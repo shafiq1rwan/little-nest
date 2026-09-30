@@ -52,15 +52,15 @@ Small differences can come from font fallbacks, browser behavior, screen density
 
 ## Saved rooms are separate from the project
 
-The game currently has one save in browser localStorage at key home-deco-sim:room. Copying the source folder does not copy that saved room. Changing browsers, profiles, hostnames, or ports can also make the old save unavailable at the new origin.
+Saved rooms live in browser localStorage at key home-deco-sim:rooms (the older single save at home-deco-sim:room is imported once). Copying the source folder does not copy them. Changing browsers, profiles, hostnames, or ports can also make the old save unavailable at the new origin.
 
 There is no export/import button today. Phase 2 adds one. Until then, if you need to preserve a saved layout:
 
 1. In the old browser, click Save room.
-2. Open browser developer tools, find Local Storage for the game's origin, and copy the value of home-deco-sim:room into a plain JSON text file.
+2. Open browser developer tools, find Local Storage for the game's origin, and copy the value of home-deco-sim:rooms into a plain JSON text file.
 3. Keep that JSON file separately with your backup.
 4. In the new browser, open the game and click Save room once to create the storage key.
-5. In developer tools, replace that key's value with the backed-up JSON, then click Load.
+5. In developer tools, replace that key's value with the backed-up JSON, reload, then open Rooms and load the design.
 
 Use the loader to validate the restored layout. The current room is 8 × 8; layouts with out-of-bounds coordinates are rejected. If restoring fails, retain the backup and diagnose the mismatch instead of deleting it.
 
@@ -78,7 +78,8 @@ Run `npm run test:install` once per machine, then `npm test`. Playwright starts 
 | Rotate near another item or boundary | Valid rotation commits; invalid rotation is rejected |
 | Undo and redo after each kind of change | Room, occupancy, materials, swatches, and selection all return to the earlier state; a drag is one step |
 | Change upholstery or plant pot | Only marked parts change color |
-| Save, modify, then Load | Saved layout, rotation, finishes, and colors return |
+| Save, modify, then load from Rooms | Saved layout, rotation, finishes, and colors return; the top-bar label shows the room name |
+| Rooms dialog: save as, rename, duplicate, delete | List updates newest first; delete needs confirmation; entries survive a reload |
 | Invalid save data | Current room remains intact and feedback appears |
 | Search plant / use categories | Five plant choices appear; category filtering is correct |
 | Type R/Delete in search | Search edits normally; game shortcuts do not fire |
@@ -98,6 +99,7 @@ Current browser checks previously passed placement, saving, plants, HUD/touch in
 
 ## Current handoff
 
+- 30 September 2026, Phase 2 increment 2: named room saves. src/persistence/gallery.js stores rooms under home-deco-sim:rooms and imports the old single save once; src/ui/gallery.js renders a native dialog with save-as, load, rename, duplicate, and confirm-to-delete. Top-bar Load became Rooms; Save overwrites the open room (first save creates "Living room"); the top-bar label shows the open room name. Suite: 39 passed (23 unit, 16 browser). Next: JSON export/import, then photo mode.
 - 30 September 2026, Phase 2 increment 1: added src/game/commands.js (undoable add, remove, move, rotate, recolor, setFinish, clear, replaceRoom; history capped at 100; events for the scene to mirror). main.js now performs every mutation through commands and rebuilds meshes from events. Undo and redo buttons sit in the tool rail; Ctrl+Z, Ctrl+Shift+Z and Ctrl+Y work; Ctrl+R no longer rotates. Recolor undo restores the original shared material. Load is one undoable entry. Suite: 31 passed (17 unit, 14 browser). Next: named room saves with a gallery, then JSON export/import, then photo mode.
 - 30 September 2026, Phase 1 steps 6–8 (Phase 1 complete): added src/scene/create-scene.js, geometry.js (shared material cache, owned-material rule, recolor, tint, dispose), thumbnails.js and src/ui/icons.js; removed src/ui.js. The floor-lamp shade clone is now owned and disposed. style.css became src/styles/{index,tokens,components,layout,responsive}.css with named tokens (--ink, --muted, --card, --drawer-button, --hover, --backdrop, --shadow, font stacks); the near-duplicate #8b715e was unified to --muted #8c725f and the obsolete .brand svg rules were dropped. Fonts: public/fonts bundles Gelasio and Source Sans 3 (OFL, licences included) as fallbacks behind Georgia and Segoe UI. Runtime: engines node >=20.19 and .nvmrc 23. main.js is about 309 lines. Suite: 24 passed; desktop and phone screenshots were compared to the baselines. Next: Phase 2, starting with a commands layer and undo/redo.
 - 30 September 2026, Phase 1 steps 4–5: added src/game/input.js (pointer/keyboard/touch lifecycle and raycasting), src/ui/hud.js (toast, catalog, filter, tabs, finish swatches, selection card), src/ui/responsive.js (compact drawer and card docking), src/ui/music.js. main.js is now composition at about 375 lines. Catalog cards are built with DOM methods instead of innerHTML. Suite: 24 passed. No gameplay or visual change intended. Next: step 6 (thumbnail/geometry ownership helpers, fix the floor lamp shade clone leak), step 7 (CSS grouping), step 8 (runtime pin and bundled font).
@@ -108,11 +110,11 @@ Current browser checks previously passed placement, saving, plants, HUD/touch in
 - Current structure: main.js composes config/, data/, game/ (placement, state, input), persistence/, scene/ (create-scene, geometry, thumbnails), ui/ (hud, responsive, music, icons), plus room, props, plants; one HTML HUD; src/styles split into four files.
 - Current room: 8 × 8 cells, 4-unit walls, orthographic camera, 16 starter items.
 - Catalog: 17 entries, including the original plant and four additional species.
-- Storage: one browser-local version-3 room save with item ids; version 2 saves migrate; legacy key retained.
+- Storage: a named-room gallery (home-deco-sim:rooms) of version-3 rooms with item ids; the legacy single save is imported once and retained.
 - Visual identity: cream, sage, peach, warm wood, cozy procedural models.
 - Work completed in this documentation task: structure review, phased plan, persistent coding instructions, style guide, transfer guide, and five current visual baseline screenshots.
 - No architecture refactor or new gameplay phase was implemented in this task.
-- Next recommended work: Phase 2 continued (named saves and gallery, export/import, photo mode).
+- Next recommended work: Phase 2 continued (export/import, photo mode).
 
 ## Update after future work
 

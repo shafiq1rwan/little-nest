@@ -40,7 +40,7 @@ Keep package-lock.json when moving computers. The runtime itself is browser-base
 - Right-drag to orbit and scroll to zoom.
 - On phones, Browse/Hide controls the drawer. Choosing furniture hides it for placement; selecting an item opens controls in the drawer. Landscape phones use a side drawer.
 - One finger moves furniture; two fingers orbit/pinch.
-- Save room stores one design in this browser. Load restores it; Clear removes furniture.
+- Save room keeps the open room in this browser (the first save is named "Living room"). Rooms opens your saved designs to load, rename, duplicate, or delete them, and to save the current room under a new name. Clear removes furniture.
 - Lo-fi background music starts after the first click or tap. The music button in the top bar turns it off or on, and the choice is remembered in this browser.
 - The help button explains controls. Keyboard shortcuts are inactive while typing in search.
 
@@ -58,13 +58,13 @@ Icon artwork: [little-nest-icon.png](public/icons/little-nest-icon.png). Its exp
 | --- | --- |
 | src/main.js | Composition: scene setup, mesh ownership, placing flow, save/load, render loop |
 | src/game/input.js | Pointer, keyboard, and touch handling |
-| src/ui/hud.js, responsive.js, music.js, icons.js | HUD rendering, compact drawer behaviour, background music, SVG icons |
+| src/ui/hud.js, responsive.js, music.js, icons.js, gallery.js | HUD rendering, compact drawer behaviour, background music, SVG icons, rooms dialog |
 | src/scene/create-scene.js, geometry.js, thumbnails.js | Renderer and camera setup, material ownership, catalog previews |
 | src/config/game.js | Room size, camera limits, renderer, music, and storage constants |
 | src/config/theme.js | Scene palette, selectable wall/floor finishes, item colors |
 | src/data/starter-room.js | The furnished living room shown on first load |
 | src/game/placement.js, state.js, commands.js | Pure placement rules, committed item records with stable ids, and undoable commands |
-| src/persistence/schema.js, storage.js | Saved-room format, validation, migrations, and guarded localStorage |
+| src/persistence/schema.js, storage.js, gallery.js | Saved-room format, validation, migrations, guarded localStorage, named room gallery |
 | tests/unit | Node unit tests for placement, state, and schema |
 | tests/browser | Playwright browser checks (`npm test` runs unit and browser projects) |
 | src/props.js | Furniture models, catalog, footprints, recoloring |

@@ -5,16 +5,17 @@ import { createScene } from './scene/create-scene.js';
 import { createThumbnails } from './scene/thumbnails.js';
 import { tintModel as tint, disposeModel, measureModel } from './scene/geometry.js';
 import { installIcons } from './ui/icons.js';
-import { ROOM, CELL, WALL_H, CAMERA, RENDER, MUSIC, SAVE_KEY, MUSIC_KEY, MAX_SAVED_ITEMS } from './config/game.js';
+import { ROOM, CELL, WALL_H, CAMERA, RENDER, MUSIC, SAVE_KEY, ROOMS_KEY, MUSIC_KEY, MAX_SAVED_ITEMS } from './config/game.js';
 import { BACKDROP, SELECTION_OUTLINE, GHOST_OK, GHOST_BLOCKED, WALL_FINISHES, FLOOR_FINISHES, ITEM_COLORS } from './config/theme.js';
 import { STARTER_ROOM } from './data/starter-room.js';
 import { createPlacement } from './game/placement.js';
 import { createRoomState, newItemId } from './game/state.js';
 import { createCommands } from './game/commands.js';
 import { createInput } from './game/input.js';
-import { serializeRoom, parseRoom } from './persistence/schema.js';
-import { readJSON, readString, writeJSON } from './persistence/storage.js';
+import { serializeRoom } from './persistence/schema.js';
+import { createGallery, DEFAULT_ROOM_NAME } from './persistence/gallery.js';
 import { createResponsiveHUD } from './ui/responsive.js';
+import { createGalleryDialog } from './ui/gallery.js';
 import { createToast, buildCatalog, setCatalogActive, bindCatalogFilter, bindTabs, buildFinishSwatches, renderSelectionCard, setPressed } from './ui/hud.js';
 import { createMusic } from './ui/music.js';
 
@@ -282,25 +283,55 @@ $('zoom-in').onclick = () => zoomBy(CAMERA.zoomStep);
 $('zoom-out').onclick = () => zoomBy(1 / CAMERA.zoomStep);
 $('reset-view').onclick = resetView;
 
-// ---------- save / load ----------
+// ---------- saved rooms ----------
 function settle() { finishDrag(); cancelPlacing(); setSelected(null); }
 function clearRoom() { settle(); commands.clear(); }
-$('save').onclick = () => {
+
+const gallery = createGallery({ key: ROOMS_KEY, legacyKey: SAVE_KEY, catalog: CATALOG, placement, maxItems: MAX_SAVED_ITEMS, newId: newItemId });
+let currentRoom = null;   // { id, name } of the gallery entry the open design belongs to
+function setCurrentRoom(summary) {
+  currentRoom = summary ? { id: summary.id, name: summary.name } : null;
+  $('room-name').textContent = currentRoom ? currentRoom.name : 'Unsaved room';
+}
+function currentRoomData() {
   finishDrag();
-  const data = serializeRoom({ wall: finishes.wall, floor: finishes.floor, items: state.items });
-  toast(writeJSON(SAVE_KEY, data) ? 'Room saved. Make yourself at home.' : 'Your browser could not save this room.');
-};
-$('load').onclick = () => {
-  if (readString(SAVE_KEY) === null) { toast('No saved room yet. Save your design first.'); return; }
-  let room;
+  return serializeRoom({ wall: finishes.wall, floor: finishes.floor, items: state.items });
+}
+/** Saves into entry `id` (or a new entry when null). Returns the summary, or null when storage refused. */
+function saveRoom(id, name) {
+  const summary = gallery.save(id, name, currentRoomData());
+  if (!summary) { toast('Your browser could not save this room.'); return null; }
+  setCurrentRoom(summary);
+  toast('"' + summary.name + '" saved.');
+  return summary;
+}
+function loadRoom(id) {
+  let entry;
   // Validate and migrate before touching the live room so a bad save never wipes the current design.
-  try { room = parseRoom(readJSON(SAVE_KEY), { catalog: CATALOG, placement, maxItems: MAX_SAVED_ITEMS, newId: newItemId }); }
-  catch { toast('This saved room could not be loaded. Your current room is safe.'); return; }
+  try { entry = gallery.load(id); } catch { toast('This saved room could not be loaded. Your current room is safe.'); return; }
   settle();
-  commands.replaceRoom(room);   // one history entry, so a load can be undone
-  toast('Saved room loaded.');
-};
+  commands.replaceRoom(entry.room);   // one history entry, so a load can be undone
+  setCurrentRoom(entry);
+  toast('"' + entry.name + '" loaded.');
+}
+const galleryDialog = createGalleryDialog({
+  dialog: $('gallery'), list: $('gallery-list'), saveForm: $('gallery-save'), nameInput: $('gallery-name'),
+  emptyEl: $('gallery-empty'), closeButton: $('gallery-close'),
+  handlers: {
+    entries: () => gallery.list(),
+    currentId: () => currentRoom?.id ?? null,
+    onSaveAs: (name) => saveRoom(null, name),
+    onLoad: loadRoom,
+    onRename: (id, name) => { const s = gallery.rename(id, name); if (s && currentRoom?.id === id) setCurrentRoom(s); },
+    onDuplicate: (id) => { const s = gallery.duplicate(id); toast(s ? '"' + s.name + '" created.' : 'Could not duplicate this room.'); },
+    onDelete: (id) => { gallery.remove(id); if (currentRoom?.id === id) setCurrentRoom(null); toast('Room deleted.'); },
+  },
+});
+// Save keeps the open room; the first save of a fresh design creates "Living room" without a prompt.
+$('save').onclick = () => saveRoom(currentRoom?.id ?? null, currentRoom?.name ?? DEFAULT_ROOM_NAME);
+$('load').onclick = () => galleryDialog.open();
 $('clear').onclick = () => { clearRoom(); toast('Room cleared. A fresh start.'); };
+gallery.migrateLegacy();
 
 // ---------- starter room ----------
 let starterSelection = null;
@@ -324,7 +355,8 @@ renderer.setAnimationLoop(() => {
 // record copies with their mesh attached, so checks can inspect both data and visuals.
 const withMesh = (r) => (r ? { ...r, mesh: meshOf(r) } : null);
 window.__sim = {
-  state, placement, commands, finishes, occupancy: state.occupancy, bgm: music.audio, scene, camera, controls, grid, walls, wallMat, floorMat,
+  state, placement, commands, finishes, gallery, occupancy: state.occupancy, bgm: music.audio, scene, camera, controls, grid, walls, wallMat, floorMat,
+  get currentRoom() { return currentRoom; },
   pointerToFloor: input.floorHit, snap, isFree, worldPos, meshOf, addItem, setSelected, rotateSelected,
   measure: measureModel,
   get musicOn() { return music.isOn(); },

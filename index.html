@@ -8,8 +8,8 @@
 <div id="app">
 <header class="topbar">
 <div class="brand"><img class="brand-icon" src="/icons/little-nest-192.png" alt="" width="36" height="36"/><h1 aria-label="Little Nest"><span class="brand-long">Little Nest</span><span class="brand-short">Little Nest</span></h1></div>
-<span class="room-name">Living room</span>
-<div class="save-actions"><button id="load" aria-label="Load room" title="Load room"><span data-icon="folder"></span><span class="action-label">Load</span></button><button id="save" class="primary" aria-label="Save room" title="Save room"><span data-icon="save"></span><span class="save-label">Save<span class="desktop-label"> room</span></span></button><button id="music-toggle" class="icon-button" aria-label="Turn music off" aria-pressed="true" title="Music"><span data-icon="music"></span></button><button id="help-toggle" class="icon-button" aria-label="Show controls" title="Show controls"><span data-icon="help"></span></button></div>
+<span class="room-name" id="room-name">Unsaved room</span>
+<div class="save-actions"><button id="load" aria-label="Your rooms" title="Your rooms"><span data-icon="folder"></span><span class="action-label">Rooms</span></button><button id="save" class="primary" aria-label="Save room" title="Save room"><span data-icon="save"></span><span class="save-label">Save<span class="desktop-label"> room</span></span></button><button id="music-toggle" class="icon-button" aria-label="Turn music off" aria-pressed="true" title="Music"><span data-icon="music"></span></button><button id="help-toggle" class="icon-button" aria-label="Show controls" title="Show controls"><span data-icon="help"></span></button></div>
 </header>
 <main class="workspace">
 <div id="viewport">
@@ -30,9 +30,16 @@
 </section>
 <div class="hint-strip">Drag to move <span>·</span> R to rotate <span>·</span> Scroll to zoom</div>
 <div class="camera-tools"><span>View</span><button id="zoom-out" class="icon-button" aria-label="Zoom out"><span data-icon="minus"></span></button><button id="zoom-in" class="icon-button" aria-label="Zoom in"><span data-icon="plus"></span></button><button id="reset-view" class="icon-button" aria-label="Reset camera"><span data-icon="target"></span></button></div>
-<section id="help-panel" hidden><h2>Make yourself at home</h2><p class="desktop-help">Choose furniture, then click a free tile to place it. Hold Shift to place several.</p><p class="desktop-help">Drag furniture to move it. R rotates, Delete removes, and Escape cancels. Ctrl+Z undoes and Ctrl+Shift+Z redoes.</p><p class="desktop-help">Right-drag to orbit. Scroll or use the view buttons to zoom.</p><p class="touch-help">Browse furniture, choose an item, then tap a free tile in the room to place it.</p><p class="touch-help">Drag furniture to move it. Select an item to rotate, remove, or recolor it in the bottom panel. The arrows in the toolbar undo and redo.</p><p class="touch-help">Use two fingers to orbit and pinch to zoom, or use the View buttons. Hide the decorating panel for a bigger view.</p><p>Lo-fi music starts after your first tap or click. Use the music button to turn it off; your choice is remembered.</p><p>Your saved room stays in this browser.</p></section>
+<section id="help-panel" hidden><h2>Make yourself at home</h2><p class="desktop-help">Choose furniture, then click a free tile to place it. Hold Shift to place several.</p><p class="desktop-help">Drag furniture to move it. R rotates, Delete removes, and Escape cancels. Ctrl+Z undoes and Ctrl+Shift+Z redoes.</p><p class="desktop-help">Right-drag to orbit. Scroll or use the view buttons to zoom.</p><p class="touch-help">Browse furniture, choose an item, then tap a free tile in the room to place it.</p><p class="touch-help">Drag furniture to move it. Select an item to rotate, remove, or recolor it in the bottom panel. The arrows in the toolbar undo and redo.</p><p class="touch-help">Use two fingers to orbit and pinch to zoom, or use the View buttons. Hide the decorating panel for a bigger view.</p><p>Lo-fi music starts after your first tap or click. Use the music button to turn it off; your choice is remembered.</p><p>Save room keeps the open room; Rooms lists every saved design so you can load, rename, duplicate, or delete it. Saves stay in this browser.</p></section>
 <div id="toast" role="status" aria-live="polite"></div>
 </div>
+<dialog id="gallery" aria-labelledby="gallery-title">
+<div class="gallery-heading"><h2 id="gallery-title">Your rooms</h2><button id="gallery-close" class="icon-button" aria-label="Close"><span data-icon="close"></span></button></div>
+<form id="gallery-save" class="gallery-save"><label class="sr-only" for="gallery-name">Name for the current room</label><input id="gallery-name" type="text" placeholder="Name this room" autocomplete="off"/><button type="submit" class="primary">Save current room</button></form>
+<p id="gallery-empty" hidden>No saved rooms yet. Save the current room to keep it.</p>
+<ul id="gallery-list" class="room-list"></ul>
+<p class="gallery-note">Rooms are kept in this browser.</p>
+</dialog>
 <aside id="panel">
 <div class="drawer-heading"><div><span class="drawer-eyebrow">MAKE IT YOURS</span><h2>Decorate</h2></div><button id="panel-toggle" aria-expanded="true" aria-label="Hide decorating panel" aria-controls="panel-content"><span class="toggle-label">Hide</span><span data-icon="chevron"></span></button></div>
 <div id="panel-content">

@@ -49,5 +49,16 @@ export function twoFrames(page) {
   return page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
 }
 
+/** Opens the rooms dialog and loads the entry the open design belongs to. */
+export async function loadCurrentRoom(page) {
+  await page.locator('#load').click();
+  await page.locator('#gallery .room-entry.current .primary').click();
+}
+
+/** Reads the raw gallery store. */
+export function galleryStore(page) {
+  return page.evaluate(() => JSON.parse(localStorage.getItem('home-deco-sim:rooms') || 'null'));
+}
+
 export const STARTER_ITEM_COUNT = 16;
 export const TERRACOTTA = 0xb96949;

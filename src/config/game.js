@@ -27,6 +27,7 @@ export const MUSIC = {
 };
 
 // Storage keys keep the original project name on purpose so existing saves stay readable.
-export const SAVE_KEY = 'home-deco-sim:room';
+export const SAVE_KEY = 'home-deco-sim:room';        // pre-gallery single save; imported once, never deleted
+export const ROOMS_KEY = 'home-deco-sim:rooms';      // named room gallery
 export const MUSIC_KEY = 'home-deco-sim:music';
 export const MAX_SAVED_ITEMS = 200;

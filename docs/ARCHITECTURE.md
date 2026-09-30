@@ -26,6 +26,8 @@ It is not yet a fully separated foundation for a larger game. src/main.js is app
 | src/game/commands.js | Undoable mutations over state and finishes; emits add/remove/transform/color/finish/history events; capped history (no Three.js, no DOM) |
 | src/persistence/schema.js | Saved-room format, validation, and version migrations |
 | src/persistence/storage.js | Guarded localStorage adapter |
+| src/persistence/gallery.js | Named room saves: list, load (validated), save, rename, duplicate, remove, one-time legacy import |
+| src/ui/gallery.js | The "Your rooms" dialog rendering |
 | tests/unit | Node unit tests for placement, state, and schema |
 | tests/browser | Playwright specs and helpers; playwright.config.js starts the dev server |
 | src/room.js | Room shell, procedural textures, windows, blinds, artwork, shadow receiver |
@@ -42,7 +44,7 @@ It is not yet a fully separated foundation for a larger game. src/main.js is app
 | package-lock.json | Exact installed dependency graph |
 | output/checks | Historical Codex checks and screenshots, superseded by tests/browser |
 
-There is no backend, account system, cloud sync, undo history, or multi-room save gallery today. `npm test` runs the portable browser checks. The manifest supplies application metadata; there is no service worker or offline-cache implementation.
+There is no backend, account system, or cloud sync today. `npm test` runs the portable browser checks. The manifest supplies application metadata; there is no service worker or offline-cache implementation.
 
 ## What is already working
 
@@ -129,7 +131,9 @@ Item ids are the handle undo history uses; a removed item comes back with the sa
 
 ### Save contract
 
-Storage key: home-deco-sim:room. Current writer (src/persistence/schema.js, version 3):
+Named rooms live under home-deco-sim:rooms as { version: 1, rooms: [{ id, name, updatedAt, room }] }, where `room` is the saved-room shape below. Entries are validated on load, not on list, so one corrupt entry cannot hide the others. The pre-gallery single save at home-deco-sim:room is imported once as "Living room" when the gallery is empty and is never deleted. The top-bar Save button overwrites the open room, creating "Living room" on a fresh design; the dialog saves under a typed name.
+
+Room shape (src/persistence/schema.js, version 3):
 
     {
       "version": 3,
@@ -144,7 +148,7 @@ The example shows the shape; colors are numeric 24-bit RGB values. There are no 
 
 parseRoom migrates by version before validating: saves with no version or version 2 (no ids) are read as version 3 and each item receives a fresh id; unknown versions are rejected. Validation covers known types, integer coordinates/rotation, bounds, collisions, optional color ranges, string ids (duplicates are replaced), and at most 200 items. Add a new version and a migration step in schema.js before changing the shape again.
 
-Browser storage belongs to a browser profile and origin. The project directory does not contain these saves.
+Browser storage belongs to a browser profile and origin. The project directory does not contain these saves. The gallery is capped at 50 rooms; a refused write returns null and the HUD shows a toast.
 
 ### Input and responsive contract
 

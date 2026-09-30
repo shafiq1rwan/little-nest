@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openGame, tilePoint, selectedInfo, TERRACOTTA } from './helpers.js';
+import { openGame, tilePoint, selectedInfo, loadCurrentRoom, TERRACOTTA } from './helpers.js';
 
 const PLANTS = ['snakePlant', 'palm', 'cactus', 'rubberTree'];
 
@@ -39,7 +39,7 @@ test('plant species fit one tile, render thumbnails, and survive place/rotate/re
 
     await page.locator('#save').click();
     await page.locator('#remove-selected').click();
-    await page.locator('#load').click();
+    await loadCurrentRoom(page);
     const restored = await page.evaluate((type) => {
       const i = window.__sim.items.find((x) => x.type === type && x.gx === 7 && x.gz === 3);
       return i && { color: i.color, rot: i.rot };

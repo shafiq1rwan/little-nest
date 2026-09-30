@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openGame, roomState, tilePoint, itemPoint, selectedInfo, noHorizontalOverflow, STARTER_ITEM_COUNT, TERRACOTTA } from './helpers.js';
+import { openGame, roomState, tilePoint, itemPoint, selectedInfo, noHorizontalOverflow, loadCurrentRoom, galleryStore, STARTER_ITEM_COUNT, TERRACOTTA } from './helpers.js';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -21,9 +21,10 @@ test('desktop decorating flow: rotate, recolor, save/load, search, finishes, cam
 
   const saved = await roomState(page);
   await page.locator('#save').click();
+  expect(await page.locator('#room-name').textContent()).toBe('Living room');
   await page.locator('#remove-selected').click();
   expect(await roomState(page)).toHaveLength(STARTER_ITEM_COUNT - 1);
-  await page.locator('#load').click();
+  await loadCurrentRoom(page);
   expect(await roomState(page)).toEqual(saved);
 
   await page.locator('#search').fill('plant');
@@ -77,8 +78,9 @@ test('desktop decorating flow: rotate, recolor, save/load, search, finishes, cam
 
   // Invalid saved data must leave the current design intact.
   const beforeInvalid = await roomState(page);
-  await page.evaluate(() => localStorage.setItem('home-deco-sim:room', '{"items":null}'));
+  await page.evaluate(() => localStorage.setItem('home-deco-sim:rooms', JSON.stringify({ version: 1, rooms: [{ id: 'bad', name: 'Broken', updatedAt: '2026-01-01T00:00:00Z', room: { items: null } }] })));
   await page.locator('#load').click();
+  await page.getByRole('button', { name: 'Load Broken', exact: true }).click();
   expect(await roomState(page)).toEqual(beforeInvalid);
 
   await page.locator('#clear').click();
@@ -90,27 +92,34 @@ test('desktop decorating flow: rotate, recolor, save/load, search, finishes, cam
   expect(errors).toEqual([]);
 });
 
-test('saves carry stable ids and a legacy version 2 save still loads', async ({ page }) => {
+test('saves carry stable ids and a legacy version 2 save is imported into the gallery', async ({ page }) => {
   await openGame(page);
   await page.locator('#save').click();
-  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('home-deco-sim:room')));
+  const store = await galleryStore(page);
+  expect(store.rooms).toHaveLength(1);
+  const saved = store.rooms[0].room;
   expect(saved.version).toBe(3);
   expect(saved.items).toHaveLength(STARTER_ITEM_COUNT);
   expect(new Set(saved.items.map((i) => i.id)).size).toBe(STARTER_ITEM_COUNT);
   const liveIds = await page.evaluate(() => window.__sim.items.map((i) => i.id));
   expect(saved.items.map((i) => i.id)).toEqual(liveIds);
 
-  // Ids survive a round trip, so future undo and export can refer to items reliably.
+  // Ids survive a round trip, so undo and export can refer to items reliably.
   await page.locator('#clear').click();
-  await page.locator('#load').click();
+  await loadCurrentRoom(page);
   expect(await page.evaluate(() => window.__sim.items.map((i) => i.id))).toEqual(liveIds);
 
-  // A pre-id save (version 2, as written before 30 September 2026) migrates instead of failing.
+  // A pre-gallery save (version 2, as written before 30 September 2026) is imported as "Living room" on the next start.
+  await page.evaluate(() => localStorage.removeItem('home-deco-sim:rooms'));
   await page.evaluate(() => localStorage.setItem('home-deco-sim:room', JSON.stringify({
     version: 2, wall: 0x92725c, floor: 0xe3a372,
     items: [{ type: 'sofa', gx: 2, gz: 1, rot: 0 }, { type: 'rug', gx: 2, gz: 3, rot: 0 }, { type: 'armchair', gx: 6, gz: 3, rot: 3, color: 0x81936a }],
   })));
+  await page.reload();
+  await page.waitForFunction(() => !!window.__sim);
+  expect((await galleryStore(page)).rooms.map((r) => r.name)).toEqual(['Living room']);
   await page.locator('#load').click();
+  await page.getByRole('button', { name: 'Load Living room', exact: true }).click();
   const migrated = await roomState(page);
   expect(migrated).toEqual([
     { type: 'sofa', gx: 2, gz: 1, rot: 0, color: null },
@@ -191,7 +200,7 @@ test('undo and redo cover placement, drag, rotate, recolor, finishes, clear, and
   // Load is one entry.
   await page.locator('#save').click();
   await page.locator('#clear').click();
-  await page.locator('#load').click();
+  await loadCurrentRoom(page);
   expect(await roomState(page)).toHaveLength(STARTER_ITEM_COUNT);
   await page.keyboard.press('Control+z');
   expect(await roomState(page)).toHaveLength(0);

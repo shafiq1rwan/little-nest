@@ -1,0 +1,46 @@
+# Little Nest — instructions for future coding sessions
+
+This file travels with the project. Read it before editing this repository; do not rely on the history of a previous chat or on a previous computer's paths.
+
+## Read first
+
+1. [README.md](README.md) — how to run the game and where to start.
+2. [docs/STYLE_GUIDE.md](docs/STYLE_GUIDE.md) — visual identity, room art, and HUD behavior.
+3. [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — current structure, contracts, and planned module boundaries.
+4. [docs/ROADMAP.md](docs/ROADMAP.md) — phased work and completion criteria.
+5. [docs/HANDOFF.md](docs/HANDOFF.md) — moving computers, validation, and current project status.
+
+The user's latest explicit instructions take precedence over these guidelines. These files preserve the baseline; they are not a reason to ask for approval for routine work. When the user deliberately changes the design or scope, implement that request and update the relevant documentation.
+
+## Product and visual baseline
+
+- The product name is Little Nest. Keep title, header, icons, and manifest consistent.
+- Preserve the cozy isometric room: warm wood, cream upholstery, sage plants, terracotta accents, soft lighting, rounded furniture, and readable silhouettes.
+- Keep the current room editable in 3D. A mockup or background image is not a replacement for playable geometry.
+- Use the actual game screenshots in docs/design-reference as the current visual baseline. hud-concept.png is the original artistic direction, not an exact description of the current renderer.
+- Extend existing native geometry, icons, and CSS where practical. Keep new furniture visually compatible with existing pieces.
+- Preserve desktop and compact HUD behavior. Compact means width <= 900px OR height <= 600px; see STYLE_GUIDE for orientation rules.
+- Keep selected-item controls outside the room on compact screens. Do not resize the canvas in the middle of a drag or pinch.
+- Keep important touch actions at least 44px in each dimension. Existing 40px category chips are a baseline exception, not a target for new controls.
+- Avoid adding timers, currency, daily rewards, accounts, or monetization unless requested.
+
+## Implementation
+
+- The app currently uses vanilla JavaScript ES modules, Three.js, and Vite. Do not introduce a framework or replace the build system as incidental cleanup.
+- main.js is still the prototype coordinator. Phase 1 extracts responsibilities in small steps; do not claim the proposed folders already exist.
+- Put new plant models in src/plants.js and other furniture in src/props.js until the catalog split is implemented.
+- Keep catalog keys stable: they are stored in saved rooms. Add migrations before renaming or removing keys.
+- Keep localStorage key home-deco-sim:room for compatibility. The brand name is different intentionally.
+- Validate imported/saved room data before replacing the current scene.
+- Keep one source of truth for committed placement state; derive occupancy and mesh transforms from it.
+- Dispose geometry and individually owned materials when removing models. Do not dispose cached materials shared by live objects.
+- Use project-relative asset paths. Do not embed a computer's user directory or Codex cache path in production code, setup, or future portable tests.
+- Preserve package-lock.json. Dependency upgrades are separate, intentional changes.
+
+## Validation and finishing
+
+For gameplay or visual changes, run npm run build and use the relevant scenarios in HANDOFF. For documentation-only changes, check links, paths, and factual consistency; a gameplay test run is not required.
+
+Check relevant desktop, phone, tablet, and landscape states. Capture images when a visual change needs review. The scripts in output/checks are historical, machine-specific checks, not a portable npm test suite.
+
+Update docs when an implementation changes a documented contract, design rule, or phase status. Record what changed, what was checked, and what remains in HANDOFF. Only mark a roadmap phase complete when its completion criteria are met.

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Little Nest</title><link rel="icon" type="image/png" sizes="32x32" href="/icons/little-nest-32.png"/><link rel="apple-touch-icon" sizes="180x180" href="/icons/little-nest-180.png"/><link rel="manifest" href="/manifest.webmanifest"/><meta name="theme-color" content="#fff8ed"/><meta name="description" content="Little Nest — a cozy room decorating game. Arrange furniture, collect plants, and make a little space your own."/><link rel="stylesheet" href="/src/style.css"/>
+</head>
+<body>
+<div id="app">
+<header class="topbar">
+<div class="brand"><img class="brand-icon" src="/icons/little-nest-192.png" alt="" width="36" height="36"/><h1 aria-label="Little Nest"><span class="brand-long">Little Nest</span><span class="brand-short">Little Nest</span></h1></div>
+<span class="room-name">Living room</span>
+<div class="save-actions"><button id="load" aria-label="Load room" title="Load room"><span data-icon="folder"></span><span class="action-label">Load</span></button><button id="save" class="primary" aria-label="Save room" title="Save room"><span data-icon="save"></span><span class="save-label">Save<span class="desktop-label"> room</span></span></button><button id="music-toggle" class="icon-button" aria-label="Turn music off" aria-pressed="true" title="Music"><span data-icon="music"></span></button><button id="help-toggle" class="icon-button" aria-label="Show controls" title="Show controls"><span data-icon="help"></span></button></div>
+</header>
+<main class="workspace">
+<div id="viewport">
+<canvas id="scene" aria-label="Interactive decorating room"></canvas>
+<div class="mode-pill"><span data-icon="pencil"></span><span id="mode-label">Decorate mode</span></div>
+<nav class="tool-rail" aria-label="Room tools">
+<button id="move-tool" class="icon-button active" aria-label="Select and move" title="Select and move"><span data-icon="move"></span></button>
+<button id="rotate-tool" class="icon-button" aria-label="Rotate selected item" title="Rotate (R)"><span data-icon="rotate"></span></button>
+<button id="grid-tool" class="icon-button" aria-label="Toggle grid" aria-pressed="false" title="Placement grid"><span data-icon="grid"></span></button>
+<button id="walls-tool" class="icon-button" aria-label="Toggle walls" aria-pressed="true" title="Show or hide walls"><span data-icon="eye"></span></button>
+</nav>
+<section id="selection-card" class="selection-card" hidden aria-label="Selected furniture">
+<div class="selection-heading"><img id="selection-image" alt=""/><div><h2 id="selection-name"></h2><p id="selection-size"></p></div><button id="deselect" class="icon-button" aria-label="Deselect"><span data-icon="close"></span></button></div>
+<div class="selection-actions"><button id="move-selected"><span data-icon="move"></span>Move</button><button id="rotate-selected"><span data-icon="rotate"></span>Rotate <kbd>R</kbd></button><button id="remove-selected"><span data-icon="trash"></span>Remove <kbd>Del</kbd></button></div>
+<div id="item-swatches" class="swatches" aria-label="Furniture colors"></div>
+</section>
+<div class="hint-strip">Drag to move <span>·</span> R to rotate <span>·</span> Scroll to zoom</div>
+<div class="camera-tools"><span>View</span><button id="zoom-out" class="icon-button" aria-label="Zoom out"><span data-icon="minus"></span></button><button id="zoom-in" class="icon-button" aria-label="Zoom in"><span data-icon="plus"></span></button><button id="reset-view" class="icon-button" aria-label="Reset camera"><span data-icon="target"></span></button></div>
+<section id="help-panel" hidden><h2>Make yourself at home</h2><p class="desktop-help">Choose furniture, then click a free tile to place it. Hold Shift to place several.</p><p class="desktop-help">Drag furniture to move it. R rotates, Delete removes, and Escape cancels.</p><p class="desktop-help">Right-drag to orbit. Scroll or use the view buttons to zoom.</p><p class="touch-help">Browse furniture, choose an item, then tap a free tile in the room to place it.</p><p class="touch-help">Drag furniture to move it. Select an item to rotate, remove, or recolor it in the bottom panel.</p><p class="touch-help">Use two fingers to orbit and pinch to zoom, or use the View buttons. Hide the decorating panel for a bigger view.</p><p>Lo-fi music starts after your first tap or click. Use the music button to turn it off; your choice is remembered.</p><p>Your saved room stays in this browser.</p></section>
+<div id="toast" role="status" aria-live="polite"></div>
+</div>
+<aside id="panel">
+<div class="drawer-heading"><div><span class="drawer-eyebrow">MAKE IT YOURS</span><h2>Decorate</h2></div><button id="panel-toggle" aria-expanded="true" aria-label="Hide decorating panel" aria-controls="panel-content"><span class="toggle-label">Hide</span><span data-icon="chevron"></span></button></div>
+<div id="panel-content">
+<h2 class="panel-title">Decorate</h2>
+<div class="tabs" role="tablist" aria-label="Decoration type"><button id="tab-furniture" role="tab" aria-selected="true" aria-controls="furniture-pane" class="active" data-tab="furniture">Furniture</button><button id="tab-walls" role="tab" aria-selected="false" aria-controls="walls-pane" data-tab="walls">Walls</button><button id="tab-floor" role="tab" aria-selected="false" aria-controls="floor-pane" data-tab="floor">Floor</button></div>
+<section id="furniture-pane" class="pane" role="tabpanel" aria-labelledby="tab-furniture">
+<label class="search-field"><span data-icon="search"></span><input id="search" type="search" placeholder="Search furniture" aria-label="Search furniture"/></label>
+<div id="categories" class="categories" aria-label="Furniture category"><button class="active" data-category="all" aria-pressed="true">All</button><button data-category="seating" aria-pressed="false">Seating</button><button data-category="tables" aria-pressed="false">Tables</button><button data-category="decor" aria-pressed="false">Decor</button></div>
+<div id="catalog"></div><p id="empty-catalog" hidden>No furniture found. Try another search.</p>
+</section>
+<section id="walls-pane" class="pane finishes" role="tabpanel" aria-labelledby="tab-walls" hidden><h3>Set the mood</h3><p>Choose a color for your wood-paneled walls.</p><div id="wall-swatches" class="swatches"></div></section>
+<section id="floor-pane" class="pane finishes" role="tabpanel" aria-labelledby="tab-floor" hidden><h3>A warm foundation</h3><p>Choose a finish for the parquet floor.</p><div id="floor-swatches" class="swatches"></div></section>
+<footer class="panel-footer"><span id="item-count">0 items in room</span><button id="clear">Clear room</button></footer>
+</div>
+</aside>
+</main>
+</div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
+

@@ -31,7 +31,7 @@ It is not yet a fully separated foundation for a larger game. src/main.js is app
 | src/ui/gallery.js | The "Your rooms" dialog rendering |
 | tests/unit | Node unit tests for placement, state, and schema |
 | tests/browser | Playwright specs and helpers; playwright.config.js starts the dev server |
-| src/room.js | Room shell, procedural textures, windows, blinds, artwork, shadow receiver |
+| src/room.js | Room shell, procedural textures, windows, blinds, bulb string, shadow receiver; exports the wall panels and fixture rectangles |
 | src/props.js | Furniture models and catalog registry (materials via scene/geometry.js) |
 | src/plants.js | Four additional plant models, pot materials, plant catalog entries |
 | src/scene/create-scene.js | Renderer, orthographic camera, orbit controls, lighting, resize, zoom and reset helpers |
@@ -118,7 +118,7 @@ Avoid creating empty folders before their responsibilities have been extracted. 
 
 Catalog entries are keyed by a stable saved type and define label, category, w, d, and build(). Optional fields are layer, tags, defaultColor, and surface. Existing category names are seating, tables, decor, and small.
 
-layer: 'floor' marks rugs (no floor occupancy). layer: 'surface' marks small items that live in a supporter's slot and never on the floor grid. A supporter declares surface: { y, slots: [{ x, z, y? }] } in its own local space (before rotation); slots should avoid the model's baked decoration and stay visible from the default camera. Small-item meshes are added as Three.js children of the supporter's group, so they inherit its position and rotation.
+layer: 'floor' marks rugs (no floor occupancy). layer: 'surface' marks small items that live in a supporter's slot and never on the floor grid. layer: 'wall' marks decorations that hang on the back or left wall; they declare wall: { w, h } in columns (1 unit) and rows (0.5 unit), are built with their origin at the bottom-centre of the back face extending +z, never rotate, and may also declare a surface for small items (the wall shelf does). A supporter declares surface: { y, slots: [{ x, z, y? }] } in its own local space (before rotation); slots should avoid the model's baked decoration and stay visible from the default camera. Small-item meshes are added as Three.js children of the supporter's group, so they inherit its position and rotation.
 
 build() returns a THREE.Group with its origin at the center of its footprint on the floor, +Y up, and default rotation zero. Sofa fronts face +Z. Footprints are grid-cell counts; rotation swaps width/depth on odd quarter-turns.
 
@@ -126,9 +126,9 @@ Use userData.recolor only on intended changeable parts. Recoloring pots must not
 
 ### Placement contract
 
-Committed items are records { id, type, gx, gz, rot, color, parent, slot } owned by src/game/state.js. Floor items have parent and slot null; surface items have gx and gz null and reference their supporter's id and slot index. Removing a supporter removes its children; state.remove returns every removed record, children first. Meshes are kept in a Map keyed by id in main.js and every mesh carries userData.itemId. Ids are short random strings, assigned on add or preserved from a save. A transient drag target is held in main.js while dragging. rot is an integer 0–3; each step is 90 degrees.
+Committed items are records { id, type, gx, gz, rot, color, parent, slot, wall, col, row } owned by src/game/state.js. Floor items use gx/gz; surface items reference their supporter's id and slot index; wall items use wall ('back' or 'left'), col, and row with rot fixed at 0. Unused fields are null. Removing a supporter removes its children; state.remove returns every removed record, children first. Meshes are kept in a Map keyed by id in main.js and every mesh carries userData.itemId. Ids are short random strings, assigned on add or preserved from a save. A transient drag target is held in main.js while dragging. rot is an integer 0–3; each step is 90 degrees.
 
-Ordinary furniture cannot overlap occupied cells or exceed room bounds. Floor-layer items can overlap ordinary furniture. All mutations from the HUD and input go through src/game/commands.js (add, remove, move, place, rotate, recolor, setFinish, clear, replaceRoom), which validates through state, refuses invalid results without touching occupancy, and records one history entry per command. A completed drag is one move command; pointer moves only preview. main.js mirrors command events onto meshes and materials, so undo and redo need no scene-specific code. The starter layout is built through commands and then the history is cleared.
+Ordinary furniture cannot overlap occupied cells or exceed room bounds. Floor-layer items can overlap ordinary furniture. All mutations from the HUD and input go through src/game/commands.js (add, remove, move, place, mount, rotate, recolor, setFinish, clear, replaceRoom), which validates through state, refuses invalid results without touching occupancy, and records one history entry per command. A completed drag is one move command; pointer moves only preview. main.js mirrors command events onto meshes and materials, so undo and redo need no scene-specific code. The starter layout is built through commands and then the history is cleared.
 
 Item ids are the handle undo history uses; a removed item comes back with the same id on undo. Export and parent/surface relationships should use them too.
 
@@ -138,21 +138,22 @@ Named rooms live under home-deco-sim:rooms as { version: 1, rooms: [{ id, name, 
 
 Export files (src/persistence/transfer.js) wrap a room as { app: "little-nest", format: 1, exportedAt, name, room } and are named <slug>.littlenest.json. Import accepts that envelope or a bare room, caps the text at 1 MB, validates and migrates through parseRoom, and adds a new gallery entry; nothing else changes. Item ids are preserved through export and import.
 
-Room shape (src/persistence/schema.js, version 4; parent and slot were added in version 4 and default to null when migrating version 3):
+Room shape (src/persistence/schema.js, version 5; parent and slot arrived in version 4, wall/col/row in version 5; older versions migrate with nulls):
 
     {
       "version": 3,
       "wall": 9597532,
       "floor": 14918514,
       "items": [
-        { "id": "i4k2x9qz", "type": "armchair", "gx": 6, "gz": 3, "rot": 3, "color": 8491882, "parent": null, "slot": null },
-        { "id": "i9m0k2qa", "type": "mug", "gx": null, "gz": null, "rot": 0, "color": null, "parent": "i4k2x9qz", "slot": 0 }
+        { "id": "i4k2x9qz", "type": "armchair", "gx": 6, "gz": 3, "rot": 3, "color": 8491882, "parent": null, "slot": null, "wall": null, "col": null, "row": null },
+        { "id": "i9m0k2qa", "type": "mug", "gx": null, "gz": null, "rot": 0, "color": null, "parent": "i4k2x9qz", "slot": 0, "wall": null, "col": null, "row": null },
+        { "id": "iq7c1p0d", "type": "clock", "gx": null, "gz": null, "rot": 0, "color": null, "parent": null, "slot": null, "wall": "back", "col": 5, "row": 6 }
       ]
     }
 
 The example shows the shape; colors are numeric 24-bit RGB values. There are no room names, room dimensions, parent IDs, or save-slot IDs in this format.
 
-parseRoom migrates by version before validating: saves with no version or version 2 (no ids) are read as version 3 and each item receives a fresh id; unknown versions are rejected. Validation covers known types, integer coordinates/rotation, bounds, collisions, optional color ranges, string ids (duplicates are replaced), at most 200 items, and for surface items an existing floor supporter with that slot and no other occupant. Parsed rooms list floor items before surface items. Add a new version and a migration step in schema.js before changing the shape again.
+parseRoom migrates by version before validating: saves with no version or version 2 (no ids) are read as version 3 and each item receives a fresh id; unknown versions are rejected. Validation covers known types, integer coordinates/rotation, bounds, collisions, optional color ranges, string ids (duplicates are replaced), at most 200 items, and for surface items an existing supporter with that slot and no other occupant; wall items need a known wall, integer col/row, and a spot that is in bounds, unoccupied, and not covered by a fixture (the parser takes the same wallBlocked set the game uses). Parsed rooms list floor and wall items before surface items. Add a new version and a migration step in schema.js before changing the shape again.
 
 Browser storage belongs to a browser profile and origin. The project directory does not contain these saves. The gallery is capped at 50 rooms; a refused write returns null and the HUD shows a toast.
 

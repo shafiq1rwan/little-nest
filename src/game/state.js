@@ -1,7 +1,8 @@
 // Committed room state: serializable item records and the occupancy derived from them.
-// Records are { id, type, gx, gz, rot, color, parent, slot }.
-//   floor items:   parent null, slot null, gx/gz on the grid
-//   surface items: parent = supporting item id, slot = index on its surface, gx/gz null
+// Records are { id, type, gx, gz, rot, color, parent, slot, wall, col, row }.
+//   floor items:   gx/gz on the grid; parent/slot/wall/col/row null
+//   surface items: parent = supporting item id, slot = index on its surface; gx/gz/wall null
+//   wall items:    wall = 'back' | 'left', col/row on that wall's grid; gx/gz/parent null; rot is 0
 // Meshes live elsewhere, keyed by id. No Three.js and no DOM.
 
 import { cellKey } from './placement.js';
@@ -10,9 +11,12 @@ export function newItemId() {
   return 'i' + Math.random().toString(36).slice(2, 10);
 }
 
-export function createRoomState({ placement }) {
+const EMPTY = { gx: null, gz: null, parent: null, slot: null, wall: null, col: null, row: null };
+
+export function createRoomState({ placement, wallBlocked = new Set() }) {
   const items = [];
   const occupancy = new Set();          // floor cells in use
+  const wallOccupancy = new Set();      // wall cells in use
   const slotsUsed = new Map();          // parent id -> Set of slot indexes in use
   const byId = new Map();
 
@@ -23,6 +27,13 @@ export function createRoomState({ placement }) {
       if (on) set.add(record.slot); else set.delete(record.slot);
       return;
     }
+    if (record.wall) {
+      const { w, h } = placement.wallSize(record.type);
+      for (const c of placement.wallCellsOf(record.wall, record.col, record.row, w, h)) {
+        if (on) wallOccupancy.add(c); else wallOccupancy.delete(c);
+      }
+      return;
+    }
     if (!placement.occupies(record.type)) return;
     for (const c of placement.cellsOf(record.type, record.gx, record.gz, record.rot).cells) {
       if (on) occupancy.add(c); else occupancy.delete(c);
@@ -30,7 +41,12 @@ export function createRoomState({ placement }) {
   }
 
   function ownCells(record) {
-    if (record.parent || !placement.occupies(record.type)) return null;
+    if (!record || record.parent) return null;
+    if (record.wall) {
+      const { w, h } = placement.wallSize(record.type);
+      return new Set(placement.wallCellsOf(record.wall, record.col, record.row, w, h));
+    }
+    if (!placement.occupies(record.type)) return null;
     return new Set(placement.cellsOf(record.type, record.gx, record.gz, record.rot).cells);
   }
 
@@ -43,7 +59,7 @@ export function createRoomState({ placement }) {
 
   /** True when a floor footprint fits, ignoring the cells of `ignoreId` (an item being moved). */
   function canPlace(type, gx, gz, rot, ignoreId = null) {
-    if (placement.isSurfaceItem(type)) return false;
+    if (placement.isSurfaceItem(type) || placement.isWallItem(type)) return false;
     const own = ignoreId ? ownCells(byId.get(ignoreId)) : null;
     return placement.isFree(occupancy, type, gx, gz, rot, own);
   }
@@ -57,15 +73,28 @@ export function createRoomState({ placement }) {
     const occupant = items.find((r) => r.parent === parentId && r.slot === slot);
     return !!occupant && occupant.id === ignoreId;
   }
+  /** True when a wall item fits at wall/col/row, ignoring `ignoreId`'s own cells. */
+  function canMount(type, wall, col, row, ignoreId = null) {
+    const own = ignoreId ? ownCells(byId.get(ignoreId)) : null;
+    return placement.wallFree(wallOccupancy, wallBlocked, type, wall, col, row, own);
+  }
 
   /** Adds a record. Returns it, or null when the position is not free. */
-  function add({ type, gx = null, gz = null, rot = 0, color = null, id = null, parent = null, slot = null }) {
-    if (parent ? !canPlaceOn(type, parent, slot) : !canPlace(type, gx, gz, rot)) return null;
+  function add({ type, gx = null, gz = null, rot = 0, color = null, id = null, parent = null, slot = null, wall = null, col = null, row = null }) {
+    let record;
+    if (parent) {
+      if (!canPlaceOn(type, parent, slot)) return null;
+      record = { type, rot, color, ...EMPTY, parent, slot };
+    } else if (wall) {
+      if (!canMount(type, wall, col, row)) return null;
+      record = { type, rot: 0, color, ...EMPTY, wall, col, row };
+    } else {
+      if (!canPlace(type, gx, gz, rot)) return null;
+      record = { type, rot, color, ...EMPTY, gx, gz };
+    }
     let key = id;
     while (!key || byId.has(key)) key = newItemId();
-    const record = parent
-      ? { id: key, type, gx: null, gz: null, rot, color, parent, slot }
-      : { id: key, type, gx, gz, rot, color, parent: null, slot: null };
+    record = { id: key, ...record };
     items.push(record);
     byId.set(key, record);
     occupy(record, true);
@@ -89,24 +118,24 @@ export function createRoomState({ placement }) {
   /** Moves a floor item if the target is free. Children follow because they are relative. */
   function move(id, gx, gz) {
     const record = byId.get(id);
-    if (!record || record.parent || !canPlace(record.type, gx, gz, record.rot, id)) return false;
+    if (!record || record.parent || record.wall || !canPlace(record.type, gx, gz, record.rot, id)) return false;
     occupy(record, false);
     record.gx = gx; record.gz = gz;
     occupy(record, true);
     return true;
   }
 
-  /** Rotates a quarter turn in place if it still fits. Returns true on success. */
+  /** Rotates a quarter turn in place if it still fits. Wall items do not rotate. */
   function rotate(id) {
     const record = byId.get(id);
-    if (!record) return false;
+    if (!record || record.wall) return false;
     return transform(id, { rot: (record.rot + 1) % 4 });
   }
 
-  /** Sets any of gx, gz, rot at once if the result fits. Surface items only rotate. */
+  /** Sets any of gx, gz, rot at once if the result fits. Surface items only rotate; wall items refuse. */
   function transform(id, { gx, gz, rot }) {
     const record = byId.get(id);
-    if (!record) return false;
+    if (!record || record.wall) return false;
     if (record.parent) {
       if (gx != null || gz != null) return false;
       record.rot = rot ?? record.rot;
@@ -131,6 +160,16 @@ export function createRoomState({ placement }) {
     return true;
   }
 
+  /** Moves a wall item to another spot on either wall. Returns true on success. */
+  function mount(id, wall, col, row) {
+    const record = byId.get(id);
+    if (!record || !record.wall || !canMount(record.type, wall, col, row, id)) return false;
+    occupy(record, false);
+    record.wall = wall; record.col = col; record.row = row;
+    occupy(record, true);
+    return true;
+  }
+
   function setColor(id, color) {
     const record = byId.get(id);
     if (!record) return false;
@@ -142,14 +181,15 @@ export function createRoomState({ placement }) {
     items.length = 0;
     byId.clear();
     occupancy.clear();
+    wallOccupancy.clear();
     slotsUsed.clear();
   }
 
   /** Plain copies of every record, parents before their children, safe to JSON.stringify. */
   function serialize() {
-    const copy = ({ id, type, gx, gz, rot, color, parent, slot }) => ({ id, type, gx, gz, rot, color, parent, slot });
+    const copy = ({ id, type, gx, gz, rot, color, parent, slot, wall, col, row }) => ({ id, type, gx, gz, rot, color, parent, slot, wall, col, row });
     return [...items.filter((r) => !r.parent), ...items.filter((r) => r.parent)].map(copy);
   }
 
-  return { items, occupancy, slotsUsed, get, childrenOf, canPlace, canPlaceOn, add, remove, move, rotate, transform, place, setColor, clear, serialize, cellKey };
+  return { items, occupancy, wallOccupancy, slotsUsed, get, childrenOf, canPlace, canPlaceOn, canMount, add, remove, move, rotate, transform, place, mount, setColor, clear, serialize, cellKey };
 }

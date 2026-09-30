@@ -25,7 +25,7 @@ export function buildCatalog({ container, catalog, thumbnails, onChoose }) {
     const name = document.createElement('strong');
     name.textContent = def.label;
     const size = document.createElement('small');
-    size.textContent = def.layer === 'surface' ? 'Tabletop' : def.w + ' × ' + def.d + ' tiles';
+    size.textContent = def.layer === 'surface' ? 'Tabletop' : def.layer === 'wall' ? 'Wall' : def.w + ' × ' + def.d + ' tiles';
     b.append(img, name, size);
     b.setAttribute('aria-label', 'Place ' + def.label);
     b.onclick = () => onChoose(key);
@@ -107,12 +107,12 @@ export function buildFinishSwatches(groups) {
 }
 
 /** Fills the selection card. `item` is null to hide it. */
-export function renderSelectionCard({ card, item, def, thumbnail, size, canRecolor, colors, activeColor, onColor }) {
+export function renderSelectionCard({ card, item, def, thumbnail, sizeText, canRecolor, colors, activeColor, onColor }) {
   card.hidden = !item;
   if (!item) return;
   card.querySelector('#selection-image').src = thumbnail;
   card.querySelector('#selection-name').textContent = def.label;
-  card.querySelector('#selection-size').textContent = size ? size.w + ' × ' + size.d + ' tiles' : 'Sits on tables and shelves';
+  card.querySelector('#selection-size').textContent = sizeText;
   const swatches = card.querySelector('#item-swatches');
   swatches.replaceChildren();
   swatches.hidden = !canRecolor;

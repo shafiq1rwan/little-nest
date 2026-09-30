@@ -33,8 +33,8 @@
 .search-field svg { color: #916b52; width: 18px; }
 .search-field input { width: 100%; min-width: 0; border: none; background: transparent; color: var(--ink); font-size: 12px; }
 .search-field input::placeholder { color: #a18a76; }
-.categories { display: flex; gap: 7px; margin: 16px 0; }
-.categories button { border-radius: 25px; font-size: 11px; padding: 8px 12px; flex: 1; }
+.categories { display: flex; flex-wrap: wrap; gap: 7px; margin: 16px 0; }
+.categories button { border-radius: 25px; font-size: 11px; padding: 8px 9px; flex: 1 1 auto; white-space: nowrap; }
 .categories button.active { background: var(--sage); color: white; border-color: var(--sage); }
 #catalog { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 #empty-catalog { font-size: 13px; color: var(--muted); }

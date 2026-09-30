@@ -15,7 +15,7 @@ export function cleanName(name, fallback = DEFAULT_ROOM_NAME) {
   return trimmed || fallback;
 }
 
-export function createGallery({ key, legacyKey = null, catalog, placement, maxItems, newId, now = () => new Date().toISOString(), maxRooms = 50 }) {
+export function createGallery({ key, legacyKey = null, catalog, placement, maxItems, newId, wallBlocked = new Set(), now = () => new Date().toISOString(), maxRooms = 50 }) {
   function readAll() {
     const data = readJSON(key);
     if (!data || data.version !== GALLERY_VERSION || !Array.isArray(data.rooms)) return [];
@@ -42,7 +42,7 @@ export function createGallery({ key, legacyKey = null, catalog, placement, maxIt
   function load(id) {
     const entry = readAll().find((e) => e.id === id);
     if (!entry) throw new SaveError('No such room');
-    return { ...summary(entry), room: parseRoom(entry.room, { catalog, placement, maxItems, newId }) };
+    return { ...summary(entry), room: parseRoom(entry.room, { catalog, placement, maxItems, newId, wallBlocked }) };
   }
   /** Creates (id null) or overwrites an entry. Returns its summary, or null when storage refused. */
   function save(id, name, room) {
@@ -84,7 +84,7 @@ export function createGallery({ key, legacyKey = null, catalog, placement, maxIt
   function migrateLegacy() {
     if (!legacyKey || readAll().length || readString(legacyKey) === null) return null;
     const raw = readJSON(legacyKey);
-    try { parseRoom(raw, { catalog, placement, maxItems, newId }); } catch { return null; }
+    try { parseRoom(raw, { catalog, placement, maxItems, newId, wallBlocked }); } catch { return null; }
     return save(null, DEFAULT_ROOM_NAME, raw);
   }
 

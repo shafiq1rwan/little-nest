@@ -5,7 +5,7 @@
 // Events (subscribe(fn) receives (kind, payload)):
 //   add       record                the record now exists; build its mesh
 //   remove    { id }                the record is gone; drop its mesh
-//   transform record                gx/gz/rot (floor) or parent/slot/rot (surface) changed; move its mesh
+//   transform record                gx/gz/rot (floor), parent/slot/rot (surface), or wall/col/row changed; move its mesh
 //   color     record                color changed; recolor its mesh
 //   finish    { key, color }        wall or floor color changed
 //   history   { canUndo, canRedo }  undo/redo availability changed
@@ -19,7 +19,7 @@ export function createCommands({ state, finishes, limit = 100 }) {
   const canUndo = () => undoStack.length > 0;
   const canRedo = () => redoStack.length > 0;
   const notify = () => emit('history', { canUndo: canUndo(), canRedo: canRedo() });
-  const snapshotOf = ({ id, type, gx, gz, rot, color, parent, slot }) => ({ id, type, gx, gz, rot, color, parent, slot });
+  const snapshotOf = ({ id, type, gx, gz, rot, color, parent, slot, wall, col, row }) => ({ id, type, gx, gz, rot, color, parent, slot, wall, col, row });
 
   // ----- primitive operations: mutate, emit, but never touch history -----
   function opAdd(data) {
@@ -39,6 +39,14 @@ export function createCommands({ state, finishes, limit = 100 }) {
     if (!record) return null;
     const prev = { gx: record.gx, gz: record.gz, rot: record.rot };
     if (!state.transform(id, next)) return null;
+    emit('transform', record);
+    return prev;
+  }
+  function opMount(id, wall, col, row) {
+    const record = state.get(id);
+    if (!record) return null;
+    const prev = { wall: record.wall, col: record.col, row: record.row };
+    if (!state.mount(id, wall, col, row)) return null;
     emit('transform', record);
     return prev;
   }
@@ -112,6 +120,15 @@ export function createCommands({ state, finishes, limit = 100 }) {
     push({ undo: () => opPlace(id, prev.parent, prev.slot), redo: () => opPlace(id, parent, slot) });
     return true;
   }
+  /** Moves a wall item to another spot on a wall. */
+  function mount(id, wall, col, row) {
+    const record = state.get(id);
+    if (!record || !record.wall || (record.wall === wall && record.col === col && record.row === row)) return false;
+    const prev = opMount(id, wall, col, row);
+    if (!prev) return false;
+    push({ undo: () => opMount(id, prev.wall, prev.col, prev.row), redo: () => opMount(id, wall, col, row) });
+    return true;
+  }
   function rotate(id) {
     const record = state.get(id);
     if (!record) return false;
@@ -177,5 +194,5 @@ export function createCommands({ state, finishes, limit = 100 }) {
     return () => listeners.delete(fn);
   }
 
-  return { add, remove, move, place, rotate, recolor, setFinish, clear, replaceRoom, undo, redo, canUndo, canRedo, clearHistory, subscribe };
+  return { add, remove, move, place, mount, rotate, recolor, setFinish, clear, replaceRoom, undo, redo, canUndo, canRedo, clearHistory, subscribe };
 }

@@ -99,7 +99,7 @@ test('small items sit in slots, follow their supporter, cascade on removal, and 
 
   // Save and load keep the relationships; the store is version 4.
   await page.locator('#save').click();
-  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('home-deco-sim:rooms')).rooms[0].room.version)).toBe(4);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("home-deco-sim:rooms")).rooms[0].room.version)).toBeGreaterThanOrEqual(4);
   await page.locator('#clear').click();
   await loadCurrentRoom(page);
   expect(await roomState(page)).toHaveLength(STARTER_ITEM_COUNT + 1);

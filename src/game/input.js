@@ -48,6 +48,12 @@ export function createInput({ canvas, camera, pickables, idOf }, handlers) {
     }
     return null;
   }
+  /** Nearest hit among `objects` and their descendants: { object, point } or null. */
+  function hitFirst(ev, objects) {
+    aim(ev);
+    const hits = raycaster.intersectObjects(objects, true);
+    return hits[0] ? { object: hits[0].object, point: hits[0].point } : null;
+  }
   function isTyping(target) {
     return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
   }
@@ -87,5 +93,5 @@ export function createInput({ canvas, camera, pickables, idOf }, handlers) {
     if (action) handlers.key(action, ev);
   });
 
-  return { floorHit, hitAmong, activePointers: () => touchPointers.size };
+  return { floorHit, hitAmong, hitFirst, activePointers: () => touchPointers.size };
 }

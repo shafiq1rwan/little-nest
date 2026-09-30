@@ -33,7 +33,7 @@ The user's latest explicit instructions take precedence over these guidelines. T
 - Put new constants in src/config and new preset layouts in src/data rather than inline in main.js.
 - Placement rules, room state, and the saved-room schema live in src/game and src/persistence. Keep those modules free of Three.js and DOM so tests/unit can run them in Node. Change saved data only by adding a version and a migration in schema.js.
 - Put new plant models in src/plants.js and other furniture in src/props.js until the catalog split is implemented.
-- Keep catalog keys stable: they are stored in saved rooms. Add migrations before renaming or removing keys. Surface slot indexes are stored too: append new slots rather than reordering existing ones.
+- Keep catalog keys stable: they are stored in saved rooms. Add migrations before renaming or removing keys. Surface slot indexes are stored too: append new slots rather than reordering existing ones. Wall fixtures (windows, lights) are declared in room.js; changing them changes which wall cells are blocked, so check saved rooms still load.
 - Keep localStorage keys home-deco-sim:room (legacy single save, imported once) and home-deco-sim:rooms (gallery) for compatibility. The brand name is different intentionally.
 - Validate imported/saved room data before replacing the current scene.
 - Keep one source of truth for committed placement state; derive occupancy and mesh transforms from it. Mutate the room only through src/game/commands.js so every change is undoable; add a command there rather than calling state directly from the HUD or input.

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { PLANT_CATALOG } from './plants.js';
 import { sharedMaterial, ownMaterial, recolorModel } from './scene/geometry.js';
+import { artTexture } from './room.js';
 
 const C = { cream: 0xf3e4d2, wood: 0xb87946, dark: 0x694b35, sage: 0x81936a, green: 0x4d7639, pot: 0xeee0ca, black: 0x393932, brass: 0xbb9451 };
 const material = (color) => sharedMaterial(color, .85);
@@ -116,6 +117,41 @@ const SMALL_CATALOG = {
   }},
 };
 
+// Wall-mounted decorations. Origin at the bottom-centre of the back face, extending +z into the room.
+// `wall: { w, h }` is the footprint in wall columns (1 unit) and rows (0.5 unit).
+function framedPrint(width, height, botanical) {
+  const g = new THREE.Group();
+  const frame = box(width + .16, height + .16, .08, C.wood, 0, 0, 0, .01); frame.position.y = height / 2 + .08; frame.position.z = .04; frame.userData.recolor = true; g.add(frame);
+  const art = new THREE.Mesh(new THREE.BoxGeometry(width, height, .02), new THREE.MeshStandardMaterial({ map: artTexture(botanical), roughness: 1 }));
+  art.position.set(0, height / 2 + .08, .085); art.castShadow = art.receiveShadow = true; art.userData.ownedMaterial = art.material; g.add(art);
+  return g;
+}
+const WALL_CATALOG = {
+  worldMap: { label: 'World map', category: 'wall', layer: 'wall', tags: ['art', 'picture', 'poster'], w: 2, d: 1, wall: { w: 2, h: 3 }, defaultColor: C.wood, build: () => framedPrint(1.55, 1.2, false) },
+  botanicalPrint: { label: 'Botanical print', category: 'wall', layer: 'wall', tags: ['art', 'picture', 'plant'], w: 2, d: 1, wall: { w: 2, h: 3 }, defaultColor: C.wood, build: () => framedPrint(1.05, 1.3, true) },
+  wallShelf: { label: 'Wall shelf', category: 'wall', layer: 'wall', tags: ['shelf', 'storage'], w: 2, d: 1, wall: { w: 2, h: 1 }, defaultColor: C.wood,
+    surface: { y: .42, slots: [{ x: -.5, z: .17 }, { x: .5, z: .17 }] }, build() {
+    const g = new THREE.Group();
+    const board = box(1.9, .05, .32, C.wood, 0, .37, .16, .008); board.userData.recolor = true; g.add(board);
+    for (const x of [-.7, .7]) { g.add(box(.05, .3, .05, C.dark, x, .07, .03, .004), box(.05, .05, .26, C.dark, x, .32, .14, .004)); }
+    return g;
+  }},
+  mirror: { label: 'Round mirror', category: 'wall', layer: 'wall', tags: ['glass', 'reflection'], w: 1, d: 1, wall: { w: 1, h: 2 }, defaultColor: C.brass, build() {
+    const g = new THREE.Group();
+    const ring = mesh(new THREE.TorusGeometry(.4, .035, 8, 32), C.brass, 0, .5, .05); ring.userData.recolor = true; g.add(ring);
+    const glass = mesh(new THREE.CylinderGeometry(.38, .38, .02, 32), 0xd8e6e4, 0, .5, .04); glass.rotation.x = Math.PI / 2;
+    glass.material = material(0xd8e6e4).clone(); glass.material.roughness = .15; glass.material.metalness = .3; glass.userData.ownedMaterial = glass.material; g.add(glass);
+    return g;
+  }},
+  clock: { label: 'Wall clock', category: 'wall', layer: 'wall', tags: ['time'], w: 1, d: 1, wall: { w: 1, h: 1 }, defaultColor: C.dark, build() {
+    const g = new THREE.Group();
+    const rim = mesh(new THREE.CylinderGeometry(.23, .23, .05, 32), C.dark, 0, .25, .03); rim.rotation.x = Math.PI / 2; rim.userData.recolor = true; g.add(rim);
+    const face = mesh(new THREE.CylinderGeometry(.2, .2, .01, 32), C.cream, 0, .25, .06); face.rotation.x = Math.PI / 2; g.add(face);
+    g.add(box(.02, .12, .01, C.black, 0, .25, .07, .002), box(.09, .02, .01, C.black, .04, .24, .07, .002));
+    return g;
+  }},
+};
+
 export const CATALOG = {
   sofa: { label: 'Sofa', category: 'seating', w: 3, d: 1, build: () => seating(true) },
   armchair: { label: 'Armchair', category: 'seating', w: 1, d: 1, build: () => seating(false) },
@@ -182,6 +218,7 @@ export const CATALOG = {
   }},
   ...PLANT_CATALOG,
   ...SMALL_CATALOG,
+  ...WALL_CATALOG,
 };
 
 export const recolor = recolorModel;

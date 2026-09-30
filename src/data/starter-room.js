@@ -20,4 +20,7 @@ export const STARTER_ROOM = [
   { type: 'snakePlant', gx: 7, gz: 5, rot: 0 },
   { type: 'plant', gx: 6, gz: 6, rot: 0 },
   { type: 'cactus', gx: 1, gz: 7, rot: 0 },
+  // Wall decorations: wall is 'back' or 'left'; col counts along the wall, row counts half-units up.
+  { type: 'worldMap', wall: 'back', col: 5, row: 3 },
+  { type: 'botanicalPrint', wall: 'left', col: 5, row: 4 },
 ];

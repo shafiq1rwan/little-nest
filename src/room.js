@@ -46,7 +46,7 @@ function viewTexture() {
     }
   }, 512);
 }
-function artTexture(botanical) {
+export function artTexture(botanical) {
   return texture((c, s) => {
     c.fillStyle = botanical ? '#f0dfc5' : '#eed1a0'; c.fillRect(0, 0, s, s);
     if (botanical) {
@@ -76,8 +76,9 @@ export function createRoom(scene, size, wallHeight) {
   block(size,.15,size,floorMat,0,-.075,0,scene);
   block(size,.15,.15,trim,0,-.05,half+.07,scene);
   block(.15,.15,size,trim,half+.07,-.05,0,scene);
-  block(size,wallHeight,.2,wallMat,0,wallHeight/2,-half-.1);
-  block(.2,wallHeight,size+.2,wallMat,-half-.1,wallHeight/2,-.1);
+  // The two wall panels double as raycast targets for wall-mounted decorations.
+  const backPanel = block(size,wallHeight,.2,wallMat,0,wallHeight/2,-half-.1); backPanel.userData.wall = 'back';
+  const leftPanel = block(.2,wallHeight,size+.2,wallMat,-half-.1,wallHeight/2,-.1); leftPanel.userData.wall = 'left';
   block(size+.25,.1,.3,trim,0,wallHeight,-half-.1);
   block(.3,.1,size+.25,trim,-half-.1,wallHeight,-.1);
   block(size,.16,.09,wood,0,.09,-half+.06);
@@ -96,16 +97,10 @@ export function createRoom(scene, size, wallHeight) {
   }
   windowAt(-1.5,-half+.05,0,4.7);
   windowAt(-half+.05,-1.9,Math.PI/2,3.9);
-  function painting(x,z,r,w,h,botanical) {
-    const g = new THREE.Group(); g.position.set(x,2.55,z); g.rotation.y=r; walls.add(g);
-    block(w+.16,h+.16,.1,wood,0,0,0,g);
-    block(w,h,.025,new THREE.MeshStandardMaterial({ map:artTexture(botanical), roughness:1 }),0,0,.07,g);
-  }
-  painting(2.1,-half+.06,0,1.25,1.65,true);
-  painting(-half+.06,1.5,Math.PI/2,1.8,1.3,false);
+  // The framed prints are catalog wall items now (see props.js) so they can be moved and swapped.
   // A short string of warm bulbs above the cabinet.
   const wireMat = new THREE.MeshStandardMaterial({ color: 0x5d4938 });
-  const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(half-1.1,3.35,-half+.18),new THREE.Vector3(half-.65,2.94,-half+.18),new THREE.Vector3(half-.2,3.35,-half+.18)]);
+  const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(half-1.1,3.6,-half+.18),new THREE.Vector3(half-.65,3.25,-half+.18),new THREE.Vector3(half-.2,3.6,-half+.18)]);
   walls.add(new THREE.Mesh(new THREE.TubeGeometry(curve,24,.008,5,false),wireMat));
   const bulbMat = new THREE.MeshStandardMaterial({ color:0xffe2a4,emissive:0xffc76b,emissiveIntensity:2 });
   for (const t of [.12,.4,.7,.92]) {
@@ -115,5 +110,11 @@ export function createRoom(scene, size, wallHeight) {
   ground.rotation.x=-Math.PI/2; ground.position.y=-.34; scene.add(ground);
   const groundShadow = new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.ShadowMaterial({opacity:.18}));
   groundShadow.rotation.x=-Math.PI/2;groundShadow.position.y=-.335;groundShadow.receiveShadow=true;scene.add(groundShadow);
-  return { floorMat, wallMat, walls };
+  // Wall areas covered by fixtures, in world units along each wall, so decorations cannot overlap them.
+  const fixtures = [
+    { wall: 'back', from: -3.85, to: .85, bottom: 1.05, top: 3.4 },   // back window with sill and blinds
+    { wall: 'left', from: -3.85, to: .05, bottom: 1.05, top: 3.4 },   // side window
+    { wall: 'back', from: 2.9, to: 3.8, bottom: 3.2, top: 3.65 },     // string of bulbs
+  ];
+  return { floorMat, wallMat, walls, wallPanels: { back: backPanel, left: leftPanel }, fixtures };
 }

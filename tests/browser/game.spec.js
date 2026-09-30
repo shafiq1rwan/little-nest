@@ -28,7 +28,7 @@ test('desktop decorating flow: rotate, recolor, save/load, search, finishes, cam
   expect(await roomState(page)).toEqual(saved);
 
   await page.locator('#search').fill('plant');
-  expect(await page.locator('.catalog-card:visible').count()).toBe(6);   // five plants plus the tabletop succulent
+  expect(await page.locator('.catalog-card:visible').count()).toBe(7);   // five plants, the tabletop succulent, and the botanical print
   await page.locator('#search').fill('rug');
   expect(await page.locator('.catalog-card:visible').count()).toBe(1);
   await page.locator('#search').fill('');
@@ -98,7 +98,7 @@ test('saves carry stable ids and a legacy version 2 save is imported into the ga
   const store = await galleryStore(page);
   expect(store.rooms).toHaveLength(1);
   const saved = store.rooms[0].room;
-  expect(saved.version).toBe(4);
+  expect(saved.version).toBe(5);
   expect(saved.items).toHaveLength(STARTER_ITEM_COUNT);
   expect(new Set(saved.items.map((i) => i.id)).size).toBe(STARTER_ITEM_COUNT);
   const liveIds = await page.evaluate(() => window.__sim.items.map((i) => i.id).sort());

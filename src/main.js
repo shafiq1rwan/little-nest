@@ -27,7 +27,7 @@ const canvas = $('scene');
 const { renderer, scene, camera, controls, resetView, zoomBy, resize } = createScene({ canvas, camera: CAMERA, render: RENDER, backdrop: BACKDROP });
 
 // ---------- room ----------
-const { floorMat, wallMat, walls } = createRoom(scene, ROOM, WALL_H);
+const { floorMat, wallMat, walls, wallPanels, fixtures } = createRoom(scene, ROOM, WALL_H);
 
 const grid = new THREE.GridHelper(ROOM, ROOM, 0xffffff, 0xffffff);
 grid.material.opacity = 0.12;
@@ -38,8 +38,9 @@ scene.add(grid);
 
 // ---------- placement state ----------
 // Committed state lives in `state` as serializable records; meshes are looked up by record id.
-const placement = createPlacement({ catalog: CATALOG, room: ROOM, cell: CELL });
-const state = createRoomState({ placement });
+const placement = createPlacement({ catalog: CATALOG, room: ROOM, cell: CELL, wallRows: WALL_H / 0.5, wallRow: 0.5 });
+const wallBlocked = placement.blockedWallCells(fixtures);   // windows and lights keep decorations off those wall cells
+const state = createRoomState({ placement, wallBlocked });
 const finishes = { wall: wallMat.color.getHex(), floor: floorMat.color.getHex() };
 const commands = createCommands({ state, finishes });   // every room mutation goes through here so it can be undone
 const meshes = new Map();             // record id -> THREE.Group
@@ -77,11 +78,32 @@ function applyTransform(record) {
     if (mesh.parent !== parentMesh) parentMesh.add(mesh);
     const local = placement.slotLocal(parentRecord.type, record.slot);
     mesh.position.set(local.x, local.y, local.z);
+  } else if (record.wall) {
+    if (mesh.parent !== scene) scene.add(mesh);
+    const w = placement.wallWorld(record.type, record.wall, record.col, record.row);
+    mesh.position.set(w.x, w.y, w.z);
+    mesh.rotation.y = w.rotY;
+    return;
   } else {
     if (mesh.parent !== scene) scene.add(mesh);
     mesh.position.copy(worldPos(record.type, record.gx, record.gz, record.rot));
   }
   mesh.rotation.y = (record.rot * Math.PI) / 2;
+}
+/** Nearest wall spot under the pointer for a wall item: { wall, col, row, free } or null. */
+function wallUnder(ev, type, ignoreId = null) {
+  // Furniture in front of the wall blocks the spot, so nothing can be hung where it cannot be seen.
+  const others = [...meshes.entries()].filter(([id]) => id !== ignoreId).map(([, m]) => m);
+  const hit = input.hitFirst(ev, [wallPanels.back, wallPanels.left, ...others]);
+  const wall = hit?.object.userData.wall;
+  if (!wall) return null;
+  const { col, row } = placement.wallSnap(type, wall, hit.point);
+  return { wall, col, row, free: state.canMount(type, wall, col, row, ignoreId) };
+}
+function placeWallGhost(target) {
+  const w = placement.wallWorld(selectedType, target.wall, target.col, target.row);
+  ghost.position.set(w.x, w.y, w.z);
+  ghost.rotation.y = w.rotY;
 }
 /** Meshes of floor items that offer surface slots. */
 function supporterMeshes() {
@@ -134,8 +156,8 @@ commands.subscribe((kind, p) => {
     $('redo-tool').disabled = !p.canRedo;
   }
 });
-function addItem(type, gx, gz, rot, color = null, id = null, parent = null, slot = null) {
-  return commands.add({ type, gx, gz, rot, color, id, parent, slot });
+function addItem(type, gx, gz, rot, color = null, id = null, parent = null, slot = null, wall = null, col = null, row = null) {
+  return commands.add({ type, gx, gz, rot, color, id, parent, slot, wall, col, row });
 }
 function removeItem(record) {
   commands.remove(record.id);
@@ -163,7 +185,8 @@ function startPlacing(type) {
   tint(ghost, GHOST_OK);
   ghost.visible = false;
   scene.add(ghost);
-  $('mode-label').textContent = 'Place ' + CATALOG[type].label.toLowerCase() + (placement.isSurfaceItem(type) ? ' on a table or shelf' : '') + ' · Esc to cancel';
+  const where = placement.isSurfaceItem(type) ? ' on a table or shelf' : placement.isWallItem(type) ? ' on a wall' : '';
+  $('mode-label').textContent = 'Place ' + CATALOG[type].label.toLowerCase() + where + ' · Esc to cancel';
   canvas.style.cursor = 'crosshair';
   updateSelection();
   if (hud.isCompact()) hud.setExpanded(false);
@@ -181,6 +204,7 @@ function rotateSelected() {
   if (dragging) return;
   if (ghost) { ghost.userData.rot = (ghost.userData.rot + 1) % 4; ghost.rotation.y = ghost.userData.rot * Math.PI / 2; return; }
   if (!selected) { toast('Select furniture to rotate it.'); return; }
+  if (selected.wall) { toast('Wall decorations already face the room.'); return; }
   if (!commands.rotate(selected.id)) toast('There needs to be more space to rotate this item.');
 }
 
@@ -190,6 +214,7 @@ function finishDrag(showControls = true, allReleased = input.activePointers() ==
     // One history entry per completed drag. A blocked drop leaves the record untouched; the mesh
     // snaps back to the committed position either way.
     if (dragTarget && dragging.parent) commands.place(dragging.id, dragTarget.parent, dragTarget.slot);
+    else if (dragTarget && dragging.wall) commands.mount(dragging.id, dragTarget.wall, dragTarget.col, dragTarget.row);
     else if (dragTarget) commands.move(dragging.id, dragTarget.gx, dragTarget.gz);
     applyTransform(dragging);
     tint(meshOf(dragging), null);
@@ -208,7 +233,22 @@ const input = createInput({
 }, {
   move(hit, ev) {
     if (photoMode) return;
-    if (ghost && placement.isSurfaceItem(selectedType)) {
+    if (ghost && placement.isWallItem(selectedType)) {
+      ghostTarget = wallUnder(ev, selectedType);
+      ghost.visible = !!ghostTarget;
+      if (!ghostTarget) return;
+      placeWallGhost(ghostTarget);
+      tint(ghost, ghostTarget.free ? GHOST_OK : GHOST_BLOCKED);
+    } else if (dragging && dragging.wall) {
+      const target = wallUnder(ev, dragging.type, dragging.id);
+      if (!target) return;
+      const w = placement.wallWorld(dragging.type, target.wall, target.col, target.row);
+      const mesh = meshOf(dragging);
+      mesh.position.set(w.x, w.y, w.z);
+      mesh.rotation.y = w.rotY;
+      dragTarget = { wall: target.wall, col: target.col, row: target.row };
+      tint(mesh, target.free ? null : GHOST_BLOCKED);
+    } else if (ghost && placement.isSurfaceItem(selectedType)) {
       // Small items preview on the nearest free slot of the table or shelf under the pointer.
       ghostTarget = surfaceUnder(ev, selectedType);
       ghost.visible = !!ghostTarget;
@@ -241,6 +281,13 @@ const input = createInput({
   },
   down({ hit, pick, shiftKey }) {
     if (photoMode) return;
+    if (ghost && placement.isWallItem(selectedType)) {
+      if (!ghostTarget) { toast('Wall decorations go on the two walls. Point at one to place it.'); return; }
+      if (!ghostTarget.free) { toast('That part of the wall is taken. Try a clear spot.'); return; }
+      const placed = addItem(selectedType, null, null, 0, null, null, null, null, ghostTarget.wall, ghostTarget.col, ghostTarget.row);
+      if (placed && !shiftKey) { cancelPlacing(); setSelected(placed); }
+      return;
+    }
     if (ghost && placement.isSurfaceItem(selectedType)) {
       if (!ghostTarget) { toast('Small items go on tables and shelves. Point at one to place it.'); return; }
       if (!ghostTarget.free) { toast('That spot is taken. Try another part of the surface.'); return; }
@@ -309,7 +356,7 @@ function updateSelection() {
     item: selected,
     def,
     thumbnail: selected && thumbnails[selected.type],
-    size: selected && !selected.parent ? footprint(selected.type, selected.rot) : null,
+    sizeText: !selected ? '' : selected.parent ? 'Sits on tables and shelves' : selected.wall ? 'On the wall' : (({ w, d }) => w + ' × ' + d + ' tiles')(footprint(selected.type, selected.rot)),
     canRecolor,
     colors: ITEM_COLORS,
     activeColor: selected && (selected.color ?? def.defaultColor ?? ITEM_COLORS[0].color),
@@ -347,7 +394,7 @@ $('reset-view').onclick = resetView;
 function settle() { finishDrag(); cancelPlacing(); setSelected(null); }
 function clearRoom() { settle(); commands.clear(); }
 
-const gallery = createGallery({ key: ROOMS_KEY, legacyKey: SAVE_KEY, catalog: CATALOG, placement, maxItems: MAX_SAVED_ITEMS, newId: newItemId });
+const gallery = createGallery({ key: ROOMS_KEY, legacyKey: SAVE_KEY, catalog: CATALOG, placement, maxItems: MAX_SAVED_ITEMS, newId: newItemId, wallBlocked });
 let currentRoom = null;   // { id, name } of the gallery entry the open design belongs to
 function setCurrentRoom(summary) {
   currentRoom = summary ? { id: summary.id, name: summary.name } : null;
@@ -398,7 +445,7 @@ async function importFile(file) {
   let parsed;
   try {
     const text = await file.text();
-    parsed = parseImport(text, { catalog: CATALOG, placement, maxItems: MAX_SAVED_ITEMS, newId: newItemId, fallbackName: file.name.replace(/\.littlenest\.json$|\.json$/i, '') });
+    parsed = parseImport(text, { catalog: CATALOG, placement, maxItems: MAX_SAVED_ITEMS, newId: newItemId, wallBlocked, fallbackName: file.name.replace(/\.littlenest\.json$|\.json$/i, '') });
   } catch { toast('That file is not a Little Nest room. Nothing was changed.'); return; }
   const summary = gallery.save(null, parsed.name, serializeRoom(parsed.room));
   toast(summary ? '"' + summary.name + '" imported. Load it from the list.' : 'Your browser could not store the imported room.');
@@ -486,7 +533,9 @@ const starterByKey = new Map();
 for (const it of STARTER_ROOM) {
   const item = it.on
     ? addItem(it.type, null, null, it.rot, it.color ?? null, null, starterByKey.get(it.on)?.id, it.slot)
-    : addItem(it.type, it.gx, it.gz, it.rot, it.color ?? null);
+    : it.wall
+      ? addItem(it.type, null, null, 0, it.color ?? null, null, null, null, it.wall, it.col, it.row)
+      : addItem(it.type, it.gx, it.gz, it.rot, it.color ?? null);
   if (it.key && item) starterByKey.set(it.key, item);
   if (it.select) starterSelection = item;
 }
@@ -509,7 +558,7 @@ window.__sim = {
   state, placement, commands, finishes, gallery, occupancy: state.occupancy, bgm: music.audio, scene, camera, controls, grid, walls, wallMat, floorMat,
   get currentRoom() { return currentRoom; },
   get photoMode() { return photoMode; },
-  pointerToFloor: input.floorHit, snap, isFree, worldPos, meshOf, addItem, setSelected, rotateSelected, slotWorld, surfaceUnder, supporterMeshes, hitAmong: input.hitAmong,
+  pointerToFloor: input.floorHit, snap, isFree, worldPos, meshOf, addItem, setSelected, rotateSelected, slotWorld, surfaceUnder, supporterMeshes, hitAmong: input.hitAmong, wallPanels, wallBlocked,
   measure: measureModel,
   get musicOn() { return music.isOn(); },
   get items() { return state.items.map(withMesh); },

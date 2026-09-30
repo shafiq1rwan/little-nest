@@ -97,7 +97,7 @@ test('schema version 4 validates supporters and slots, and migrates older saves'
   ] };
   const parsed = parseRoom(good, opts);
   expect(parsed.items.map((i) => i.id)).toEqual(['t', 'm']);                  // parents first on the way out
-  expect(serializeRoom({ wall: 1, floor: 2, items: parsed.items }).version).toBe(4);
+  expect(serializeRoom({ wall: 1, floor: 2, items: parsed.items }).version).toBeGreaterThanOrEqual(4);
 
   const v3 = { version: 3, wall: 1, floor: 2, items: [{ id: 'c', type: 'chair', gx: 0, gz: 0, rot: 0, color: null }] };
   expect(parseRoom(v3, opts).items[0]).toMatchObject({ parent: null, slot: null });

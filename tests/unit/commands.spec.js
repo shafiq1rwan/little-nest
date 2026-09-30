@@ -91,7 +91,7 @@ test('finishes, clear, and replaceRoom are single undoable entries', () => {
   expect(state.occupancy.size).toBe(3);
 
   commands.replaceRoom({ wall: 1, floor: 2, items: [{ id: 'p', type: 'plant', gx: 7, gz: 7, rot: 0, color: 5 }] });
-  expect(state.serialize()).toEqual([{ id: 'p', type: 'plant', gx: 7, gz: 7, rot: 0, color: 5, parent: null, slot: null }]);
+  expect(state.serialize()).toEqual([{ id: 'p', type: 'plant', gx: 7, gz: 7, rot: 0, color: 5, parent: null, slot: null, wall: null, col: null, row: null }]);
   expect(finishes).toEqual({ wall: 1, floor: 2 });
   commands.undo();
   expect(state.items.map((i) => i.type)).toEqual(['sofa', 'rug']);

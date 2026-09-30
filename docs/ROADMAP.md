@@ -8,7 +8,7 @@ Keep the Little Nest style guide and existing saves intact through every phase. 
 | --- | --- | --- | --- |
 | 0 | Playable visual baseline | Implemented; documented | None |
 | 1 | Structure and portable development | Complete 30 September 2026 | Phase 0 |
-| 2 | Safe creative workflow | Planned — recommended next | Phase 1 |
+| 2 | Safe creative workflow | In progress: undo/redo done 30 September 2026 | Phase 1 |
 | 3 | Richer decorating | Planned | Phase 2 |
 | 4 | More rooms and furniture collections | Planned | Phase 3 |
 | 5 | Lighting and atmosphere | Planned | Phase 4 |
@@ -55,7 +55,7 @@ Goal: let players experiment, keep several designs, and move their creations bet
 
 Deliver:
 
-- Undo/redo for placement, move, rotate, recolor, finish changes, deletion, and clear.
+- Done (30 September 2026): undo/redo for placement, move, rotate, recolor, finish changes, deletion, clear, and load, with toolbar buttons and Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y.
 - Named room saves with a gallery, duplicate, rename, and explicit delete actions.
 - JSON export/import with schema validation and version migrations.
 - Photo mode: hide the HUD, choose a view, export an image, then restore normal controls.

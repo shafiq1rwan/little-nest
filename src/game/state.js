@@ -70,10 +70,17 @@ export function createRoomState({ placement }) {
   function rotate(id) {
     const record = byId.get(id);
     if (!record) return false;
-    const next = (record.rot + 1) % 4;
-    if (!canPlace(record.type, record.gx, record.gz, next, id)) return false;
+    return transform(id, { rot: (record.rot + 1) % 4 });
+  }
+
+  /** Sets any of gx, gz, rot at once if the result fits. Returns true on success. */
+  function transform(id, { gx, gz, rot }) {
+    const record = byId.get(id);
+    if (!record) return false;
+    const next = { gx: gx ?? record.gx, gz: gz ?? record.gz, rot: rot ?? record.rot };
+    if (!canPlace(record.type, next.gx, next.gz, next.rot, id)) return false;
     occupy(record, false);
-    record.rot = next;
+    Object.assign(record, next);
     occupy(record, true);
     return true;
   }
@@ -96,5 +103,5 @@ export function createRoomState({ placement }) {
     return items.map(({ id, type, gx, gz, rot, color }) => ({ id, type, gx, gz, rot, color }));
   }
 
-  return { items, occupancy, get, canPlace, add, remove, move, rotate, setColor, clear, serialize, cellKey };
+  return { items, occupancy, get, canPlace, add, remove, move, rotate, transform, setColor, clear, serialize, cellKey };
 }

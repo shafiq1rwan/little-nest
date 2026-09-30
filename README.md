@@ -33,7 +33,7 @@ Keep package-lock.json when moving computers. The runtime itself is browser-base
 ## Decorating
 
 - Browse furniture by category or search. Choose an item and click a free tile to place it; hold Shift to place several.
-- Drag furniture to move it. R rotates; Delete removes; Escape cancels.
+- Drag furniture to move it. R rotates; Delete removes; Escape cancels. Undo and redo with the toolbar arrows or Ctrl+Z and Ctrl+Shift+Z.
 - Change colors on upholstery, rugs, and the marked parts of plant pots.
 - Use Walls and Floor tabs to choose finishes.
 - Toggle grid/walls with the left toolbar; use the camera buttons to zoom or reset.
@@ -63,7 +63,7 @@ Icon artwork: [little-nest-icon.png](public/icons/little-nest-icon.png). Its exp
 | src/config/game.js | Room size, camera limits, renderer, music, and storage constants |
 | src/config/theme.js | Scene palette, selectable wall/floor finishes, item colors |
 | src/data/starter-room.js | The furnished living room shown on first load |
-| src/game/placement.js, state.js | Pure placement rules and committed item records with stable ids |
+| src/game/placement.js, state.js, commands.js | Pure placement rules, committed item records with stable ids, and undoable commands |
 | src/persistence/schema.js, storage.js | Saved-room format, validation, migrations, and guarded localStorage |
 | tests/unit | Node unit tests for placement, state, and schema |
 | tests/browser | Playwright browser checks (`npm test` runs unit and browser projects) |

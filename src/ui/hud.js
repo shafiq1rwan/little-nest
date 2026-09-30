@@ -76,18 +76,21 @@ export function bindTabs({ buttons, onChange }) {
   });
 }
 
-/** Wall and floor finish swatches bound to a material. Returns a sync function that marks the active swatch. */
+/**
+ * Wall and floor finish swatches. Each group gives `current()` (the active hex) and `onPick(color)`.
+ * Returns a sync function that marks the active swatch; call it whenever a finish changes.
+ */
 export function buildFinishSwatches(groups) {
   function sync() {
-    for (const { el, material } of groups) {
+    for (const { el, current } of groups) {
       el.querySelectorAll('button').forEach((b) => {
-        const active = Number(b.dataset.color) === material.color.getHex();
+        const active = Number(b.dataset.color) === current();
         b.classList.toggle('active', active);
         b.setAttribute('aria-pressed', String(active));
       });
     }
   }
-  for (const { el, finishes, material } of groups) {
+  for (const { el, finishes, onPick } of groups) {
     finishes.forEach(({ name, color }) => {
       const b = document.createElement('button');
       b.className = 'swatch';
@@ -95,7 +98,7 @@ export function buildFinishSwatches(groups) {
       b.style.backgroundColor = hex(color);
       b.title = name;
       b.setAttribute('aria-label', name);
-      b.onclick = () => { material.color.setHex(color); sync(); };
+      b.onclick = () => onPick(color);
       el.append(b);
     });
   }

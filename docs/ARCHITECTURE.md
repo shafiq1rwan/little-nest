@@ -23,6 +23,7 @@ It is not yet a fully separated foundation for a larger game. src/main.js is app
 | src/data/starter-room.js | STARTER_ROOM item list |
 | src/game/placement.js | Pure footprint, bounds, occupancy, snap, and world-position rules (no Three.js, no DOM) |
 | src/game/state.js | Committed item records with stable ids; occupancy derived from them (no Three.js, no DOM) |
+| src/game/commands.js | Undoable mutations over state and finishes; emits add/remove/transform/color/finish/history events; capped history (no Three.js, no DOM) |
 | src/persistence/schema.js | Saved-room format, validation, and version migrations |
 | src/persistence/storage.js | Guarded localStorage adapter |
 | tests/unit | Node unit tests for placement, state, and schema |
@@ -66,7 +67,7 @@ There is no backend, account system, cloud sync, undo history, or multi-room sav
 
 ## Proposed structure after Phase 1
 
-Introduce these incrementally, while keeping a working game after every extraction. Everything below exists except game/commands.js, which Phase 2 adds with undo history:
+Introduce these incrementally, while keeping a working game after every extraction. Everything below exists:
 
     src/
       main.js                    composition and startup only
@@ -122,9 +123,9 @@ Use userData.recolor only on intended changeable parts. Recoloring pots must not
 
 Committed items are records { id, type, gx, gz, rot, color } owned by src/game/state.js. Meshes are kept in a Map keyed by id in main.js and every mesh carries userData.itemId. Ids are short random strings, assigned on add or preserved from a save. A transient drag target is held in main.js while dragging. rot is an integer 0–3; each step is 90 degrees.
 
-Ordinary furniture cannot overlap occupied cells or exceed room bounds. Floor-layer items can overlap ordinary furniture. Moves and rotations go through state.move and state.rotate, which ignore the item's own cells and refuse invalid results without touching occupancy. Finish a move once, even if capture is lost or an interaction is canceled.
+Ordinary furniture cannot overlap occupied cells or exceed room bounds. Floor-layer items can overlap ordinary furniture. All mutations from the HUD and input go through src/game/commands.js (add, remove, move, rotate, recolor, setFinish, clear, replaceRoom), which validates through state, refuses invalid results without touching occupancy, and records one history entry per command. A completed drag is one move command; pointer moves only preview. main.js mirrors command events onto meshes and materials, so undo and redo need no scene-specific code. The starter layout is built through commands and then the history is cleared.
 
-Item ids are the handle future undo history, export, parent/surface relationships, and commands should use.
+Item ids are the handle undo history uses; a removed item comes back with the same id on undo. Export and parent/surface relationships should use them too.
 
 ### Save contract
 

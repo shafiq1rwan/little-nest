@@ -76,6 +76,7 @@ Run `npm run test:install` once per machine, then `npm test`. Playwright starts 
 | Place on an occupied tile | No overlapping furniture is committed |
 | Drag onto a free / blocked tile | Valid move commits; blocked move restores old location |
 | Rotate near another item or boundary | Valid rotation commits; invalid rotation is rejected |
+| Undo and redo after each kind of change | Room, occupancy, materials, swatches, and selection all return to the earlier state; a drag is one step |
 | Change upholstery or plant pot | Only marked parts change color |
 | Save, modify, then Load | Saved layout, rotation, finishes, and colors return |
 | Invalid save data | Current room remains intact and feedback appears |
@@ -97,6 +98,7 @@ Current browser checks previously passed placement, saving, plants, HUD/touch in
 
 ## Current handoff
 
+- 30 September 2026, Phase 2 increment 1: added src/game/commands.js (undoable add, remove, move, rotate, recolor, setFinish, clear, replaceRoom; history capped at 100; events for the scene to mirror). main.js now performs every mutation through commands and rebuilds meshes from events. Undo and redo buttons sit in the tool rail; Ctrl+Z, Ctrl+Shift+Z and Ctrl+Y work; Ctrl+R no longer rotates. Recolor undo restores the original shared material. Load is one undoable entry. Suite: 31 passed (17 unit, 14 browser). Next: named room saves with a gallery, then JSON export/import, then photo mode.
 - 30 September 2026, Phase 1 steps 6–8 (Phase 1 complete): added src/scene/create-scene.js, geometry.js (shared material cache, owned-material rule, recolor, tint, dispose), thumbnails.js and src/ui/icons.js; removed src/ui.js. The floor-lamp shade clone is now owned and disposed. style.css became src/styles/{index,tokens,components,layout,responsive}.css with named tokens (--ink, --muted, --card, --drawer-button, --hover, --backdrop, --shadow, font stacks); the near-duplicate #8b715e was unified to --muted #8c725f and the obsolete .brand svg rules were dropped. Fonts: public/fonts bundles Gelasio and Source Sans 3 (OFL, licences included) as fallbacks behind Georgia and Segoe UI. Runtime: engines node >=20.19 and .nvmrc 23. main.js is about 309 lines. Suite: 24 passed; desktop and phone screenshots were compared to the baselines. Next: Phase 2, starting with a commands layer and undo/redo.
 - 30 September 2026, Phase 1 steps 4–5: added src/game/input.js (pointer/keyboard/touch lifecycle and raycasting), src/ui/hud.js (toast, catalog, filter, tabs, finish swatches, selection card), src/ui/responsive.js (compact drawer and card docking), src/ui/music.js. main.js is now composition at about 375 lines. Catalog cards are built with DOM methods instead of innerHTML. Suite: 24 passed. No gameplay or visual change intended. Next: step 6 (thumbnail/geometry ownership helpers, fix the floor lamp shade clone leak), step 7 (CSS grouping), step 8 (runtime pin and bundled font).
 - 30 September 2026, Phase 1 step 3 and storage: added src/game/placement.js, src/game/state.js, src/persistence/schema.js, src/persistence/storage.js and tests/unit. Items now have stable ids; saves are version 3 and version 2 saves migrate on load (browser test covers it). Drag and rotate go through state.move/state.rotate instead of freeing and re-occupying cells. main.js is 463 lines and still owns input and HUD wiring. Suite: 24 passed (11 unit, 13 browser). No gameplay or visual change intended. Next: step 4 (input extraction) and the HUD half of step 5.
@@ -110,7 +112,7 @@ Current browser checks previously passed placement, saving, plants, HUD/touch in
 - Visual identity: cream, sage, peach, warm wood, cozy procedural models.
 - Work completed in this documentation task: structure review, phased plan, persistent coding instructions, style guide, transfer guide, and five current visual baseline screenshots.
 - No architecture refactor or new gameplay phase was implemented in this task.
-- Next recommended work: Phase 2 (commands layer with undo/redo, named saves, export/import, photo mode).
+- Next recommended work: Phase 2 continued (named saves and gallery, export/import, photo mode).
 
 ## Update after future work
 

@@ -36,7 +36,7 @@ The user's latest explicit instructions take precedence over these guidelines. T
 - Keep catalog keys stable: they are stored in saved rooms. Add migrations before renaming or removing keys.
 - Keep localStorage key home-deco-sim:room for compatibility. The brand name is different intentionally.
 - Validate imported/saved room data before replacing the current scene.
-- Keep one source of truth for committed placement state; derive occupancy and mesh transforms from it.
+- Keep one source of truth for committed placement state; derive occupancy and mesh transforms from it. Mutate the room only through src/game/commands.js so every change is undoable; add a command there rather than calling state directly from the HUD or input.
 - Dispose geometry and individually owned materials when removing models. Do not dispose cached materials shared by live objects.
 - Use project-relative asset paths. Do not embed a computer's user directory or Codex cache path in production code, setup, or future portable tests.
 - Preserve package-lock.json. Dependency upgrades are separate, intentional changes.

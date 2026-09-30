@@ -120,6 +120,89 @@ test('saves carry stable ids and a legacy version 2 save still loads', async ({ 
   expect(await page.evaluate(() => window.__sim.items.every((i) => typeof i.id === 'string' && i.id))).toBe(true);
 });
 
+test('undo and redo cover placement, drag, rotate, recolor, finishes, clear, and load', async ({ page }) => {
+  await openGame(page);
+  const undoBtn = page.locator('#undo-tool');
+  const redoBtn = page.locator('#redo-tool');
+  await expect(undoBtn).toBeDisabled();   // the starter room is not undoable
+  await expect(redoBtn).toBeDisabled();
+
+  // Place, then undo with the keyboard and redo with the button.
+  await page.locator('.catalog-card[data-type="plant"]').click();
+  const point = await tilePoint(page, 'plant', 7, 3);
+  await page.mouse.move(point.x, point.y);
+  await page.mouse.click(point.x, point.y);
+  expect(await roomState(page)).toHaveLength(STARTER_ITEM_COUNT + 1);
+  await expect(undoBtn).toBeEnabled();
+  await page.keyboard.press('Control+z');
+  expect(await roomState(page)).toHaveLength(STARTER_ITEM_COUNT);
+  expect(await selectedInfo(page)).toBeNull();   // the undone item was selected; selection clears
+  await expect(redoBtn).toBeEnabled();
+  await redoBtn.click();
+  expect(await roomState(page)).toHaveLength(STARTER_ITEM_COUNT + 1);
+  expect(await page.evaluate(() => window.__sim.items.filter((i) => i.type === 'plant' && i.gx === 7).length)).toBe(1);
+  await page.keyboard.press('Control+z');
+
+  // A completed drag is one entry.
+  const from = await itemPoint(page, 'sofa', 0.65);
+  const to = await tilePoint(page, 'sofa', 1, 1);
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(to.x, to.y, { steps: 8 });
+  await page.mouse.up();
+  const sofaAt = () => page.evaluate(() => { const s = window.__sim.items.find((i) => i.type === 'sofa'); return { gx: s.gx, gz: s.gz, x: s.mesh.position.x }; });
+  expect((await sofaAt()).gx).toBe(1);
+  await page.keyboard.press('Control+z');
+  expect(await sofaAt()).toMatchObject({ gx: 2, gz: 1 });
+  expect((await sofaAt()).x).toBeCloseTo(-0.5, 5);   // the mesh followed the record back
+  expect(await page.evaluate(() => window.__sim.occupancy.has('1,1'))).toBe(false);
+
+  // Rotate and recolor a free-standing item, then undo both and check the mesh material too.
+  await page.evaluate(() => window.__sim.setSelected(window.__sim.items.find((i) => i.type === 'snakePlant')));
+  await page.locator('#rotate-selected').click();
+  await page.getByRole('button', { name: 'Terracotta', exact: true }).click();
+  expect(await selectedInfo(page)).toMatchObject({ rot: 1, color: TERRACOTTA });
+  await page.keyboard.press('Control+z');
+  await page.keyboard.press('Control+z');
+  expect(await selectedInfo(page)).toMatchObject({ rot: 0, color: null });
+  expect(await page.evaluate((c) => { let any = false; window.__sim.selected.mesh.traverse((o) => { if (o.userData.recolor && o.material.color.getHex() === c) any = true; }); return any; }, TERRACOTTA)).toBe(false);
+
+  // Finishes.
+  await page.locator('#tab-walls').click();
+  const wallBefore = await page.evaluate(() => window.__sim.wallMat.color.getHex());
+  await page.locator('#wall-swatches').getByRole('button', { name: 'Sage', exact: true }).click();
+  expect(await page.evaluate(() => window.__sim.wallMat.color.getHex())).toBe(0x9ba58c);
+  await page.keyboard.press('Control+z');
+  expect(await page.evaluate(() => window.__sim.wallMat.color.getHex())).toBe(wallBefore);
+  expect(await page.locator('#wall-swatches button[aria-pressed="true"]').getAttribute('data-color')).toBe(String(wallBefore));
+
+  // Clear is one entry and restores occupancy.
+  await page.locator('#clear').click();
+  expect(await roomState(page)).toHaveLength(0);
+  await page.keyboard.press('Control+z');
+  expect(await roomState(page)).toHaveLength(STARTER_ITEM_COUNT);
+  expect(await page.evaluate(() => window.__sim.occupancy.size)).toBeGreaterThan(0);
+  await page.keyboard.press('Control+Shift+z');
+  expect(await roomState(page)).toHaveLength(0);
+  await page.keyboard.press('Control+y');
+  await page.keyboard.press('Control+z');
+  expect(await roomState(page)).toHaveLength(STARTER_ITEM_COUNT);
+
+  // Load is one entry.
+  await page.locator('#save').click();
+  await page.locator('#clear').click();
+  await page.locator('#load').click();
+  expect(await roomState(page)).toHaveLength(STARTER_ITEM_COUNT);
+  await page.keyboard.press('Control+z');
+  expect(await roomState(page)).toHaveLength(0);
+
+  // Ctrl+R must not rotate anything.
+  await page.keyboard.press('Control+z');
+  await page.evaluate(() => window.__sim.setSelected(window.__sim.items.find((i) => i.type === 'snakePlant')));
+  await page.evaluate(() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'r', ctrlKey: true, cancelable: true })));
+  expect((await selectedInfo(page)).rot).toBe(0);
+});
+
 test('keyboard shortcuts stay inactive while typing in search', async ({ page }) => {
   await openGame(page);
   const before = await roomState(page);

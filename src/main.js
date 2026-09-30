@@ -10,6 +10,7 @@ import { BACKDROP, SELECTION_OUTLINE, GHOST_OK, GHOST_BLOCKED, WALL_FINISHES, FL
 import { STARTER_ROOM } from './data/starter-room.js';
 import { createPlacement } from './game/placement.js';
 import { createRoomState, newItemId } from './game/state.js';
+import { createCommands } from './game/commands.js';
 import { createInput } from './game/input.js';
 import { serializeRoom, parseRoom } from './persistence/schema.js';
 import { readJSON, readString, writeJSON } from './persistence/storage.js';
@@ -37,6 +38,8 @@ scene.add(grid);
 // Committed state lives in `state` as serializable records; meshes are looked up by record id.
 const placement = createPlacement({ catalog: CATALOG, room: ROOM, cell: CELL });
 const state = createRoomState({ placement });
+const finishes = { wall: wallMat.color.getHex(), floor: floorMat.color.getHex() };
+const commands = createCommands({ state, finishes });   // every room mutation goes through here so it can be undone
 const meshes = new Map();             // record id -> THREE.Group
 let selectedType = null;              // catalog key while placing
 let ghost = null;                     // preview mesh while placing
@@ -67,27 +70,49 @@ function applyTransform(record) {
   mesh.position.copy(worldPos(record.type, record.gx, record.gz, record.rot));
   mesh.rotation.y = (record.rot * Math.PI) / 2;
 }
-/** Commits a record and builds its mesh. Returns the record, or null when the tile is not free. */
+// The scene mirrors the command log: meshes are created, moved, recolored, and dropped from events,
+// so undo and redo need no special handling here.
+commands.subscribe((kind, p) => {
+  if (kind === 'add') {
+    const mesh = CATALOG[p.type].build();
+    if (p.color !== null) recolor(mesh, p.color);
+    mesh.userData.itemId = p.id;
+    meshes.set(p.id, mesh);
+    applyTransform(p);
+    scene.add(mesh);
+    updateCount();
+  } else if (kind === 'remove') {
+    if (selected?.id === p.id) setSelected(null);
+    const mesh = meshes.get(p.id);
+    meshes.delete(p.id);
+    scene.remove(mesh);
+    disposeModel(mesh);
+    updateCount();
+  } else if (kind === 'transform') {
+    applyTransform(p);
+    if (selected === p) updateSelection();
+  } else if (kind === 'color') {
+    recolor(meshOf(p), p.color);
+    if (selected === p) updateSelection();
+  } else if (kind === 'finish') {
+    (p.key === 'wall' ? wallMat : floorMat).color.setHex(p.color);
+    syncFinishSwatches();
+  } else if (kind === 'history') {
+    $('undo-tool').disabled = !p.canUndo;
+    $('redo-tool').disabled = !p.canRedo;
+  }
+});
 function addItem(type, gx, gz, rot, color = null, id = null) {
-  const record = state.add({ type, gx, gz, rot, color, id });
-  if (!record) return null;
-  const mesh = CATALOG[type].build();
-  if (color !== null) recolor(mesh, color);
-  mesh.userData.itemId = record.id;
-  meshes.set(record.id, mesh);
-  applyTransform(record);
-  scene.add(mesh);
-  updateCount();
-  return record;
+  return commands.add({ type, gx, gz, rot, color, id });
 }
 function removeItem(record) {
-  if (selected === record) setSelected(null);
-  const mesh = meshOf(record);
-  state.remove(record.id);
-  meshes.delete(record.id);
-  scene.remove(mesh);
-  disposeModel(mesh);
-  updateCount();
+  commands.remove(record.id);
+}
+function undoRedo(direction) {
+  if (dragging) return;
+  cancelPlacing();
+  const done = direction === 'undo' ? commands.undo() : commands.redo();
+  if (!done) toast(direction === 'undo' ? 'Nothing to undo.' : 'Nothing to redo.');
 }
 function setSelected(item, showControls = true) {
   if (selected && meshOf(selected)) tint(meshOf(selected), null);
@@ -123,16 +148,15 @@ function rotateSelected() {
   if (dragging) return;
   if (ghost) { ghost.userData.rot = (ghost.userData.rot + 1) % 4; ghost.rotation.y = ghost.userData.rot * Math.PI / 2; return; }
   if (!selected) { toast('Select furniture to rotate it.'); return; }
-  if (state.rotate(selected.id)) applyTransform(selected);
-  else toast('There needs to be more space to rotate this item.');
-  updateSelection();
+  if (!commands.rotate(selected.id)) toast('There needs to be more space to rotate this item.');
 }
 
 // ---------- input ----------
 function finishDrag(showControls = true, allReleased = input.activePointers() === 0) {
   if (dragging) {
-    // A blocked drop leaves the record untouched; the mesh snaps back to the committed position either way.
-    if (dragTarget) state.move(dragging.id, dragTarget.gx, dragTarget.gz);
+    // One history entry per completed drag. A blocked drop leaves the record untouched; the mesh
+    // snaps back to the committed position either way.
+    if (dragTarget) commands.move(dragging.id, dragTarget.gx, dragTarget.gz);
     applyTransform(dragging);
     tint(meshOf(dragging), null);
     dragging = null;
@@ -193,6 +217,7 @@ const input = createInput({
     if (action === 'cancel') { cancelPlacing(); setSelected(null); }
     if (action === 'rotate') rotateSelected();
     if (action === 'remove' && selected && !dragging) { ev.preventDefault(); removeItem(selected); }
+    if (action === 'undo' || action === 'redo') { ev.preventDefault(); undoRedo(action); }
   },
 });
 
@@ -227,7 +252,7 @@ function updateSelection() {
     canRecolor,
     colors: ITEM_COLORS,
     activeColor: selected && (selected.color ?? def.defaultColor ?? ITEM_COLORS[0].color),
-    onColor: (color) => { recolor(meshOf(selected), color); state.setColor(selected.id, color); updateSelection(); },
+    onColor: (color) => commands.recolor(selected.id, color),
   });
 }
 
@@ -235,12 +260,14 @@ buildCatalog({ container: $('catalog'), catalog: CATALOG, thumbnails, onChoose: 
 bindCatalogFilter({ container: $('catalog'), catalog: CATALOG, search: $('search'), categoryButtons: [...document.querySelectorAll('[data-category]')], emptyEl: $('empty-catalog') });
 bindTabs({ buttons: [...document.querySelectorAll('[data-tab]')], onChange: () => cancelPlacing() });
 const syncFinishSwatches = buildFinishSwatches([
-  { el: $('wall-swatches'), finishes: WALL_FINISHES, material: wallMat },
-  { el: $('floor-swatches'), finishes: FLOOR_FINISHES, material: floorMat },
+  { el: $('wall-swatches'), finishes: WALL_FINISHES, current: () => finishes.wall, onPick: (c) => commands.setFinish('wall', c) },
+  { el: $('floor-swatches'), finishes: FLOOR_FINISHES, current: () => finishes.floor, onPick: (c) => commands.setFinish('floor', c) },
 ]);
 
 $('rotate-selected').onclick = rotateSelected;
 $('rotate-tool').onclick = rotateSelected;
+$('undo-tool').onclick = () => undoRedo('undo');
+$('redo-tool').onclick = () => undoRedo('redo');
 $('remove-selected').onclick = () => { if (selected) removeItem(selected); };
 $('deselect').onclick = () => setSelected(null);
 $('move-tool').onclick = () => { cancelPlacing(); toast('Drag any furniture to move it.'); };
@@ -256,10 +283,11 @@ $('zoom-out').onclick = () => zoomBy(1 / CAMERA.zoomStep);
 $('reset-view').onclick = resetView;
 
 // ---------- save / load ----------
-function clearRoom() { finishDrag(); cancelPlacing(); setSelected(null); while (state.items.length) removeItem(state.items[0]); }
+function settle() { finishDrag(); cancelPlacing(); setSelected(null); }
+function clearRoom() { settle(); commands.clear(); }
 $('save').onclick = () => {
   finishDrag();
-  const data = serializeRoom({ wall: wallMat.color.getHex(), floor: floorMat.color.getHex(), items: state.items });
+  const data = serializeRoom({ wall: finishes.wall, floor: finishes.floor, items: state.items });
   toast(writeJSON(SAVE_KEY, data) ? 'Room saved. Make yourself at home.' : 'Your browser could not save this room.');
 };
 $('load').onclick = () => {
@@ -268,11 +296,8 @@ $('load').onclick = () => {
   // Validate and migrate before touching the live room so a bad save never wipes the current design.
   try { room = parseRoom(readJSON(SAVE_KEY), { catalog: CATALOG, placement, maxItems: MAX_SAVED_ITEMS, newId: newItemId }); }
   catch { toast('This saved room could not be loaded. Your current room is safe.'); return; }
-  clearRoom();
-  wallMat.color.setHex(room.wall);
-  floorMat.color.setHex(room.floor);
-  for (const it of room.items) addItem(it.type, it.gx, it.gz, it.rot, it.color, it.id);
-  syncFinishSwatches();
+  settle();
+  commands.replaceRoom(room);   // one history entry, so a load can be undone
   toast('Saved room loaded.');
 };
 $('clear').onclick = () => { clearRoom(); toast('Room cleared. A fresh start.'); };
@@ -283,6 +308,7 @@ for (const it of STARTER_ROOM) {
   const item = addItem(it.type, it.gx, it.gz, it.rot, it.color ?? null);
   if (it.select) starterSelection = item;
 }
+commands.clearHistory();   // the starter layout is the baseline, not something to undo
 setSelected(hud.isCompact() ? null : starterSelection);
 canvas.style.cursor = 'grab';
 
@@ -298,7 +324,7 @@ renderer.setAnimationLoop(() => {
 // record copies with their mesh attached, so checks can inspect both data and visuals.
 const withMesh = (r) => (r ? { ...r, mesh: meshOf(r) } : null);
 window.__sim = {
-  state, placement, occupancy: state.occupancy, bgm: music.audio, scene, camera, controls, grid, walls, wallMat, floorMat,
+  state, placement, commands, finishes, occupancy: state.occupancy, bgm: music.audio, scene, camera, controls, grid, walls, wallMat, floorMat,
   pointerToFloor: input.floorHit, snap, isFree, worldPos, meshOf, addItem, setSelected, rotateSelected,
   measure: measureModel,
   get musicOn() { return music.isOn(); },

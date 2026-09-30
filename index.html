@@ -18,6 +18,8 @@
 <nav class="tool-rail" aria-label="Room tools">
 <button id="move-tool" class="icon-button active" aria-label="Select and move" title="Select and move"><span data-icon="move"></span></button>
 <button id="rotate-tool" class="icon-button" aria-label="Rotate selected item" title="Rotate (R)"><span data-icon="rotate"></span></button>
+<button id="undo-tool" class="icon-button" aria-label="Undo" title="Undo (Ctrl+Z)" disabled><span data-icon="undo"></span></button>
+<button id="redo-tool" class="icon-button" aria-label="Redo" title="Redo (Ctrl+Shift+Z)" disabled><span data-icon="redo"></span></button>
 <button id="grid-tool" class="icon-button" aria-label="Toggle grid" aria-pressed="false" title="Placement grid"><span data-icon="grid"></span></button>
 <button id="walls-tool" class="icon-button" aria-label="Toggle walls" aria-pressed="true" title="Show or hide walls"><span data-icon="eye"></span></button>
 </nav>
@@ -28,7 +30,7 @@
 </section>
 <div class="hint-strip">Drag to move <span>·</span> R to rotate <span>·</span> Scroll to zoom</div>
 <div class="camera-tools"><span>View</span><button id="zoom-out" class="icon-button" aria-label="Zoom out"><span data-icon="minus"></span></button><button id="zoom-in" class="icon-button" aria-label="Zoom in"><span data-icon="plus"></span></button><button id="reset-view" class="icon-button" aria-label="Reset camera"><span data-icon="target"></span></button></div>
-<section id="help-panel" hidden><h2>Make yourself at home</h2><p class="desktop-help">Choose furniture, then click a free tile to place it. Hold Shift to place several.</p><p class="desktop-help">Drag furniture to move it. R rotates, Delete removes, and Escape cancels.</p><p class="desktop-help">Right-drag to orbit. Scroll or use the view buttons to zoom.</p><p class="touch-help">Browse furniture, choose an item, then tap a free tile in the room to place it.</p><p class="touch-help">Drag furniture to move it. Select an item to rotate, remove, or recolor it in the bottom panel.</p><p class="touch-help">Use two fingers to orbit and pinch to zoom, or use the View buttons. Hide the decorating panel for a bigger view.</p><p>Lo-fi music starts after your first tap or click. Use the music button to turn it off; your choice is remembered.</p><p>Your saved room stays in this browser.</p></section>
+<section id="help-panel" hidden><h2>Make yourself at home</h2><p class="desktop-help">Choose furniture, then click a free tile to place it. Hold Shift to place several.</p><p class="desktop-help">Drag furniture to move it. R rotates, Delete removes, and Escape cancels. Ctrl+Z undoes and Ctrl+Shift+Z redoes.</p><p class="desktop-help">Right-drag to orbit. Scroll or use the view buttons to zoom.</p><p class="touch-help">Browse furniture, choose an item, then tap a free tile in the room to place it.</p><p class="touch-help">Drag furniture to move it. Select an item to rotate, remove, or recolor it in the bottom panel. The arrows in the toolbar undo and redo.</p><p class="touch-help">Use two fingers to orbit and pinch to zoom, or use the View buttons. Hide the decorating panel for a bigger view.</p><p>Lo-fi music starts after your first tap or click. Use the music button to turn it off; your choice is remembered.</p><p>Your saved room stays in this browser.</p></section>
 <div id="toast" role="status" aria-live="polite"></div>
 </div>
 <aside id="panel">

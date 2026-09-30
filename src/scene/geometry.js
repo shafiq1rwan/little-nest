@@ -27,11 +27,22 @@ export function ownMaterial(mesh, material) {
   return material;
 }
 
-/** Recolors every mesh flagged userData.recolor by giving it an owned clone of its material. */
+/**
+ * Recolors every mesh flagged userData.recolor by giving it an owned clone of its material.
+ * A null color restores the original shared material (used when a recolor is undone).
+ */
 export function recolorModel(group, color) {
   group.traverse((o) => {
     if (!o.isMesh || !o.userData.recolor) return;
-    const next = (o.userData.base || o.material).clone();
+    if (!o.userData.original) o.userData.original = o.userData.base || o.material;
+    if (color == null) {
+      if (o.userData.ownedMaterial) o.userData.ownedMaterial.dispose();
+      o.userData.ownedMaterial = null;
+      o.material = o.userData.original;
+      if (o.userData.base) o.userData.base = o.userData.original;
+      return;
+    }
+    const next = o.userData.original.clone();
     next.color.setHex(color);
     ownMaterial(o, next);
   });

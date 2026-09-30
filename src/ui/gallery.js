@@ -10,8 +10,8 @@ function formatDate(iso) {
   return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) + ', ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 }
 
-export function createGalleryDialog({ dialog, list, saveForm, nameInput, emptyEl, closeButton, handlers }) {
-  const { entries, currentId, onSaveAs, onLoad, onRename, onDuplicate, onDelete } = handlers;
+export function createGalleryDialog({ dialog, list, saveForm, nameInput, emptyEl, closeButton, importButton, importInput, handlers }) {
+  const { entries, currentId, onSaveAs, onLoad, onRename, onDuplicate, onDelete, onExport, onImport } = handlers;
   let pendingDelete = null;
   let renaming = null;
 
@@ -24,6 +24,14 @@ export function createGalleryDialog({ dialog, list, saveForm, nameInput, emptyEl
   };
   closeButton.onclick = () => dialog.close();
   dialog.addEventListener('click', (ev) => { if (ev.target === dialog) dialog.close(); });   // backdrop closes
+  importButton.onclick = () => importInput.click();
+  importInput.onchange = async () => {
+    const file = importInput.files?.[0];
+    importInput.value = '';
+    if (!file) return;
+    await onImport(file);
+    render();
+  };
 
   function button(label, className, onClick, attrs = {}) {
     const b = document.createElement('button');
@@ -68,6 +76,7 @@ export function createGalleryDialog({ dialog, list, saveForm, nameInput, emptyEl
       button('Load', 'primary', () => { onLoad(entry.id); dialog.close(); }, { 'aria-label': 'Load ' + entry.name }),
       button('Rename', '', () => { renaming = entry.id; pendingDelete = null; render(); }, { 'aria-label': 'Rename ' + entry.name }),
       button('Duplicate', '', () => { onDuplicate(entry.id); render(); }, { 'aria-label': 'Duplicate ' + entry.name }),
+      button('Export', '', () => onExport(entry.id), { 'aria-label': 'Export ' + entry.name }),
     );
     if (pendingDelete === entry.id) {
       actions.append(

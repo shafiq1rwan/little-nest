@@ -40,7 +40,7 @@ Keep package-lock.json when moving computers. The runtime itself is browser-base
 - Right-drag to orbit and scroll to zoom.
 - On phones, Browse/Hide controls the drawer. Choosing furniture hides it for placement; selecting an item opens controls in the drawer. Landscape phones use a side drawer.
 - One finger moves furniture; two fingers orbit/pinch.
-- Save room keeps the open room in this browser (the first save is named "Living room"). Rooms opens your saved designs to load, rename, duplicate, or delete them, and to save the current room under a new name. Clear removes furniture.
+- Save room keeps the open room in this browser (the first save is named "Living room"). Rooms opens your saved designs to load, rename, duplicate, export, or delete them, to import a room file, and to save the current room under a new name. Clear removes furniture.
 - Lo-fi background music starts after the first click or tap. The music button in the top bar turns it off or on, and the choice is remembered in this browser.
 - The help button explains controls. Keyboard shortcuts are inactive while typing in search.
 
@@ -64,7 +64,7 @@ Icon artwork: [little-nest-icon.png](public/icons/little-nest-icon.png). Its exp
 | src/config/theme.js | Scene palette, selectable wall/floor finishes, item colors |
 | src/data/starter-room.js | The furnished living room shown on first load |
 | src/game/placement.js, state.js, commands.js | Pure placement rules, committed item records with stable ids, and undoable commands |
-| src/persistence/schema.js, storage.js, gallery.js | Saved-room format, validation, migrations, guarded localStorage, named room gallery |
+| src/persistence/schema.js, storage.js, gallery.js, transfer.js | Saved-room format, validation, migrations, guarded localStorage, named room gallery, room file export/import |
 | tests/unit | Node unit tests for placement, state, and schema |
 | tests/browser | Playwright browser checks (`npm test` runs unit and browser projects) |
 | src/props.js | Furniture models, catalog, footprints, recoloring |
@@ -85,4 +85,4 @@ Run the browser checks on any machine:
 
 The checks start the Vite dev server themselves, cover placement, drag, rotation, recoloring, save/load, search, finishes, camera, music, six baseline viewports, touch gestures, and branding, and fail on any page error. Set LITTLE_NEST_BROWSER=msedge or chrome to run against a system browser instead. The scripts in output/checks are the historical, machine-specific originals and are superseded.
 
-Use [HANDOFF](docs/HANDOFF.md) for the manual checks, test viewport sizes, and transfer checklist. Copy docs and public assets with the source. Browser-local saved rooms must be backed up separately; exporting/importing rooms through the game UI is planned for Phase 2.
+Use [HANDOFF](docs/HANDOFF.md) for the manual checks, test viewport sizes, and transfer checklist. Copy docs and public assets with the source. Saved rooms live in the browser; use Rooms → Export and Import to move them between machines.

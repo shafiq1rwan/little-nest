@@ -76,3 +76,6 @@ kbd { font: inherit; border: 1px solid var(--line); border-radius: 4px; padding:
 .room-actions .danger:hover { background: #a2573a; }
 .gallery-note { margin: 14px 0 0; font-size: 12px; color: var(--muted); }
 #gallery-empty { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
+.gallery-tools { display: flex; gap: 8px; align-items: center; }
+.gallery-tools > button:not(.icon-button) { padding: 8px 12px; font-size: 13px; }
+.gallery-tools svg { width: 17px; height: 17px; }

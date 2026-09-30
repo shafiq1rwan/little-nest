@@ -14,6 +14,7 @@ import { createCommands } from './game/commands.js';
 import { createInput } from './game/input.js';
 import { serializeRoom } from './persistence/schema.js';
 import { createGallery, DEFAULT_ROOM_NAME } from './persistence/gallery.js';
+import { exportRoom, parseImport } from './persistence/transfer.js';
 import { createResponsiveHUD } from './ui/responsive.js';
 import { createGalleryDialog } from './ui/gallery.js';
 import { createToast, buildCatalog, setCatalogActive, bindCatalogFilter, bindTabs, buildFinishSwatches, renderSelectionCard, setPressed } from './ui/hud.js';
@@ -314,10 +315,39 @@ function loadRoom(id) {
   setCurrentRoom(entry);
   toast('"' + entry.name + '" loaded.');
 }
+/** Offers a room as a file download. */
+function downloadText(filename, text) {
+  const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function exportEntry(id) {
+  let entry;
+  try { entry = gallery.load(id); } catch { toast('This room could not be exported.'); return; }
+  const { filename, text } = exportRoom({ name: entry.name, room: serializeRoom(entry.room) });
+  downloadText(filename, text);
+  toast('"' + entry.name + '" exported.');
+}
+async function importFile(file) {
+  let parsed;
+  try {
+    const text = await file.text();
+    parsed = parseImport(text, { catalog: CATALOG, placement, maxItems: MAX_SAVED_ITEMS, newId: newItemId, fallbackName: file.name.replace(/\.littlenest\.json$|\.json$/i, '') });
+  } catch { toast('That file is not a Little Nest room. Nothing was changed.'); return; }
+  const summary = gallery.save(null, parsed.name, serializeRoom(parsed.room));
+  toast(summary ? '"' + summary.name + '" imported. Load it from the list.' : 'Your browser could not store the imported room.');
+}
 const galleryDialog = createGalleryDialog({
   dialog: $('gallery'), list: $('gallery-list'), saveForm: $('gallery-save'), nameInput: $('gallery-name'),
-  emptyEl: $('gallery-empty'), closeButton: $('gallery-close'),
+  emptyEl: $('gallery-empty'), closeButton: $('gallery-close'), importButton: $('gallery-import'), importInput: $('gallery-import-file'),
   handlers: {
+    onExport: exportEntry,
+    onImport: importFile,
     entries: () => gallery.list(),
     currentId: () => currentRoom?.id ?? null,
     onSaveAs: (name) => saveRoom(null, name),

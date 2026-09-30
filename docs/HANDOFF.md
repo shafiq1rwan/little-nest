@@ -54,7 +54,7 @@ Small differences can come from font fallbacks, browser behavior, screen density
 
 Saved rooms live in browser localStorage at key home-deco-sim:rooms (the older single save at home-deco-sim:room is imported once). Copying the source folder does not copy them. Changing browsers, profiles, hostnames, or ports can also make the old save unavailable at the new origin.
 
-There is no export/import button today. Phase 2 adds one. Until then, if you need to preserve a saved layout:
+Use Rooms → Export on any saved room to download a .littlenest.json file, and Rooms → Import on the other machine. The developer-tools route below still works as a fallback:
 
 1. In the old browser, click Save room.
 2. Open browser developer tools, find Local Storage for the game's origin, and copy the value of home-deco-sim:rooms into a plain JSON text file.
@@ -80,6 +80,7 @@ Run `npm run test:install` once per machine, then `npm test`. Playwright starts 
 | Change upholstery or plant pot | Only marked parts change color |
 | Save, modify, then load from Rooms | Saved layout, rotation, finishes, and colors return; the top-bar label shows the room name |
 | Rooms dialog: save as, rename, duplicate, delete | List updates newest first; delete needs confirmation; entries survive a reload |
+| Export a room, then import the file | A new entry with the same name and layout appears; junk files are refused with a toast |
 | Invalid save data | Current room remains intact and feedback appears |
 | Search plant / use categories | Five plant choices appear; category filtering is correct |
 | Type R/Delete in search | Search edits normally; game shortcuts do not fire |
@@ -99,6 +100,7 @@ Current browser checks previously passed placement, saving, plants, HUD/touch in
 
 ## Current handoff
 
+- 30 September 2026, Phase 2 increment 3: export/import. src/persistence/transfer.js defines the file envelope and import parsing; each gallery entry has Export (downloads <slug>.littlenest.json) and the dialog has Import (file picker, adds a gallery entry). Invalid or foreign files show a toast and change nothing. Suite: 46 passed (28 unit, 18 browser). Next: photo mode, which completes Phase 2.
 - 30 September 2026, Phase 2 increment 2: named room saves. src/persistence/gallery.js stores rooms under home-deco-sim:rooms and imports the old single save once; src/ui/gallery.js renders a native dialog with save-as, load, rename, duplicate, and confirm-to-delete. Top-bar Load became Rooms; Save overwrites the open room (first save creates "Living room"); the top-bar label shows the open room name. Suite: 39 passed (23 unit, 16 browser). Next: JSON export/import, then photo mode.
 - 30 September 2026, Phase 2 increment 1: added src/game/commands.js (undoable add, remove, move, rotate, recolor, setFinish, clear, replaceRoom; history capped at 100; events for the scene to mirror). main.js now performs every mutation through commands and rebuilds meshes from events. Undo and redo buttons sit in the tool rail; Ctrl+Z, Ctrl+Shift+Z and Ctrl+Y work; Ctrl+R no longer rotates. Recolor undo restores the original shared material. Load is one undoable entry. Suite: 31 passed (17 unit, 14 browser). Next: named room saves with a gallery, then JSON export/import, then photo mode.
 - 30 September 2026, Phase 1 steps 6–8 (Phase 1 complete): added src/scene/create-scene.js, geometry.js (shared material cache, owned-material rule, recolor, tint, dispose), thumbnails.js and src/ui/icons.js; removed src/ui.js. The floor-lamp shade clone is now owned and disposed. style.css became src/styles/{index,tokens,components,layout,responsive}.css with named tokens (--ink, --muted, --card, --drawer-button, --hover, --backdrop, --shadow, font stacks); the near-duplicate #8b715e was unified to --muted #8c725f and the obsolete .brand svg rules were dropped. Fonts: public/fonts bundles Gelasio and Source Sans 3 (OFL, licences included) as fallbacks behind Georgia and Segoe UI. Runtime: engines node >=20.19 and .nvmrc 23. main.js is about 309 lines. Suite: 24 passed; desktop and phone screenshots were compared to the baselines. Next: Phase 2, starting with a commands layer and undo/redo.
@@ -114,7 +116,7 @@ Current browser checks previously passed placement, saving, plants, HUD/touch in
 - Visual identity: cream, sage, peach, warm wood, cozy procedural models.
 - Work completed in this documentation task: structure review, phased plan, persistent coding instructions, style guide, transfer guide, and five current visual baseline screenshots.
 - No architecture refactor or new gameplay phase was implemented in this task.
-- Next recommended work: Phase 2 continued (export/import, photo mode).
+- Next recommended work: Phase 2 photo mode, then Phase 3.
 
 ## Update after future work
 

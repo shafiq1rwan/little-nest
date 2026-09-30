@@ -83,5 +83,44 @@ for (const [width, height, label] of [[1440, 900, 'desktop'], [390, 844, 'phone'
       }
       expect(errors).toEqual([]);
     });
+
+    test('export downloads a room file and import adds it back; bad files change nothing', async ({ page }) => {
+      await openGame(page);
+      const names = () => page.locator('#gallery .room-head h3').allTextContents();
+      await page.locator('#load').click();
+      await page.locator('#gallery-name').fill('Travel room');
+      await page.locator('#gallery-save button[type="submit"]').click();
+
+      const [download] = await Promise.all([
+        page.waitForEvent('download'),
+        page.getByRole('button', { name: 'Export Travel room', exact: true }).click(),
+      ]);
+      expect(download.suggestedFilename()).toBe('travel-room.littlenest.json');
+      const path = await download.path();
+      const text = (await import('node:fs')).readFileSync(path, 'utf8');
+      const file = JSON.parse(text);
+      expect(file).toMatchObject({ app: 'little-nest', format: 1, name: 'Travel room' });
+      expect(file.room.items).toHaveLength(STARTER_ITEM_COUNT);
+
+      // Import the exported file: a new entry with the file's name appears.
+      await page.locator('#gallery-import-file').setInputFiles({ name: 'travel-room.littlenest.json', mimeType: 'application/json', buffer: Buffer.from(text) });
+      await expect(page.locator('#gallery .room-head h3')).toHaveCount(2);
+      expect(await names()).toEqual(['Travel room', 'Travel room']);
+      const store = await galleryStore(page);
+      expect(store.rooms[1].room.items.map((i) => i.id)).toEqual(store.rooms[0].room.items.map((i) => i.id));   // ids preserved
+
+      // A bare room without the envelope is named after the file.
+      await page.locator('#gallery-import-file').setInputFiles({ name: 'cozy-loft.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(file.room)) });
+      await expect(page.locator('#gallery .room-head h3')).toHaveCount(3);
+      expect(await names()).toContain('cozy-loft');
+
+      // Junk and foreign files are refused with a toast and no new entry.
+      for (const buffer of ['{not json', JSON.stringify({ app: 'other', format: 1, room: file.room }), JSON.stringify({ app: 'little-nest', format: 1, name: 'x', room: { items: null } })]) {
+        await page.locator('#gallery-import-file').setInputFiles({ name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from(buffer) });
+        await expect(page.locator('#toast')).toContainText('not a Little Nest room');
+      }
+      expect(await names()).toHaveLength(3);
+      expect(await roomState(page)).toHaveLength(STARTER_ITEM_COUNT);   // live room untouched throughout
+    });
   });
 }

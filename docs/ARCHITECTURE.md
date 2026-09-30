@@ -27,6 +27,7 @@ It is not yet a fully separated foundation for a larger game. src/main.js is app
 | src/persistence/schema.js | Saved-room format, validation, and version migrations |
 | src/persistence/storage.js | Guarded localStorage adapter |
 | src/persistence/gallery.js | Named room saves: list, load (validated), save, rename, duplicate, remove, one-time legacy import |
+| src/persistence/transfer.js | Room file export (envelope) and import parsing with validation |
 | src/ui/gallery.js | The "Your rooms" dialog rendering |
 | tests/unit | Node unit tests for placement, state, and schema |
 | tests/browser | Playwright specs and helpers; playwright.config.js starts the dev server |
@@ -132,6 +133,8 @@ Item ids are the handle undo history uses; a removed item comes back with the sa
 ### Save contract
 
 Named rooms live under home-deco-sim:rooms as { version: 1, rooms: [{ id, name, updatedAt, room }] }, where `room` is the saved-room shape below. Entries are validated on load, not on list, so one corrupt entry cannot hide the others. The pre-gallery single save at home-deco-sim:room is imported once as "Living room" when the gallery is empty and is never deleted. The top-bar Save button overwrites the open room, creating "Living room" on a fresh design; the dialog saves under a typed name.
+
+Export files (src/persistence/transfer.js) wrap a room as { app: "little-nest", format: 1, exportedAt, name, room } and are named <slug>.littlenest.json. Import accepts that envelope or a bare room, caps the text at 1 MB, validates and migrates through parseRoom, and adds a new gallery entry; nothing else changes. Item ids are preserved through export and import.
 
 Room shape (src/persistence/schema.js, version 3):
 

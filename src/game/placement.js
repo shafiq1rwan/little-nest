@@ -26,9 +26,38 @@ export function createPlacement({ catalog, room, cell = 1 }) {
     return gx >= 0 && gz >= 0 && gx + w <= room && gz + d <= room;
   }
 
-  /** Floor-layer items (rugs) never occupy cells, so furniture can sit on them. */
+  /** Floor-layer items (rugs) and surface items never occupy floor cells. */
   function occupies(type) {
-    return catalog[type].layer !== 'floor';
+    const layer = catalog[type].layer;
+    return layer !== 'floor' && layer !== 'surface';
+  }
+  /** Surface items live on a supporting item's slots rather than the floor grid. */
+  function isSurfaceItem(type) {
+    return catalog[type].layer === 'surface';
+  }
+  /** Surface definition { y, slots: [{ x, z }] } in the supporter's local space, or null. */
+  function surfaceOf(type) {
+    return catalog[type]?.surface ?? null;
+  }
+  function slotCount(type) {
+    return surfaceOf(type)?.slots.length ?? 0;
+  }
+  /** Local position of a slot on a supporter, or null when the slot does not exist. A slot may override the surface height. */
+  function slotLocal(type, slot) {
+    const s = surfaceOf(type);
+    if (!s || !Number.isInteger(slot) || slot < 0 || slot >= s.slots.length) return null;
+    return { x: s.slots[slot].x, y: s.slots[slot].y ?? s.y, z: s.slots[slot].z };
+  }
+  /** Index of the slot closest to a point in the supporter's local space, or -1 without a surface. */
+  function nearestSlot(type, local) {
+    const s = surfaceOf(type);
+    if (!s) return -1;
+    let best = -1, bestD = Infinity;
+    s.slots.forEach((p, i) => {
+      const d = (p.x - local.x) ** 2 + (p.z - local.z) ** 2;
+      if (d < bestD) { bestD = d; best = i; }
+    });
+    return best;
   }
 
   /**
@@ -58,5 +87,5 @@ export function createPlacement({ catalog, room, cell = 1 }) {
     };
   }
 
-  return { room, cell, half, footprint, cellsOf, inBounds, occupies, isFree, worldPos, snap };
+  return { room, cell, half, footprint, cellsOf, inBounds, occupies, isFree, worldPos, snap, isSurfaceItem, surfaceOf, slotCount, slotLocal, nearestSlot };
 }

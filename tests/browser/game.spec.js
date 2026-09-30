@@ -8,7 +8,7 @@ test('desktop decorating flow: rotate, recolor, save/load, search, finishes, cam
 
   const initial = await roomState(page);
   expect(initial).toHaveLength(STARTER_ITEM_COUNT);
-  expect(initial.every((it) => it.gx >= 0 && it.gz >= 0 && it.gx < 8 && it.gz < 8)).toBe(true);
+  expect(initial.every((it) => it.gx === null || (it.gx >= 0 && it.gz >= 0 && it.gx < 8 && it.gz < 8))).toBe(true);
   expect(await page.evaluate(() => [...document.querySelectorAll('.catalog-card img')].every((i) => i.complete && i.naturalWidth > 0))).toBe(true);
 
   // The starter armchair is selected on desktop and sits against furniture, so rotation is rejected.
@@ -28,7 +28,7 @@ test('desktop decorating flow: rotate, recolor, save/load, search, finishes, cam
   expect(await roomState(page)).toEqual(saved);
 
   await page.locator('#search').fill('plant');
-  expect(await page.locator('.catalog-card:visible').count()).toBe(5);
+  expect(await page.locator('.catalog-card:visible').count()).toBe(6);   // five plants plus the tabletop succulent
   await page.locator('#search').fill('rug');
   expect(await page.locator('.catalog-card:visible').count()).toBe(1);
   await page.locator('#search').fill('');
@@ -98,16 +98,16 @@ test('saves carry stable ids and a legacy version 2 save is imported into the ga
   const store = await galleryStore(page);
   expect(store.rooms).toHaveLength(1);
   const saved = store.rooms[0].room;
-  expect(saved.version).toBe(3);
+  expect(saved.version).toBe(4);
   expect(saved.items).toHaveLength(STARTER_ITEM_COUNT);
   expect(new Set(saved.items.map((i) => i.id)).size).toBe(STARTER_ITEM_COUNT);
-  const liveIds = await page.evaluate(() => window.__sim.items.map((i) => i.id));
-  expect(saved.items.map((i) => i.id)).toEqual(liveIds);
+  const liveIds = await page.evaluate(() => window.__sim.items.map((i) => i.id).sort());
+  expect(saved.items.map((i) => i.id).sort()).toEqual(liveIds);
 
   // Ids survive a round trip, so undo and export can refer to items reliably.
   await page.locator('#clear').click();
   await loadCurrentRoom(page);
-  expect(await page.evaluate(() => window.__sim.items.map((i) => i.id))).toEqual(liveIds);
+  expect(await page.evaluate(() => window.__sim.items.map((i) => i.id).sort())).toEqual(liveIds);
 
   // A pre-gallery save (version 2, as written before 30 September 2026) is imported as "Living room" on the next start.
   await page.evaluate(() => localStorage.removeItem('home-deco-sim:rooms'));
@@ -126,6 +126,7 @@ test('saves carry stable ids and a legacy version 2 save is imported into the ga
     { type: 'rug', gx: 2, gz: 3, rot: 0, color: null },
     { type: 'armchair', gx: 6, gz: 3, rot: 3, color: 0x81936a },
   ]);
+  expect(await page.evaluate(() => window.__sim.items.every((i) => i.parent === null && i.slot === null))).toBe(true);
   expect(await page.evaluate(() => window.__sim.items.every((i) => typeof i.id === 'string' && i.id))).toBe(true);
 });
 

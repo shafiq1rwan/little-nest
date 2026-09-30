@@ -41,7 +41,7 @@
   .search-field input { font-size: 16px; }
   .search-field input::placeholder { font-size: 13px; }
   .categories { gap: 8px; margin: 10px 0; }
-  .categories button { min-height: 40px; font-size: 12px; padding: 6px 12px; }
+  .categories button { min-height: 40px; font-size: 12px; padding: 6px 10px; flex: 1 1 auto; white-space: nowrap; }
   #catalog { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 118px; gap: 10px; overflow-x: auto; padding: 2px 2px 8px; scroll-snap-type: x proximity; scrollbar-width: thin; overscroll-behavior-x: contain; }
   .catalog-card { padding: 6px 10px 11px; scroll-snap-align: start; min-height: 140px; border-radius: 13px; }
   .catalog-card img { height: 84px; }

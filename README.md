@@ -32,7 +32,7 @@ Keep package-lock.json when moving computers. The runtime itself is browser-base
 
 ## Decorating
 
-- Browse furniture by category or search. Choose an item and click a free tile to place it; hold Shift to place several.
+- Browse furniture by category or search. Choose an item and click a free tile to place it; hold Shift to place several. Small items (the Small category) go on tables and shelves: point at the surface and a preview snaps to a free spot. They move and rotate with the furniture they sit on.
 - Drag furniture to move it. R rotates; Delete removes; Escape cancels. Undo and redo with the toolbar arrows or Ctrl+Z and Ctrl+Shift+Z.
 - Change colors on upholstery, rugs, and the marked parts of plant pots.
 - Use Walls and Floor tabs to choose finishes.
@@ -69,6 +69,7 @@ Icon artwork: [little-nest-icon.png](public/icons/little-nest-icon.png). Its exp
 | tests/browser | Playwright browser checks (`npm test` runs unit and browser projects) |
 | src/props.js | Furniture models, catalog, footprints, recoloring |
 | src/plants.js | Snake plant, areca palm, flowering cactus, rubber tree |
+| src/props.js (SMALL_CATALOG) | Mug, candle, book stack, succulent, photo frame, vase |
 | src/room.js | Room shell, textures, windows, blinds, artwork, ground shadows |
 | src/styles/ | tokens, components, layout, responsive stylesheets |
 | index.html | HUD markup and accessibility labels |

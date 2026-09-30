@@ -25,7 +25,7 @@ export function buildCatalog({ container, catalog, thumbnails, onChoose }) {
     const name = document.createElement('strong');
     name.textContent = def.label;
     const size = document.createElement('small');
-    size.textContent = def.w + ' × ' + def.d + ' tiles';
+    size.textContent = def.layer === 'surface' ? 'Tabletop' : def.w + ' × ' + def.d + ' tiles';
     b.append(img, name, size);
     b.setAttribute('aria-label', 'Place ' + def.label);
     b.onclick = () => onChoose(key);
@@ -112,7 +112,7 @@ export function renderSelectionCard({ card, item, def, thumbnail, size, canRecol
   if (!item) return;
   card.querySelector('#selection-image').src = thumbnail;
   card.querySelector('#selection-name').textContent = def.label;
-  card.querySelector('#selection-size').textContent = size.w + ' × ' + size.d + ' tiles';
+  card.querySelector('#selection-size').textContent = size ? size.w + ' × ' + size.d + ' tiles' : 'Sits on tables and shelves';
   const swatches = card.querySelector('#item-swatches');
   swatches.replaceChildren();
   swatches.hidden = !canRecolor;

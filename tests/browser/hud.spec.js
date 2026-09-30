@@ -78,7 +78,7 @@ for (const [width, height] of VIEWPORTS) {
       await page.getByRole('button', { name: 'Clay', exact: true }).tap();
       await page.locator('#tab-furniture').tap();
       await page.locator('#search').fill('plant');
-      expect(await page.locator('.catalog-card:visible').count()).toBe(5);
+      expect(await page.locator('.catalog-card:visible').count()).toBe(6);   // five plants plus the tabletop succulent
       await page.locator('#save').tap();
       expect(errors).toEqual([]);
     });

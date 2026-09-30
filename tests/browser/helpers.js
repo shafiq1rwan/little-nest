@@ -10,9 +10,13 @@ export async function openGame(page, path = '/') {
   return errors;
 }
 
-/** Serializable snapshot of the committed furniture. */
+/** Serializable snapshot of the committed furniture, floor items first, then surface items (the save order). */
 export function roomState(page) {
-  return page.evaluate(() => window.__sim.items.map(({ type, gx, gz, rot, color }) => ({ type, gx, gz, rot, color })));
+  return page.evaluate(() => {
+    const pick = ({ type, gx, gz, rot, color }) => ({ type, gx, gz, rot, color });
+    const items = window.__sim.items;
+    return [...items.filter((i) => !i.parent), ...items.filter((i) => i.parent)].map(pick);
+  });
 }
 
 /** Screen coordinates of the floor centre of a footprint, for clicking or tapping a tile. */
@@ -60,5 +64,5 @@ export function galleryStore(page) {
   return page.evaluate(() => JSON.parse(localStorage.getItem('home-deco-sim:rooms') || 'null'));
 }
 
-export const STARTER_ITEM_COUNT = 16;
+export const STARTER_ITEM_COUNT = 18;   // 16 floor items plus a mug and a photo frame on surfaces
 export const TERRACOTTA = 0xb96949;

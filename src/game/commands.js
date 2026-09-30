@@ -5,7 +5,7 @@
 // Events (subscribe(fn) receives (kind, payload)):
 //   add       record                the record now exists; build its mesh
 //   remove    { id }                the record is gone; drop its mesh
-//   transform record                gx/gz/rot changed; move its mesh
+//   transform record                gx/gz/rot (floor) or parent/slot/rot (surface) changed; move its mesh
 //   color     record                color changed; recolor its mesh
 //   finish    { key, color }        wall or floor color changed
 //   history   { canUndo, canRedo }  undo/redo availability changed
@@ -19,7 +19,7 @@ export function createCommands({ state, finishes, limit = 100 }) {
   const canUndo = () => undoStack.length > 0;
   const canRedo = () => redoStack.length > 0;
   const notify = () => emit('history', { canUndo: canUndo(), canRedo: canRedo() });
-  const snapshotOf = ({ id, type, gx, gz, rot, color }) => ({ id, type, gx, gz, rot, color });
+  const snapshotOf = ({ id, type, gx, gz, rot, color, parent, slot }) => ({ id, type, gx, gz, rot, color, parent, slot });
 
   // ----- primitive operations: mutate, emit, but never touch history -----
   function opAdd(data) {
@@ -27,19 +27,26 @@ export function createCommands({ state, finishes, limit = 100 }) {
     if (record) emit('add', record);
     return record;
   }
+  /** Removes an item and its children; returns snapshots ordered parents first, for restoring. */
   function opRemove(id) {
-    const record = state.get(id);
-    if (!record) return null;
-    const snapshot = snapshotOf(record);
-    state.remove(id);
-    emit('remove', { id });
-    return snapshot;
+    const removed = state.remove(id);
+    if (!removed) return null;
+    for (const r of removed) emit('remove', { id: r.id });
+    return removed.map(snapshotOf).reverse();
   }
   function opTransform(id, next) {
     const record = state.get(id);
     if (!record) return null;
     const prev = { gx: record.gx, gz: record.gz, rot: record.rot };
     if (!state.transform(id, next)) return null;
+    emit('transform', record);
+    return prev;
+  }
+  function opPlace(id, parent, slot) {
+    const record = state.get(id);
+    if (!record) return null;
+    const prev = { parent: record.parent, slot: record.slot };
+    if (!state.place(id, parent, slot)) return null;
     emit('transform', record);
     return prev;
   }
@@ -58,12 +65,12 @@ export function createCommands({ state, finishes, limit = 100 }) {
     return prev;
   }
   function opClear() {
-    const snapshot = state.serialize();
-    for (const it of snapshot) opRemove(it.id);
+    const snapshot = state.serialize();          // parents first
+    for (const it of snapshot) if (state.get(it.id)) opRemove(it.id);
     return snapshot;
   }
   function opRestore(items) {
-    for (const it of items) opAdd(it);
+    for (const it of items) opAdd(it);           // parents come before children in every snapshot
   }
 
   function push(entry) {
@@ -81,18 +88,28 @@ export function createCommands({ state, finishes, limit = 100 }) {
     push({ undo: () => opRemove(snapshot.id), redo: () => opAdd(snapshot) });
     return record;
   }
+  /** Removes an item and whatever sits on it as one entry. */
   function remove(id) {
-    const snapshot = opRemove(id);
-    if (!snapshot) return false;
-    push({ undo: () => opAdd(snapshot), redo: () => opRemove(snapshot.id) });
+    const snapshots = opRemove(id);
+    if (!snapshots) return false;
+    push({ undo: () => opRestore(snapshots), redo: () => opRemove(id) });
     return true;
   }
   function move(id, gx, gz) {
     const record = state.get(id);
-    if (!record || (record.gx === gx && record.gz === gz)) return false;
+    if (!record || record.parent || (record.gx === gx && record.gz === gz)) return false;
     const prev = opTransform(id, { gx, gz });
     if (!prev) return false;
     push({ undo: () => opTransform(id, prev), redo: () => opTransform(id, { gx, gz }) });
+    return true;
+  }
+  /** Moves a surface item to a slot on a supporter. */
+  function place(id, parent, slot) {
+    const record = state.get(id);
+    if (!record || !record.parent || (record.parent === parent && record.slot === slot)) return false;
+    const prev = opPlace(id, parent, slot);
+    if (!prev) return false;
+    push({ undo: () => opPlace(id, prev.parent, prev.slot), redo: () => opPlace(id, parent, slot) });
     return true;
   }
   function rotate(id) {
@@ -126,7 +143,8 @@ export function createCommands({ state, finishes, limit = 100 }) {
   /** Replaces items and finishes (for example from a loaded save) as a single history entry. */
   function replaceRoom({ wall, floor, items }) {
     const before = { wall: finishes.wall, floor: finishes.floor, items: state.serialize() };
-    const after = { wall, floor, items: items.map(snapshotOf) };
+    const ordered = [...items.filter((i) => !i.parent), ...items.filter((i) => i.parent)];
+    const after = { wall, floor, items: ordered.map(snapshotOf) };
     const apply = (room) => { opClear(); opFinish('wall', room.wall); opFinish('floor', room.floor); opRestore(room.items); };
     apply(after);
     push({ undo: () => apply(before), redo: () => apply(after) });
@@ -159,5 +177,5 @@ export function createCommands({ state, finishes, limit = 100 }) {
     return () => listeners.delete(fn);
   }
 
-  return { add, remove, move, rotate, recolor, setFinish, clear, replaceRoom, undo, redo, canUndo, canRedo, clearHistory, subscribe };
+  return { add, remove, move, place, rotate, recolor, setFinish, clear, replaceRoom, undo, redo, canUndo, canRedo, clearHistory, subscribe };
 }

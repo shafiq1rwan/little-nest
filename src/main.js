@@ -46,7 +46,8 @@ const meshes = new Map();             // record id -> THREE.Group
 let selectedType = null;              // catalog key while placing
 let ghost = null;                     // preview mesh while placing
 let dragging = null;                  // record being moved
-let dragTarget = null;                // { gx, gz } the drag would drop onto
+let dragTarget = null;                // { gx, gz } or { parent, slot } the drag would drop onto
+let ghostTarget = null;               // { parent, slot } under the pointer while placing a surface item
 let selected = null;                  // record shown in the selection card
 let pendingSelection = false;         // selection card update deferred until the gesture ends
 const selectionBox = new THREE.Box3Helper(new THREE.Box3(), SELECTION_OUTLINE);
@@ -67,10 +68,40 @@ function snap(hit, type, rot) {
 function meshOf(record) {
   return meshes.get(record.id);
 }
+/** Places a mesh from its record. Surface items are children of their supporter's group, so they follow it. */
 function applyTransform(record) {
   const mesh = meshOf(record);
-  mesh.position.copy(worldPos(record.type, record.gx, record.gz, record.rot));
+  if (record.parent) {
+    const parentRecord = state.get(record.parent);
+    const parentMesh = meshes.get(record.parent);
+    if (mesh.parent !== parentMesh) parentMesh.add(mesh);
+    const local = placement.slotLocal(parentRecord.type, record.slot);
+    mesh.position.set(local.x, local.y, local.z);
+  } else {
+    if (mesh.parent !== scene) scene.add(mesh);
+    mesh.position.copy(worldPos(record.type, record.gx, record.gz, record.rot));
+  }
   mesh.rotation.y = (record.rot * Math.PI) / 2;
+}
+/** Meshes of floor items that offer surface slots. */
+function supporterMeshes() {
+  return state.items.filter((r) => !r.parent && placement.surfaceOf(r.type)).map(meshOf);
+}
+/** World position of a slot on a supporter. */
+function slotWorld(parentId, slot) {
+  const parentRecord = state.get(parentId);
+  const local = placement.slotLocal(parentRecord.type, slot);
+  return meshes.get(parentId).localToWorld(new THREE.Vector3(local.x, local.y, local.z));
+}
+/** Nearest surface slot under the pointer: { parent, slot, free } or null. `ignoreId` is the item being moved. */
+function surfaceUnder(ev, type, ignoreId = null) {
+  const hit = input.hitAmong(ev, supporterMeshes(), (id) => id !== ignoreId && !state.get(id)?.parent);
+  if (!hit) return null;
+  const parentRecord = state.get(hit.id);
+  const local = meshes.get(hit.id).worldToLocal(hit.point.clone());
+  const slot = placement.nearestSlot(parentRecord.type, local);
+  if (slot < 0) return null;
+  return { parent: hit.id, slot, free: state.canPlaceOn(type, hit.id, slot, ignoreId) };
 }
 // The scene mirrors the command log: meshes are created, moved, recolored, and dropped from events,
 // so undo and redo need no special handling here.
@@ -80,14 +111,13 @@ commands.subscribe((kind, p) => {
     if (p.color !== null) recolor(mesh, p.color);
     mesh.userData.itemId = p.id;
     meshes.set(p.id, mesh);
-    applyTransform(p);
-    scene.add(mesh);
+    applyTransform(p);   // also attaches the mesh to the scene or to its supporter
     updateCount();
   } else if (kind === 'remove') {
     if (selected?.id === p.id) setSelected(null);
     const mesh = meshes.get(p.id);
     meshes.delete(p.id);
-    scene.remove(mesh);
+    mesh.removeFromParent();
     disposeModel(mesh);
     updateCount();
   } else if (kind === 'transform') {
@@ -104,8 +134,8 @@ commands.subscribe((kind, p) => {
     $('redo-tool').disabled = !p.canRedo;
   }
 });
-function addItem(type, gx, gz, rot, color = null, id = null) {
-  return commands.add({ type, gx, gz, rot, color, id });
+function addItem(type, gx, gz, rot, color = null, id = null, parent = null, slot = null) {
+  return commands.add({ type, gx, gz, rot, color, id, parent, slot });
 }
 function removeItem(record) {
   commands.remove(record.id);
@@ -133,7 +163,7 @@ function startPlacing(type) {
   tint(ghost, GHOST_OK);
   ghost.visible = false;
   scene.add(ghost);
-  $('mode-label').textContent = 'Place ' + CATALOG[type].label.toLowerCase() + ' · Esc to cancel';
+  $('mode-label').textContent = 'Place ' + CATALOG[type].label.toLowerCase() + (placement.isSurfaceItem(type) ? ' on a table or shelf' : '') + ' · Esc to cancel';
   canvas.style.cursor = 'crosshair';
   updateSelection();
   if (hud.isCompact()) hud.setExpanded(false);
@@ -141,6 +171,7 @@ function startPlacing(type) {
 function cancelPlacing() {
   if (ghost) { scene.remove(ghost); disposeModel(ghost); }
   ghost = null;
+  ghostTarget = null;
   selectedType = null;
   $('mode-label').textContent = 'Decorate mode';
   canvas.style.cursor = 'grab';
@@ -158,7 +189,8 @@ function finishDrag(showControls = true, allReleased = input.activePointers() ==
   if (dragging) {
     // One history entry per completed drag. A blocked drop leaves the record untouched; the mesh
     // snaps back to the committed position either way.
-    if (dragTarget) commands.move(dragging.id, dragTarget.gx, dragTarget.gz);
+    if (dragTarget && dragging.parent) commands.place(dragging.id, dragTarget.parent, dragTarget.slot);
+    else if (dragTarget) commands.move(dragging.id, dragTarget.gx, dragTarget.gz);
     applyTransform(dragging);
     tint(meshOf(dragging), null);
     dragging = null;
@@ -174,16 +206,33 @@ const input = createInput({
   pickables: () => [...meshes.values()],
   idOf: (o) => o.userData.itemId || null,
 }, {
-  move(hit) {
+  move(hit, ev) {
     if (photoMode) return;
-    if (ghost) {
+    if (ghost && placement.isSurfaceItem(selectedType)) {
+      // Small items preview on the nearest free slot of the table or shelf under the pointer.
+      ghostTarget = surfaceUnder(ev, selectedType);
+      ghost.visible = !!ghostTarget;
+      if (!ghostTarget) return;
+      ghost.position.copy(slotWorld(ghostTarget.parent, ghostTarget.slot));
+      ghost.rotation.y = ((state.get(ghostTarget.parent).rot + ghost.userData.rot) * Math.PI) / 2;
+      tint(ghost, ghostTarget.free ? GHOST_OK : GHOST_BLOCKED);
+    } else if (ghost) {
+      if (!hit) return;
       const rot = ghost.userData.rot;
       const { gx, gz } = snap(hit, selectedType, rot);
       ghost.visible = true;
       ghost.position.copy(worldPos(selectedType, gx, gz, rot));
       ghost.rotation.y = (rot * Math.PI) / 2;
       tint(ghost, isFree(selectedType, gx, gz, rot) ? GHOST_OK : GHOST_BLOCKED);
+    } else if (dragging && dragging.parent) {
+      const target = surfaceUnder(ev, dragging.type, dragging.id);
+      if (!target) return;
+      const mesh = meshOf(dragging);
+      mesh.position.copy(mesh.parent.worldToLocal(slotWorld(target.parent, target.slot)));
+      dragTarget = { parent: target.parent, slot: target.slot };
+      tint(mesh, target.free ? null : GHOST_BLOCKED);
     } else if (dragging) {
+      if (!hit) return;
       const { gx, gz } = snap(hit, dragging.type, dragging.rot);
       meshOf(dragging).position.copy(worldPos(dragging.type, gx, gz, dragging.rot));
       dragTarget = { gx, gz };
@@ -192,6 +241,13 @@ const input = createInput({
   },
   down({ hit, pick, shiftKey }) {
     if (photoMode) return;
+    if (ghost && placement.isSurfaceItem(selectedType)) {
+      if (!ghostTarget) { toast('Small items go on tables and shelves. Point at one to place it.'); return; }
+      if (!ghostTarget.free) { toast('That spot is taken. Try another part of the surface.'); return; }
+      const placed = addItem(selectedType, null, null, ghost.userData.rot, null, null, ghostTarget.parent, ghostTarget.slot);
+      if (placed && !shiftKey) { cancelPlacing(); setSelected(placed); }
+      return;
+    }
     if (ghost) {
       if (!hit) return;
       const rot = ghost.userData.rot;
@@ -253,7 +309,7 @@ function updateSelection() {
     item: selected,
     def,
     thumbnail: selected && thumbnails[selected.type],
-    size: selected && footprint(selected.type, selected.rot),
+    size: selected && !selected.parent ? footprint(selected.type, selected.rot) : null,
     canRecolor,
     colors: ITEM_COLORS,
     activeColor: selected && (selected.color ?? def.defaultColor ?? ITEM_COLORS[0].color),
@@ -426,8 +482,12 @@ $('photo-save').onclick = savePhoto;
 
 // ---------- starter room ----------
 let starterSelection = null;
+const starterByKey = new Map();
 for (const it of STARTER_ROOM) {
-  const item = addItem(it.type, it.gx, it.gz, it.rot, it.color ?? null);
+  const item = it.on
+    ? addItem(it.type, null, null, it.rot, it.color ?? null, null, starterByKey.get(it.on)?.id, it.slot)
+    : addItem(it.type, it.gx, it.gz, it.rot, it.color ?? null);
+  if (it.key && item) starterByKey.set(it.key, item);
   if (it.select) starterSelection = item;
 }
 commands.clearHistory();   // the starter layout is the baseline, not something to undo
@@ -449,7 +509,7 @@ window.__sim = {
   state, placement, commands, finishes, gallery, occupancy: state.occupancy, bgm: music.audio, scene, camera, controls, grid, walls, wallMat, floorMat,
   get currentRoom() { return currentRoom; },
   get photoMode() { return photoMode; },
-  pointerToFloor: input.floorHit, snap, isFree, worldPos, meshOf, addItem, setSelected, rotateSelected,
+  pointerToFloor: input.floorHit, snap, isFree, worldPos, meshOf, addItem, setSelected, rotateSelected, slotWorld, surfaceUnder, supporterMeshes, hitAmong: input.hitAmong,
   measure: measureModel,
   get musicOn() { return music.isOn(); },
   get items() { return state.items.map(withMesh); },

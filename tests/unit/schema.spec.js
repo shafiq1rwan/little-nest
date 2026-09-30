@@ -9,7 +9,7 @@ const options = { catalog, placement, maxItems: 5, newId: () => 'gen' + counter+
 
 test('writer emits the current version with ids and explicit null colors', () => {
   const out = serializeRoom({ wall: 1, floor: 2, items: [{ id: 'a', type: 'sofa', gx: 0, gz: 0, rot: 0 }] });
-  expect(out).toEqual({ version: CURRENT_VERSION, wall: 1, floor: 2, items: [{ id: 'a', type: 'sofa', gx: 0, gz: 0, rot: 0, color: null }] });
+  expect(out).toEqual({ version: CURRENT_VERSION, wall: 1, floor: 2, items: [{ id: 'a', type: 'sofa', gx: 0, gz: 0, rot: 0, color: null, parent: null, slot: null }] });
 });
 
 test('legacy saves without a version migrate and receive ids', () => {
@@ -21,7 +21,8 @@ test('legacy saves without a version migrate and receive ids', () => {
 
 test('version 2 saves migrate the same way', () => {
   const v2 = { version: 2, wall: 1, floor: 2, items: [{ type: 'rug', gx: 0, gz: 0, rot: 0 }] };
-  expect(migrateRoom(v2).version).toBe(3);
+  expect(migrateRoom(v2).version).toBe(CURRENT_VERSION);
+  expect(migrateRoom(v2).items[0]).toMatchObject({ id: null, parent: null, slot: null });
   expect(parseRoom(v2, options).items[0].id).toMatch(/^gen/);
 });
 

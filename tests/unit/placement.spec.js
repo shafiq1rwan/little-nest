@@ -57,11 +57,11 @@ test('room state keeps occupancy in step with add, move, rotate, remove, and cle
   expect(sofa.rot).toBe(0);
   expect(state.occupancy.size).toBe(4);
 
-  expect(state.remove(sofa.id)).toBe(true);
+  expect(state.remove(sofa.id).map((r) => r.id)).toEqual([sofa.id]);
   expect(state.occupancy.size).toBe(1);
   expect(state.serialize()).toEqual([
-    { id: rug.id, type: 'rug', gx: 1, gz: 0, rot: 0, color: null },
-    { id: expect.any(String), type: 'plant', gx: 3, gz: 2, rot: 0, color: null },
+    { id: rug.id, type: 'rug', gx: 1, gz: 0, rot: 0, color: null, parent: null, slot: null },
+    { id: expect.any(String), type: 'plant', gx: 3, gz: 2, rot: 0, color: null, parent: null, slot: null },
   ]);
   state.clear();
   expect(state.items).toHaveLength(0);

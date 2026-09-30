@@ -9,7 +9,7 @@ Keep the Little Nest style guide and existing saves intact through every phase. 
 | 0 | Playable visual baseline | Implemented; documented | None |
 | 1 | Structure and portable development | Complete 30 September 2026 | Phase 0 |
 | 2 | Safe creative workflow | Complete 30 September 2026 | Phase 1 |
-| 3 | Richer decorating | Planned — recommended next | Phase 2 |
+| 3 | Richer decorating | In progress: surface placement done 30 September 2026 | Phase 2 |
 | 4 | More rooms and furniture collections | Planned | Phase 3 |
 | 5 | Lighting and atmosphere | Planned | Phase 4 |
 | 6 | Optional challenges and sharing | Optional backlog | Stable earlier phases |
@@ -80,11 +80,11 @@ Goal: make detailed room composition possible.
 
 Deliver:
 
-- Surface placement for plants, books, and small objects on supported tables/shelves.
+- Done (30 September 2026): six small items (mug, candle, book stack, succulent, photo frame, vase) sit in named slots on the coffee table, desk, sideboard, bookshelf, and TV stand; they follow moves and rotations, are removed with their supporter, and are saved with parent/slot (format version 4).
 - Wall-mounted pictures, shelves, and other decorations.
 - Item duplicate and optional finer placement/snapping.
 - More distinctive plant and decor models using the current palette.
-- Parent/surface relationships represented in saved data.
+- Done (30 September 2026): parent and slot fields in saved items; version 3 saves migrate.
 
 Completion criteria:
 

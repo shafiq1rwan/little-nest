@@ -1,8 +1,8 @@
 // Pointer, keyboard, and touch lifecycle for the room canvas.
 // Turns raw browser events into a few semantic callbacks and owns the raycasting.
 //
-//   move(hit)                 single pointer moving over the floor; hit is a THREE.Vector3
-//   down({ hit, pick, shiftKey })  primary press with one pointer; pick() lazily returns the item id under it
+//   move(hit, ev)             single pointer moving; hit is the floor point or null; ev allows hitAmong()
+//   down({ hit, pick, shiftKey, ev })  primary press with one pointer; pick() lazily returns the item id under it
 //   up({ allReleased })       a pointer lifted or cancelled; allReleased when no touch pointers remain
 //   secondTouch()             a second finger landed; camera gestures take over
 //   key(action, ev)           'cancel' | 'rotate' | 'remove' | 'undo' | 'redo', never while typing in a field
@@ -36,6 +36,18 @@ export function createInput({ canvas, camera, pickables, idOf }, handlers) {
     while (o && !(id = idOf(o))) o = o.parent;
     return id;
   }
+  /** Nearest hit among `objects` whose item id passes `accept`: { id, point } or null. */
+  function hitAmong(ev, objects, accept = () => true) {
+    aim(ev);
+    const hits = raycaster.intersectObjects(objects, true);
+    for (const h of hits) {
+      let o = h.object;
+      let id = null;
+      while (o && !(id = idOf(o))) o = o.parent;
+      if (id && accept(id)) return { id, point: h.point };
+    }
+    return null;
+  }
   function isTyping(target) {
     return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
   }
@@ -43,7 +55,7 @@ export function createInput({ canvas, camera, pickables, idOf }, handlers) {
   canvas.addEventListener('pointermove', (ev) => {
     if (ev.pointerType === 'touch' && touchPointers.size > 1) return;
     const hit = floorHit(ev);
-    if (hit) handlers.move(hit);
+    handlers.move(hit, ev);
   });
 
   canvas.addEventListener('pointerdown', (ev) => {
@@ -53,7 +65,7 @@ export function createInput({ canvas, camera, pickables, idOf }, handlers) {
       if (touchPointers.size > 1) { handlers.secondTouch(); return; }
     }
     canvas.setPointerCapture(ev.pointerId);
-    handlers.down({ hit: floorHit(ev), pick: () => pick(ev), shiftKey: ev.shiftKey });
+    handlers.down({ hit: floorHit(ev), pick: () => pick(ev), shiftKey: ev.shiftKey, ev });
   });
 
   function release(ev) {
@@ -75,5 +87,5 @@ export function createInput({ canvas, camera, pickables, idOf }, handlers) {
     if (action) handlers.key(action, ev);
   });
 
-  return { floorHit, activePointers: () => touchPointers.size };
+  return { floorHit, hitAmong, activePointers: () => touchPointers.size };
 }

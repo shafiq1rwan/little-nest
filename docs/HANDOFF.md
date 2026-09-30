@@ -34,7 +34,7 @@ There is no .git directory in the current project snapshot, so this folder is no
 
 Use npm ci to install the exact lockfile graph, rather than deleting the lockfile or upgrading packages during a computer move.
 
-Recorded development environment: Node v23.6.0, npm 10.9.2, Vite 6.4.3, Three.js 0.170.0. These are the observed versions on the current machine, not a claim that this runtime is the latest or the preferred long-term version. Runtime pinning and portability checks are Phase 1 work.
+Recorded development environment: Node v23.6.0, npm 10.9.2, Vite 6.4.3, Three.js 0.170.0, Playwright 1.63. package.json requires Node 20.19 or newer and .nvmrc records 23.
 
 The game itself does not need Codex caches, Python, an image-generation tool, or a remote service to run. Its icon files and procedural art are already in the project.
 
@@ -48,7 +48,7 @@ On the next computer, start a coding session with:
 
 Repository-aware agents may read AGENTS.md automatically. Explicitly naming it also helps other tools or editors. Documentation gives future sessions a persistent reference; it does not automatically enforce a pixel-identical result. Review screenshots after visual changes.
 
-Small differences can come from font fallbacks, browser behavior, screen density, and graphics drivers. The current fonts are system fonts; a portable bundled font is planned in Phase 1.
+Small differences can come from font fallbacks, browser behavior, screen density, and graphics drivers. Segoe UI and Georgia are used when present; other systems fall back to the bundled Gelasio and Source Sans 3 in public/fonts, so metrics match across machines.
 
 ## Saved rooms are separate from the project
 
@@ -68,9 +68,7 @@ No cloud synchronization or automatic browser-save transfer is implemented.
 
 ## Validation on any computer
 
-There is no npm test script yet. The files under output/checks recorded previous browser checks, but contain absolute paths to this machine's bundled Node packages and Microsoft Edge. They will not run unchanged on an arbitrary laptop. Phase 1 should replace them with a project-local runner.
-
-Until then, run npm run build and check the relevant scenarios below in the browser.
+Run `npm run test:install` once per machine, then `npm test`. Playwright starts the Vite dev server, runs 11 Node unit checks and 13 browser checks across six baseline viewports, and fails on any page error. Set LITTLE_NEST_BROWSER=msedge to use a system browser. The table below remains the manual reference for what those checks cover; output/checks holds the superseded originals.
 
 | Scenario | Expected result |
 | --- | --- |
@@ -99,16 +97,20 @@ Current browser checks previously passed placement, saving, plants, HUD/touch in
 
 ## Current handoff
 
+- 30 September 2026, Phase 1 steps 6–8 (Phase 1 complete): added src/scene/create-scene.js, geometry.js (shared material cache, owned-material rule, recolor, tint, dispose), thumbnails.js and src/ui/icons.js; removed src/ui.js. The floor-lamp shade clone is now owned and disposed. style.css became src/styles/{index,tokens,components,layout,responsive}.css with named tokens (--ink, --muted, --card, --drawer-button, --hover, --backdrop, --shadow, font stacks); the near-duplicate #8b715e was unified to --muted #8c725f and the obsolete .brand svg rules were dropped. Fonts: public/fonts bundles Gelasio and Source Sans 3 (OFL, licences included) as fallbacks behind Georgia and Segoe UI. Runtime: engines node >=20.19 and .nvmrc 23. main.js is about 309 lines. Suite: 24 passed; desktop and phone screenshots were compared to the baselines. Next: Phase 2, starting with a commands layer and undo/redo.
+- 30 September 2026, Phase 1 steps 4–5: added src/game/input.js (pointer/keyboard/touch lifecycle and raycasting), src/ui/hud.js (toast, catalog, filter, tabs, finish swatches, selection card), src/ui/responsive.js (compact drawer and card docking), src/ui/music.js. main.js is now composition at about 375 lines. Catalog cards are built with DOM methods instead of innerHTML. Suite: 24 passed. No gameplay or visual change intended. Next: step 6 (thumbnail/geometry ownership helpers, fix the floor lamp shade clone leak), step 7 (CSS grouping), step 8 (runtime pin and bundled font).
+- 30 September 2026, Phase 1 step 3 and storage: added src/game/placement.js, src/game/state.js, src/persistence/schema.js, src/persistence/storage.js and tests/unit. Items now have stable ids; saves are version 3 and version 2 saves migrate on load (browser test covers it). Drag and rotate go through state.move/state.rotate instead of freeing and re-occupying cells. main.js is 463 lines and still owns input and HUD wiring. Suite: 24 passed (11 unit, 13 browser). No gameplay or visual change intended. Next: step 4 (input extraction) and the HUD half of step 5.
+- 30 September 2026, Phase 1 steps 1–2: added tests/browser (game, hud, plants, touch, branding specs) with playwright.config.js and npm scripts; extracted constants to src/config and the starter layout to src/data/starter-room.js. Full suite: 12 passed in Playwright Chromium with software WebGL. Two test-only timing races were fixed by waiting for the compact media query and for the canvas resize after the drawer collapses. No gameplay or visual change intended. Next: Phase 1 step 3, pure placement rules and serializable item state with stable IDs.
 - 30 September 2026: added looping lo-fi background music (public/audio/lofidreams-bgm.mp3, 5.4 MB). Playback starts on the first pointer or key gesture because browsers block autoplay. A top-bar music button toggles it; the preference is stored at localStorage key home-deco-sim:music. Checked in headless Edge: unlock on gesture, toggle, persistence across reload, 44px target at 320px width, no page errors. Known trade-off: at 320px the brand text truncates because the top bar now holds four buttons.
 - Product: Little Nest, playable decorating prototype.
-- Current structure: six src modules, one HTML HUD, one shared CSS file.
+- Current structure: main.js composes config/, data/, game/ (placement, state, input), persistence/, scene/ (create-scene, geometry, thumbnails), ui/ (hud, responsive, music, icons), plus room, props, plants; one HTML HUD; src/styles split into four files.
 - Current room: 8 × 8 cells, 4-unit walls, orthographic camera, 16 starter items.
 - Catalog: 17 entries, including the original plant and four additional species.
-- Storage: one browser-local version-2 room save; legacy key retained.
+- Storage: one browser-local version-3 room save with item ids; version 2 saves migrate; legacy key retained.
 - Visual identity: cream, sage, peach, warm wood, cozy procedural models.
 - Work completed in this documentation task: structure review, phased plan, persistent coding instructions, style guide, transfer guide, and five current visual baseline screenshots.
 - No architecture refactor or new gameplay phase was implemented in this task.
-- Next recommended work: Phase 1, beginning with portable checks and configuration extraction.
+- Next recommended work: Phase 2 (commands layer with undo/redo, named saves, export/import, photo mode).
 
 ## Update after future work
 

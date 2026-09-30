@@ -26,8 +26,12 @@ The user's latest explicit instructions take precedence over these guidelines. T
 
 ## Implementation
 
-- The app currently uses vanilla JavaScript ES modules, Three.js, and Vite. Do not introduce a framework or replace the build system as incidental cleanup.
-- main.js is still the prototype coordinator. Phase 1 extracts responsibilities in small steps; do not claim the proposed folders already exist.
+- The app uses vanilla JavaScript ES modules, Three.js, and Vite. Do not introduce a framework or replace the build system as incidental cleanup.
+- Materials: get shared ones from sharedMaterial() in src/scene/geometry.js and never dispose them; give a mesh its own material only through ownMaterial() so disposeModel() can release it.
+- Styles: add colors and fonts as tokens in src/styles/tokens.css; desktop rules go in layout.css and compact/landscape overrides in responsive.css. Keep COMPACT_QUERY in src/ui/responsive.js equal to the compact media query.
+- main.js is still the prototype coordinator. Phase 1 extracts responsibilities in small steps. So far src/config (game and theme constants) and src/data (starter room) exist; the other proposed folders do not yet.
+- Put new constants in src/config and new preset layouts in src/data rather than inline in main.js.
+- Placement rules, room state, and the saved-room schema live in src/game and src/persistence. Keep those modules free of Three.js and DOM so tests/unit can run them in Node. Change saved data only by adding a version and a migration in schema.js.
 - Put new plant models in src/plants.js and other furniture in src/props.js until the catalog split is implemented.
 - Keep catalog keys stable: they are stored in saved rooms. Add migrations before renaming or removing keys.
 - Keep localStorage key home-deco-sim:room for compatibility. The brand name is different intentionally.
@@ -39,8 +43,8 @@ The user's latest explicit instructions take precedence over these guidelines. T
 
 ## Validation and finishing
 
-For gameplay or visual changes, run npm run build and use the relevant scenarios in HANDOFF. For documentation-only changes, check links, paths, and factual consistency; a gameplay test run is not required.
+For gameplay or visual changes, run npm run build and npm test (Playwright, project-local; run npm run test:install once per machine). Add or extend a spec under tests/browser when you add a scenario. For documentation-only changes, check links, paths, and factual consistency; a gameplay test run is not required.
 
-Check relevant desktop, phone, tablet, and landscape states. Capture images when a visual change needs review. The scripts in output/checks are historical, machine-specific checks, not a portable npm test suite.
+Check relevant desktop, phone, tablet, and landscape states. Capture images when a visual change needs review. The scripts in output/checks are historical, machine-specific originals superseded by tests/browser.
 
 Update docs when an implementation changes a documented contract, design rule, or phase status. Record what changed, what was checked, and what remains in HANDOFF. Only mark a roadmap phase complete when its completion criteria are met.

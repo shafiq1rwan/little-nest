@@ -7,8 +7,8 @@ Keep the Little Nest style guide and existing saves intact through every phase. 
 | Phase | Focus | Status | Dependency |
 | --- | --- | --- | --- |
 | 0 | Playable visual baseline | Implemented; documented | None |
-| 1 | Structure and portable development | Planned — recommended next | Phase 0 |
-| 2 | Safe creative workflow | Planned | Phase 1 |
+| 1 | Structure and portable development | Complete 30 September 2026 | Phase 0 |
+| 2 | Safe creative workflow | Planned — recommended next | Phase 1 |
 | 3 | Richer decorating | Planned | Phase 2 |
 | 4 | More rooms and furniture collections | Planned | Phase 3 |
 | 5 | Lighting and atmosphere | Planned | Phase 4 |
@@ -28,14 +28,14 @@ Goal: make the code easier to extend on any computer without changing the game's
 
 Small steps:
 
-1. Establish a portable browser-check harness with project-local development dependencies and browser configuration. Preserve the existing test scenarios; remove reliance on user-specific runtime paths.
-2. Extract constants, scene palette, and starter room data from main.js.
-3. Extract pure footprint/bounds/snap rules and serializable item state. Add stable item IDs with a migration for old saves.
-4. Extract pointer/keyboard/touch handling, keeping pending selection and gesture lifecycle explicit.
-5. Extract save validation/storage, then HUD/responsive logic. Keep the legacy storage key.
-6. Separate thumbnail rendering and shared geometry/material ownership helpers.
-7. Group CSS into tokens/components/layout/responsive rules without altering the compact breakpoints.
-8. Document and pin the chosen runtime. For matching typography across OSes, bundle a licensed font and check it against the baseline before adopting it.
+1. Done: portable browser-check harness in tests/browser with @playwright/test as a devDependency, `npm test`, and `npm run test:install`. All Codex scenarios were ported and pass.
+2. Done: src/config/game.js, src/config/theme.js, and src/data/starter-room.js.
+3. Done: src/game/placement.js and src/game/state.js are pure and unit-tested; items carry stable ids and version 2 saves migrate on load.
+4. Done: src/game/input.js owns the gesture lifecycle and raycasting; main.js keeps the pending-selection decision.
+5. Done: src/persistence for saves (legacy key kept); src/ui/hud.js, responsive.js, and music.js for the HUD.
+6. Done: src/scene/thumbnails.js and src/scene/geometry.js; scene setup also moved to src/scene/create-scene.js.
+7. Done: src/styles/{tokens,components,layout,responsive}.css; breakpoints unchanged.
+8. Done: package.json engines and .nvmrc pin Node 20.19+ (23 recorded); Gelasio and Source Sans 3 (OFL) are bundled as fallbacks behind Georgia and Segoe UI, so Windows rendering is unchanged and other systems get matching metrics.
 
 Completion criteria:
 

@@ -18,7 +18,7 @@ The code is suitable for a playable prototype. The next recommended phase separa
 
 ## Run
 
-Install Node.js/npm, then open a terminal in the project folder:
+Install Node.js 20.19 or newer (23 recorded in .nvmrc), then open a terminal in the project folder:
 
     npm ci
     npm run dev
@@ -56,19 +56,33 @@ Icon artwork: [little-nest-icon.png](public/icons/little-nest-icon.png). Its exp
 
 | File | Responsibility |
 | --- | --- |
-| src/main.js | Startup, scene setup, placement, input, HUD wiring, save/load, render loop |
+| src/main.js | Composition: scene setup, mesh ownership, placing flow, save/load, render loop |
+| src/game/input.js | Pointer, keyboard, and touch handling |
+| src/ui/hud.js, responsive.js, music.js, icons.js | HUD rendering, compact drawer behaviour, background music, SVG icons |
+| src/scene/create-scene.js, geometry.js, thumbnails.js | Renderer and camera setup, material ownership, catalog previews |
+| src/config/game.js | Room size, camera limits, renderer, music, and storage constants |
+| src/config/theme.js | Scene palette, selectable wall/floor finishes, item colors |
+| src/data/starter-room.js | The furnished living room shown on first load |
+| src/game/placement.js, state.js | Pure placement rules and committed item records with stable ids |
+| src/persistence/schema.js, storage.js | Saved-room format, validation, migrations, and guarded localStorage |
+| tests/unit | Node unit tests for placement, state, and schema |
+| tests/browser | Playwright browser checks (`npm test` runs unit and browser projects) |
 | src/props.js | Furniture models, catalog, footprints, recoloring |
 | src/plants.js | Snake plant, areca palm, flowering cactus, rubber tree |
 | src/room.js | Room shell, textures, windows, blinds, artwork, ground shadows |
-| src/ui.js | SVG icons and model-generated catalog thumbnails |
-| src/style.css | Shared appearance, desktop HUD, and compact drawers |
+| src/styles/ | tokens, components, layout, responsive stylesheets |
 | index.html | HUD markup and accessibility labels |
-| public/ | Branding, manifest, and background music (audio/lofidreams-bgm.mp3) |
+| public/ | Branding, manifest, background music, and bundled OFL fonts |
 
 See [Architecture](docs/ARCHITECTURE.md) for the Phase 1 target structure.
 
 ## Validation and moving computers
 
-The production build and previous browser checks have passed. Historical scripts in output/checks use this PC's runtime/browser paths; there is currently no portable npm test command.
+Run the browser checks on any machine:
+
+    npm run test:install   # once per machine: downloads Playwright Chromium
+    npm test
+
+The checks start the Vite dev server themselves, cover placement, drag, rotation, recoloring, save/load, search, finishes, camera, music, six baseline viewports, touch gestures, and branding, and fail on any page error. Set LITTLE_NEST_BROWSER=msedge or chrome to run against a system browser instead. The scripts in output/checks are the historical, machine-specific originals and are superseded.
 
 Use [HANDOFF](docs/HANDOFF.md) for the manual checks, test viewport sizes, and transfer checklist. Copy docs and public assets with the source. Browser-local saved rooms must be backed up separately; exporting/importing rooms through the game UI is planned for Phase 2.

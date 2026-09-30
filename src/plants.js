@@ -1,11 +1,8 @@
 import * as THREE from 'three';
+import { sharedMaterial } from './scene/geometry.js';
 
 const palette = { soil: 0x49392c, dark: 0x34593d, green: 0x5c814b, light: 0x8ca363, cream: 0xf3e4d2 };
-const materials = new Map();
-function mat(color) {
-  if (!materials.has(color)) materials.set(color, new THREE.MeshStandardMaterial({ color, roughness: .88 }));
-  return materials.get(color);
-}
+const mat = (color) => sharedMaterial(color, .88);
 function part(g, geometry, color, position = [0, 0, 0]) {
   const m = new THREE.Mesh(geometry, mat(color)); m.position.set(...position);
   m.castShadow = m.receiveShadow = true; g.add(m); return m;

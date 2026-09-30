@@ -1,13 +1,10 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { PLANT_CATALOG } from './plants.js';
+import { sharedMaterial, ownMaterial, recolorModel } from './scene/geometry.js';
 
 const C = { cream: 0xf3e4d2, wood: 0xb87946, dark: 0x694b35, sage: 0x81936a, green: 0x4d7639, pot: 0xeee0ca, black: 0x393932, brass: 0xbb9451 };
-const materials = new Map();
-function material(color) {
-  if (!materials.has(color)) materials.set(color, new THREE.MeshStandardMaterial({ color, roughness: .85 }));
-  return materials.get(color);
-}
+const material = (color) => sharedMaterial(color, .85);
 function mesh(geometry, color, x, y, z) {
   const m = new THREE.Mesh(geometry, material(color));
   m.position.set(x, y, z); m.castShadow = m.receiveShadow = true; return m;
@@ -94,7 +91,8 @@ export const CATALOG = {
       leg.position.set(Math.cos(a) * .12, .69, Math.sin(a) * .12); leg.rotation.z = Math.sin(a) * .16; leg.rotation.x = Math.cos(a) * .16; g.add(leg);
     }
     const shade = cyl(.24, .36, .42, 0xffebc4, 0, 1.3, 0);
-    shade.material = material(0xffebc4).clone(); shade.material.emissive.setHex(0xffcc85); shade.material.emissiveIntensity = .22; g.add(shade);
+    // The glowing shade is the one furniture part with its own material, so it is owned and disposed with the lamp.
+    const glow = ownMaterial(shade, material(0xffebc4).clone()); glow.emissive.setHex(0xffcc85); glow.emissiveIntensity = .22; g.add(shade);
     const light = new THREE.PointLight(0xffbd73, 3, 4, 2); light.position.set(0, 1.45, 0); g.add(light); return g;
   }},
   rug: { label: 'Rug', category: 'decor', w: 4, d: 3, layer: 'floor', build() {
@@ -132,11 +130,4 @@ export const CATALOG = {
   ...PLANT_CATALOG,
 };
 
-export function recolor(group, color) {
-  group.traverse(o => { if (o.isMesh && o.userData.recolor) {
-    const next = o.material.clone(); next.color.setHex(color);
-    if (o.userData.ownedMaterial) o.userData.ownedMaterial.dispose();
-    o.material = next; o.userData.ownedMaterial = next;
-    if (o.userData.base) o.userData.base = next;
-  } });
-}
+export const recolor = recolorModel;

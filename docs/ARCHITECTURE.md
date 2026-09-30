@@ -13,18 +13,35 @@ It is not yet a fully separated foundation for a larger game. src/main.js is app
 | File | Current responsibility |
 | --- | --- |
 | index.html | HUD markup and accessibility labels |
-| src/main.js | Startup, scene/camera/lighting, placement state, input, HUD wiring, save/load, render loop |
+| src/main.js | Composition: scene/camera/lighting setup, mesh ownership, placing/drag/rotate flow, and wiring of the modules below (about 375 lines) |
+| src/game/input.js | Pointer, keyboard, and touch lifecycle; raycasting; emits move/down/up/secondTouch/key |
+| src/ui/hud.js | Toast, catalog cards and filtering, tabs, finish swatches, selection card rendering |
+| src/ui/responsive.js | Compact media query, drawer expand/collapse, selection card docking |
+| src/ui/music.js | Background music with gesture unlock and remembered mute |
+| src/config/game.js | ROOM, CELL, WALL_H, CAMERA, RENDER, MUSIC, storage keys, save version and item cap |
+| src/config/theme.js | Backdrop and highlight colors, WALL_FINISHES, FLOOR_FINISHES, ITEM_COLORS |
+| src/data/starter-room.js | STARTER_ROOM item list |
+| src/game/placement.js | Pure footprint, bounds, occupancy, snap, and world-position rules (no Three.js, no DOM) |
+| src/game/state.js | Committed item records with stable ids; occupancy derived from them (no Three.js, no DOM) |
+| src/persistence/schema.js | Saved-room format, validation, and version migrations |
+| src/persistence/storage.js | Guarded localStorage adapter |
+| tests/unit | Node unit tests for placement, state, and schema |
+| tests/browser | Playwright specs and helpers; playwright.config.js starts the dev server |
 | src/room.js | Room shell, procedural textures, windows, blinds, artwork, shadow receiver |
-| src/props.js | Furniture models, catalog registry, material cache, furniture recoloring |
+| src/props.js | Furniture models and catalog registry (materials via scene/geometry.js) |
 | src/plants.js | Four additional plant models, pot materials, plant catalog entries |
-| src/ui.js | Small SVG icon registry and offscreen rendering of catalog thumbnails |
-| src/style.css | Shared visual rules, desktop layout, compact drawers, orientation overrides |
+| src/scene/create-scene.js | Renderer, orthographic camera, orbit controls, lighting, resize, zoom and reset helpers |
+| src/scene/geometry.js | Shared material cache, owned-material rule, recolor, tint, dispose, measure |
+| src/scene/thumbnails.js | Offscreen catalog previews, disposed through geometry.js |
+| src/ui/icons.js | Inline SVG icon registry |
+| src/styles/ | index.css imports tokens.css (fonts and colors), components.css, layout.css (desktop), responsive.css (compact and landscape) |
+| public/fonts | Bundled OFL fonts (Gelasio, Source Sans 3) with licences; system Segoe UI and Georgia stay first in the stacks |
 | public/icons | Original Little Nest artwork and exported icon sizes |
 | public/manifest.webmanifest | Game name, display mode, theme, and application icons |
 | package-lock.json | Exact installed dependency graph |
-| output/checks | Historical checks and screenshots; scripts contain this PC's runtime/browser paths |
+| output/checks | Historical Codex checks and screenshots, superseded by tests/browser |
 
-There is no backend, account system, cloud sync, permanent object ID, undo history, automated npm test command, or multi-room save gallery today. The manifest supplies application metadata; there is no service worker or offline-cache implementation.
+There is no backend, account system, cloud sync, undo history, or multi-room save gallery today. `npm test` runs the portable browser checks. The manifest supplies application metadata; there is no service worker or offline-cache implementation.
 
 ## What is already working
 
@@ -38,18 +55,18 @@ There is no backend, account system, cloud sync, permanent object ID, undo histo
 
 ## Main cleanup needs
 
-1. Separate DOM updates from placement rules; placement should not know button IDs.
-2. Move constants, palette values, and the starter room into named configuration/data modules.
-3. Extract save validation and storage access from click handlers.
-4. Separate UI icon helpers from thumbnail rendering; they have different dependencies and lifecycles.
-5. Establish common geometry/material ownership helpers for props and plants. Review cloned lamp materials and thumbnail cleanup.
-6. Organize CSS into tokens, common components, and clearly grouped responsive rules; remove obsolete brand SVG rules as a separate checked cleanup.
-7. Turn the existing browser scenarios into a locally installed, portable test harness.
+1. Done (30 September 2026): placement rules and state are pure; input and HUD live in their own modules and call back into main.js for decisions.
+2. Done (30 September 2026): constants, palette values, and the starter room live in src/config and src/data.
+3. Done (30 September 2026): src/persistence/schema.js and storage.js; click handlers only call them.
+4. Done (30 September 2026): src/ui/icons.js and src/scene/thumbnails.js.
+5. Done (30 September 2026): src/scene/geometry.js; the lamp shade clone is owned and disposed; thumbnails dispose through the same helper.
+6. Done (30 September 2026): src/styles split into tokens, components, layout, responsive. The obsolete .brand svg rules were removed in the same pass and checked against the baseline screenshots.
+7. Done (30 September 2026): tests/browser holds the scenarios as Playwright specs with a project-local runner.
 8. Confirm support policy for historical 10 × 10 saves. The current room is 8 × 8 and validates against its current bounds; out-of-bounds historical layouts are rejected, not migrated.
 
 ## Proposed structure after Phase 1
 
-Introduce these incrementally, while keeping a working game after every extraction:
+Introduce these incrementally, while keeping a working game after every extraction. Everything below exists except game/commands.js, which Phase 2 adds with undo history:
 
     src/
       main.js                    composition and startup only
@@ -103,33 +120,33 @@ Use userData.recolor only on intended changeable parts. Recoloring pots must not
 
 ### Placement contract
 
-Committed items currently contain type, mesh, gx, gz, rot, and color. A transient pending position is used while dragging. rot is an integer 0–3; each step is 90 degrees.
+Committed items are records { id, type, gx, gz, rot, color } owned by src/game/state.js. Meshes are kept in a Map keyed by id in main.js and every mesh carries userData.itemId. Ids are short random strings, assigned on add or preserved from a save. A transient drag target is held in main.js while dragging. rot is an integer 0–3; each step is 90 degrees.
 
-Ordinary furniture cannot overlap occupied cells or exceed room bounds. Floor-layer items can overlap ordinary furniture. Temporarily free the dragged item's own cells, then either commit a valid new position or restore its old transform. Finish a move once, even if capture is lost or an interaction is canceled.
+Ordinary furniture cannot overlap occupied cells or exceed room bounds. Floor-layer items can overlap ordinary furniture. Moves and rotations go through state.move and state.rotate, which ignore the item's own cells and refuse invalid results without touching occupancy. Finish a move once, even if capture is lost or an interaction is canceled.
 
-Future state should store serializable item data separately from mesh references. Add stable item IDs when introducing history, relationships, and surface placement.
+Item ids are the handle future undo history, export, parent/surface relationships, and commands should use.
 
 ### Save contract
 
-Storage key: home-deco-sim:room. Current writer:
+Storage key: home-deco-sim:room. Current writer (src/persistence/schema.js, version 3):
 
     {
-      "version": 2,
+      "version": 3,
       "wall": 9597532,
       "floor": 14918514,
       "items": [
-        { "type": "armchair", "gx": 6, "gz": 3, "rot": 3, "color": 8491882 }
+        { "id": "i4k2x9qz", "type": "armchair", "gx": 6, "gz": 3, "rot": 3, "color": 8491882 }
       ]
     }
 
 The example shows the shape; colors are numeric 24-bit RGB values. There are no room names, room dimensions, parent IDs, or save-slot IDs in this format.
 
-The current loader accepts matching legacy-shaped data without a version field and does not dispatch validation by schema version. Phase 1 should make version handling explicit without losing valid existing saves. Current checks include known types, integer coordinates/rotation, bounds, collisions, optional color ranges, and at most 200 items.
+parseRoom migrates by version before validating: saves with no version or version 2 (no ids) are read as version 3 and each item receives a fresh id; unknown versions are rejected. Validation covers known types, integer coordinates/rotation, bounds, collisions, optional color ranges, string ids (duplicates are replaced), and at most 200 items. Add a new version and a migration step in schema.js before changing the shape again.
 
 Browser storage belongs to a browser profile and origin. The project directory does not contain these saves.
 
 ### Input and responsive contract
 
-One finger moves furniture. Two fingers orbit/pinch; a second pointer ends the pending drag and suppresses object movement. Selection-panel changes are deferred until gestures finish.
+One finger moves furniture. Two fingers orbit/pinch; a second pointer ends the pending drag and suppresses object movement. Selection-panel changes are deferred until gestures finish. src/game/input.js owns pointer counting, capture, and raycasting and emits semantic callbacks; main.js decides what they mean.
 
 Pointer capture, cancellation, keyboard focus, and browser resize must preserve valid committed state. Search input must not trigger R/Delete shortcuts. Keep the JavaScript compact-screen query and CSS breakpoints synchronized.

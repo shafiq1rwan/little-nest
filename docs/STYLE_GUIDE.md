@@ -43,13 +43,13 @@ These are baseline images, not a requirement for identical pixels across browser
 | Scene peach backdrop | #df9d80 |
 | Scene selection outline | #91ad79 |
 
-Prefer existing CSS variables --cream, --sage, and --line. Phase 1 should name the remaining repeated tokens instead of introducing near-duplicate colors.
+Use the tokens in src/styles/tokens.css: --cream, --sage, --sage-deep, --line, --ink, --muted, --card, --card-hover, --card-active, --drawer-button, --hover, --backdrop, --shadow. Muted text is --muted (#8c725f) everywhere; the former #8b715e was folded into it.
 
 Selectable finishes can vary within the established warm/soft palette. Baseline wall color is #92725c, floor multiplier #e3a372, upholstery cream #f3e4d2, and upholstery sage #81936a. Scene material colors are affected by textures, lights, and tone mapping, so their rendered pixels differ from these source values.
 
 ## Typography, spacing, and controls
 
-- Brand and prominent headings: Georgia, serif. Body and controls: Segoe UI, system-ui, sans-serif.
+- Brand and prominent headings: Georgia, then bundled Gelasio, serif. Body and controls: Segoe UI, then bundled Source Sans 3, system-ui, sans-serif. Use the tokens --font-heading and --font-body.
 - Desktop brand size: 27px; the narrower desktop override is 21px. Compact brand is 19px and becomes 16px at <= 370px width.
 - Small-screen search text is 16px to avoid input zoom in common mobile browsers.
 - Keep control labels readable, normally 12–13px on compact screens. Footprint metadata is secondary.
@@ -59,7 +59,7 @@ Selectable finishes can vary within the established warm/soft palette. Baseline 
 - New primary touch actions should have a target at least 44 × 44px. Current category chips are 40px high and Clear is 40px; enlarge them if a future layout permits.
 - Keep focus indicators, accessible button names, active/pressed states, and reduced-motion support.
 
-Font fallback differs between operating systems: Segoe UI is not guaranteed on another OS. The current source travels consistently, but exact font metrics may differ. A bundled, licensed body font is a Phase 1 improvement, not implemented yet.
+Windows renders with Segoe UI and Georgia exactly as before. Other operating systems use the bundled OFL fonts in public/fonts, chosen for matching metrics (Gelasio is metric-compatible with Georgia).
 
 ## HUD layout and behavior
 

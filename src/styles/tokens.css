@@ -1,0 +1,40 @@
+/* Design tokens and bundled fonts. Values are documented in docs/STYLE_GUIDE.md. */
+
+/* Segoe UI and Georgia come first so Windows renders unchanged; the bundled OFL fonts cover other systems. */
+@font-face {
+  font-family: 'Source Sans 3';
+  font-style: normal;
+  font-weight: 200 900;
+  font-display: swap;
+  src: url('/fonts/source-sans-3-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Gelasio';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/gelasio-latin.woff2') format('woff2');
+}
+
+:root {
+  --font-body: 'Segoe UI', 'Source Sans 3', system-ui, sans-serif;
+  --font-heading: Georgia, 'Gelasio', serif;
+
+  --cream: #fff8ed;          /* panels and top bar */
+  --sage: #718d61;           /* primary action */
+  --sage-deep: #5e794f;      /* primary action hover */
+  --line: #ead5bd;           /* borders and dividers */
+  --ink: #563425;            /* primary text */
+  --muted: #8c725f;          /* secondary text */
+  --card: #f4ebdd;           /* catalog card background */
+  --card-hover: #eee0cd;
+  --card-active: #fcf7ed;
+  --drawer-button: #f1e7d9;  /* buttons inside the compact drawer */
+  --hover: #efdfcc;          /* generic button hover */
+  --backdrop: #df9b7d;       /* page background behind the scene */
+  --shadow: #56342522;
+
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: var(--backdrop);
+}

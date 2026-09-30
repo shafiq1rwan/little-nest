@@ -36,7 +36,7 @@ Keep package-lock.json when moving computers. The runtime itself is browser-base
 - Drag furniture to move it. R rotates; Delete removes; Escape cancels. Undo and redo with the toolbar arrows or Ctrl+Z and Ctrl+Shift+Z.
 - Change colors on upholstery, rugs, and the marked parts of plant pots.
 - Use Walls and Floor tabs to choose finishes.
-- Toggle grid/walls with the left toolbar; use the camera buttons to zoom or reset.
+- Toggle grid/walls with the left toolbar; use the camera buttons to zoom or reset. The camera button opens photo mode: the controls hide, you frame the view, and Save photo downloads a PNG.
 - Right-drag to orbit and scroll to zoom.
 - On phones, Browse/Hide controls the drawer. Choosing furniture hides it for placement; selecting an item opens controls in the drawer. Landscape phones use a side drawer.
 - One finger moves furniture; two fingers orbit/pinch.

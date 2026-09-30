@@ -45,7 +45,7 @@ It is not yet a fully separated foundation for a larger game. src/main.js is app
 | package-lock.json | Exact installed dependency graph |
 | output/checks | Historical Codex checks and screenshots, superseded by tests/browser |
 
-There is no backend, account system, or cloud sync today. `npm test` runs the portable browser checks. The manifest supplies application metadata; there is no service worker or offline-cache implementation.
+There is no backend, account system, or cloud sync today. Photo mode lives in main.js (enter/exit/savePhoto) with body.photo CSS rules in components.css and responsive.css; input callbacks return early while it is active. `npm test` runs the portable browser checks. The manifest supplies application metadata; there is no service worker or offline-cache implementation.
 
 ## What is already working
 

@@ -79,3 +79,11 @@ kbd { font: inherit; border: 1px solid var(--line); border-radius: 4px; padding:
 .gallery-tools { display: flex; gap: 8px; align-items: center; }
 .gallery-tools > button:not(.icon-button) { padding: 8px 12px; font-size: 13px; }
 .gallery-tools svg { width: 17px; height: 17px; }
+
+/* Photo mode: the HUD steps aside so the room can be framed and captured. */
+#photo-bar { position: absolute; top: 22px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 16px; border-radius: 30px; background: var(--cream); box-shadow: 0 6px 24px var(--shadow); font-size: 13px; }
+#photo-bar .photo-label { font-weight: 600; }
+#photo-bar button { padding: 8px 12px; font-size: 13px; min-height: 40px; }
+#photo-bar kbd { margin-left: 4px; }
+body.photo .tool-rail, body.photo .mode-pill, body.photo .selection-card, body.photo .hint-strip, body.photo #help-panel, body.photo #panel { display: none !important; }
+body.photo .topbar { display: none; }

@@ -117,3 +117,10 @@
   .gallery-save input, .gallery-save button, .room-actions button, .room-rename button { min-height: 44px; }
   .room-actions button { flex: 1 1 auto; font-size: 13px; }
 }
+
+@media (max-width: 900px), (max-height: 600px) {
+  #photo-bar { top: auto; bottom: 12px; left: max(12px, env(safe-area-inset-left)); transform: none; max-width: calc(100% - 24px); flex-wrap: wrap; gap: 8px; padding: 8px 10px; }
+  #photo-bar button { min-height: 44px; }
+  #photo-bar kbd { display: none; }
+  body.photo .camera-tools { bottom: auto; top: 12px; }
+}

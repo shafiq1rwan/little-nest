@@ -175,6 +175,7 @@ const input = createInput({
   idOf: (o) => o.userData.itemId || null,
 }, {
   move(hit) {
+    if (photoMode) return;
     if (ghost) {
       const rot = ghost.userData.rot;
       const { gx, gz } = snap(hit, selectedType, rot);
@@ -190,6 +191,7 @@ const input = createInput({
     }
   },
   down({ hit, pick, shiftKey }) {
+    if (photoMode) return;
     if (ghost) {
       if (!hit) return;
       const rot = ghost.userData.rot;
@@ -216,6 +218,7 @@ const input = createInput({
     pendingSelection = true;
   },
   key(action, ev) {
+    if (photoMode) { if (action === 'cancel') exitPhotoMode(); return; }
     if (action === 'cancel') { cancelPlacing(); setSelected(null); }
     if (action === 'rotate') rotateSelected();
     if (action === 'remove' && selected && !dragging) { ev.preventDefault(); removeItem(selected); }
@@ -315,16 +318,18 @@ function loadRoom(id) {
   setCurrentRoom(entry);
   toast('"' + entry.name + '" loaded.');
 }
-/** Offers a room as a file download. */
-function downloadText(filename, text) {
-  const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+/** Offers a URL as a file download. */
+function downloadUrl(filename, url, revoke = false) {
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
   document.body.append(a);
   a.click();
   a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  if (revoke) setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+function downloadText(filename, text) {
+  downloadUrl(filename, URL.createObjectURL(new Blob([text], { type: 'application/json' })), true);
 }
 function exportEntry(id) {
   let entry;
@@ -363,6 +368,62 @@ $('load').onclick = () => galleryDialog.open();
 $('clear').onclick = () => { clearRoom(); toast('Room cleared. A fresh start.'); };
 gallery.migrateLegacy();
 
+// ---------- photo mode ----------
+// The HUD hides, furniture cannot be picked, and the camera stays free so the room can be framed.
+let photoMode = false;
+let photoRestore = null;   // HUD state to put back when leaving
+function enterPhotoMode() {
+  if (photoMode) return;
+  settle();
+  photoRestore = { grid: grid.visible, panelExpanded: hud.isExpanded() };
+  photoMode = true;
+  grid.visible = false;
+  document.body.classList.add('photo');
+  $('photo-bar').hidden = false;
+  setPressed($('photo-tool'), true);
+  $('photo-tool').setAttribute('aria-label', 'Leave photo mode');
+  canvas.style.cursor = 'default';
+}
+function exitPhotoMode() {
+  if (!photoMode) return;
+  photoMode = false;
+  document.body.classList.remove('photo');
+  $('photo-bar').hidden = true;
+  setPressed($('photo-tool'), false);
+  $('photo-tool').setAttribute('aria-label', 'Photo mode');
+  grid.visible = photoRestore.grid;
+  hud.setExpanded(photoRestore.panelExpanded);
+  photoRestore = null;
+  canvas.style.cursor = 'grab';
+  updateSelection();
+}
+/** Renders the current view at up to twice the screen resolution and downloads it as a PNG. */
+function savePhoto() {
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  const scale = Math.max(1, Math.min(2, Math.floor(4096 / Math.max(w, h))));
+  const prevRatio = renderer.getPixelRatio();
+  let url = null;
+  try {
+    renderer.setPixelRatio(scale);
+    renderer.setSize(w, h, false);
+    renderer.render(scene, camera);
+    url = renderer.domElement.toDataURL('image/png');
+  } catch {
+    toast('The photo could not be captured.');
+  } finally {
+    // Always put the renderer back, whether or not the capture worked.
+    renderer.setPixelRatio(prevRatio);
+    renderer.setSize(w, h, false);
+  }
+  if (!url) return;
+  const slug = (currentRoom?.name ?? 'little nest').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'little-nest';
+  downloadUrl(slug + '-photo.png', url);
+  toast('Photo saved.');
+}
+$('photo-tool').onclick = () => (photoMode ? exitPhotoMode() : enterPhotoMode());
+$('photo-exit').onclick = exitPhotoMode;
+$('photo-save').onclick = savePhoto;
+
 // ---------- starter room ----------
 let starterSelection = null;
 for (const it of STARTER_ROOM) {
@@ -387,6 +448,7 @@ const withMesh = (r) => (r ? { ...r, mesh: meshOf(r) } : null);
 window.__sim = {
   state, placement, commands, finishes, gallery, occupancy: state.occupancy, bgm: music.audio, scene, camera, controls, grid, walls, wallMat, floorMat,
   get currentRoom() { return currentRoom; },
+  get photoMode() { return photoMode; },
   pointerToFloor: input.floorHit, snap, isFree, worldPos, meshOf, addItem, setSelected, rotateSelected,
   measure: measureModel,
   get musicOn() { return music.isOn(); },

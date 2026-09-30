@@ -81,6 +81,7 @@ Run `npm run test:install` once per machine, then `npm test`. Playwright starts 
 | Save, modify, then load from Rooms | Saved layout, rotation, finishes, and colors return; the top-bar label shows the room name |
 | Rooms dialog: save as, rename, duplicate, delete | List updates newest first; delete needs confirmation; entries survive a reload |
 | Export a room, then import the file | A new entry with the same name and layout appears; junk files are refused with a toast |
+| Photo mode: enter, save, exit | HUD hides, furniture cannot be picked, a PNG downloads, and grid/drawer/controls come back |
 | Invalid save data | Current room remains intact and feedback appears |
 | Search plant / use categories | Five plant choices appear; category filtering is correct |
 | Type R/Delete in search | Search edits normally; game shortcuts do not fire |
@@ -100,6 +101,7 @@ Current browser checks previously passed placement, saving, plants, HUD/touch in
 
 ## Current handoff
 
+- 30 September 2026, Phase 2 increment 4 (Phase 2 complete): photo mode. A camera button in the view controls hides the top bar, panel, tool rail, selection card, and hints; a photo bar offers Save photo and Done; Escape also exits. Editing input is ignored while active; the camera stays free. Save photo renders at up to 2x pixel ratio (capped at 4096px) and downloads <room>-photo.png; the renderer is restored in a finally block. Grid visibility and drawer state are restored on exit. Suite: 48 passed (28 unit, 20 browser). Next: Phase 3 (surface placement, wall decorations).
 - 30 September 2026, Phase 2 increment 3: export/import. src/persistence/transfer.js defines the file envelope and import parsing; each gallery entry has Export (downloads <slug>.littlenest.json) and the dialog has Import (file picker, adds a gallery entry). Invalid or foreign files show a toast and change nothing. Suite: 46 passed (28 unit, 18 browser). Next: photo mode, which completes Phase 2.
 - 30 September 2026, Phase 2 increment 2: named room saves. src/persistence/gallery.js stores rooms under home-deco-sim:rooms and imports the old single save once; src/ui/gallery.js renders a native dialog with save-as, load, rename, duplicate, and confirm-to-delete. Top-bar Load became Rooms; Save overwrites the open room (first save creates "Living room"); the top-bar label shows the open room name. Suite: 39 passed (23 unit, 16 browser). Next: JSON export/import, then photo mode.
 - 30 September 2026, Phase 2 increment 1: added src/game/commands.js (undoable add, remove, move, rotate, recolor, setFinish, clear, replaceRoom; history capped at 100; events for the scene to mirror). main.js now performs every mutation through commands and rebuilds meshes from events. Undo and redo buttons sit in the tool rail; Ctrl+Z, Ctrl+Shift+Z and Ctrl+Y work; Ctrl+R no longer rotates. Recolor undo restores the original shared material. Load is one undoable entry. Suite: 31 passed (17 unit, 14 browser). Next: named room saves with a gallery, then JSON export/import, then photo mode.
@@ -116,7 +118,7 @@ Current browser checks previously passed placement, saving, plants, HUD/touch in
 - Visual identity: cream, sage, peach, warm wood, cozy procedural models.
 - Work completed in this documentation task: structure review, phased plan, persistent coding instructions, style guide, transfer guide, and five current visual baseline screenshots.
 - No architecture refactor or new gameplay phase was implemented in this task.
-- Next recommended work: Phase 2 photo mode, then Phase 3.
+- Next recommended work: Phase 3 (richer decorating: surface placement, wall-mounted items).
 
 ## Update after future work
 

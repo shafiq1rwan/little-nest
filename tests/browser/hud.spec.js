@@ -10,7 +10,7 @@ const VIEWPORTS = [
   [568, 320],
   [1440, 900],
 ];
-const IMPORTANT_CONTROLS = ['save', 'load', 'help-toggle', 'music-toggle', 'undo-tool', 'redo-tool', 'grid-tool', 'walls-tool', 'zoom-in'];
+const IMPORTANT_CONTROLS = ['save', 'load', 'help-toggle', 'music-toggle', 'undo-tool', 'redo-tool', 'grid-tool', 'walls-tool', 'zoom-in', 'photo-tool'];
 
 for (const [width, height] of VIEWPORTS) {
   const compact = width <= 900 || height <= 600;

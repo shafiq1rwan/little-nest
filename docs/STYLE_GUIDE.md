@@ -22,6 +22,8 @@ The generated HUD concept is more detailed than the live procedural room. Match 
 | Current state | Reference |
 | --- | --- |
 | Desktop, 1440 × 900 | [desktop.png](design-reference/desktop.png) |
+| Main menu, 1440 × 900 | [main-menu.png](design-reference/main-menu.png) |
+| Loading screen, 1440 × 900 | [loading.png](design-reference/loading.png) |
 | Phone browsing, 390 × 844 | [phone-browse.png](design-reference/phone-browse.png) |
 | Phone selection, 390 × 844 | [phone-selected.png](design-reference/phone-selected.png) |
 | Small phone with drawer hidden, 320 × 568 | [phone-room.png](design-reference/phone-room.png) |
@@ -50,13 +52,13 @@ Selectable finishes can vary within the established warm/soft palette. Baseline 
 ## Typography, spacing, and controls
 
 - Brand: bundled Fredoka Semibold via --font-brand. Other prominent headings: Georgia, then bundled Gelasio, serif. Body and controls: Segoe UI, then bundled Source Sans 3, system-ui, sans-serif. Use the tokens --font-heading and --font-body.
-- Desktop brand size: 40px; the narrower desktop override is 34px. Compact brand is 23px and becomes 20px at <= 370px width. The title is cream text directly on the backdrop with no capsule or image logo. The current room name sits underneath in smaller, spaced lettering, including on compact screens; long names truncate. Save uses an icon at <= 440px.
+- Desktop brand size: 30px; the narrower desktop override is 26px. Compact brand is 23px and becomes 19px, wrapping to two lines, at <= 370px width. The title is cream text directly on the backdrop with no capsule or image logo. The current room name sits underneath in smaller, spaced lettering (hidden at <= 370px); long names truncate. Save uses an icon at <= 440px.
 - Small-screen search text is 16px to avoid input zoom in common mobile browsers.
 - Keep control labels readable, normally 12–13px on compact screens. Footprint metadata is secondary.
 - Use thin warm-brown line icons with consistent strokes. Do not mix emoji, filled clip-art, and line icons as controls.
 - Buttons use 12–13px corners and a shallow bottom edge; furniture tiles use 18px corners, and floating panels use 20–26px corners. Use warm outlines, soft shadows, and inset highlights to feel like tactile game pieces. Furniture thumbnails sit on subtle oval plinths.
 - Use consistent spacing from existing 4/8/12/16/24px families.
-- Primary touch actions, camera controls, selection controls, compact category chips, and Clear have targets at least 44 × 44px.
+- On compact screens, primary touch actions, camera controls, selection controls, category chips, and Clear have targets at least 44 × 44px. Desktop pointer controls are deliberately smaller and calmer: 38px icon buttons in the top-right capsule, tool tray, and camera tray; 36px selection actions; 30px category chips; 34px colour swatches.
 - Keep focus indicators, accessible button names, active/pressed states, and reduced-motion support.
 
 The wordmark uses bundled Fredoka on every platform. Body text and other headings use Segoe UI and Georgia when available, with bundled Source Sans 3 and Gelasio as fallbacks. All three fonts include OFL licences in public/fonts.
@@ -87,7 +89,7 @@ Keep the main camera actions available even with the drawer open. At landscape w
 
 ### Loading screen and main menu
 
-The loading screen is the backdrop colour with soft dappled light, the cream Fredoka wordmark, the nook illustration, a status line, a cream progress bar with a sage fill, and one random tip. It fades out when the menu is ready. The main menu floats over the live room: wordmark, then Start or Resume decorating (sage primary), My rooms, and Settings, all in the tactile button style with Fredoka labels. Desktop keeps the menu in the left third with the room to the right; portrait phones stack title, room, and buttons; short landscape keeps the side layout. The editor is inert behind the menu, and the Menu button in the HUD action capsule returns to it.
+The loading screen is the backdrop colour with soft dappled light, the cream Fredoka wordmark (28–42px), the nook illustration at about 250px, a status line, a slim cream progress bar with a sage fill, and one random tip. Everything is sized to feel quiet rather than splashy. It fades out when the menu is ready. The main menu floats over the live room: wordmark (30–48px), then Start or Resume decorating (sage primary), My rooms, and Settings as 52px tactile buttons with 15–18px Fredoka labels in a column no wider than 340px. Desktop keeps the menu in the left third with the room to the right; portrait phones stack title, room, and buttons; short landscape keeps the side layout. The editor is inert behind the menu, and the Menu button in the HUD action capsule returns to it.
 
 ### Interaction
 

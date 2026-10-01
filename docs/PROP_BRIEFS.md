@@ -1,27 +1,35 @@
 # Little Nest prop briefs
 
-Reference descriptions for every catalog item, written so an image generator (Codex) can draw a concept sheet and a 3D generator (Tripo) can model it. Dimensions and colours come from the current procedural models in `src/props.js` and `src/plants.js`; a modelled replacement must keep the same footprint, origin and colour slots so it drops into saved rooms without changes.
+Reference descriptions for every catalog item, written so Codex can draw one reference image per prop and Tripo can build a 3D model from that image. Dimensions and colours come from the current procedural models in `src/props.js` and `src/plants.js`; a modelled replacement must keep the same footprint, origin and colour slots so it drops into saved rooms without changes.
 
 ## Shared style (paste at the top of every prompt)
 
 > Low-poly cozy isometric furniture for a room-decorating game. Clean flat-shaded facets, soft rounded edges (small bevels, no sharp box corners), chunky readable silhouette, no textures or decals, one flat colour per part. Palette: warm honey wood `#b87946`, dark walnut `#694b35`, cream linen `#f3e4d2`, sage green `#81936a`, leaf green `#4d7639`, pale clay pot `#eee0ca`, soft black `#393932`, brass `#bb9451`, terracotta `#b96949`, caramel `#c38e62`. Isometric three-quarter view from the front-left, soft warm daylight, plain pale background, no floor shadow baked in.
 
-Codex image prompt: shared style + one brief + "Show front three-quarter, side and top views on one sheet."
-Tripo prompt: shared style + one brief (the image sheet as reference if the tool accepts one).
+## Pipeline: Codex draws, Tripo models from the drawing
 
-## Delivery rules for Tripo / clean-up
+1. **Codex image, one per prop.** Prompt = shared style + the prop brief + this suffix:
+   > Single object only, centred, front three-quarter view from the front-left, slightly above eye level, whole object visible with margin, plain pure white background, no floor, no shadow, no text, no other objects. Square 1024 x 1024.
+   Image-to-3D reads one isolated object best; do not put several views or several props on one image. Name the file after the catalog key (`sofa.png`).
+2. **Optional multi-view.** For items whose back matters (sofa, bed, bookshelf, desk, wardrobe, rocking chair) ask Codex for three extra images with the same suffix but "straight front view", "straight left side view", and "straight back view", and feed all four to Tripo's multi-view mode. Keep the same colours and proportions across the set.
+3. **Tripo.** Image-to-3D with the Codex image(s). Pick low-poly or "cartoon/stylised" output if offered, and request a quad or low-tri mesh. Export glb.
+4. **Check against the brief** before accepting: footprint shape, number of legs/drawers/cushions, the recolourable part exists as a visually separate area, nothing extra was hallucinated (cables, extra cushions, text on the screen).
 
-| Rule | Value |
+Tripo output is normalised to roughly a unit cube with an arbitrary origin and merged materials, so every model then needs the clean-up in the next section.
+
+## Clean-up after Tripo (Blender or similar)
+
+| Step | Target |
 | --- | --- |
 | Format | glTF binary (.glb), Y up, metres |
-| Scale | 1 grid cell = 1.0 unit. Footprints below are in cells; model sizes are in units. |
+| Scale | Resize so the longest side matches the brief's size. 1 grid cell = 1.0 unit; footprints below are in cells, sizes in units. |
 | Origin | Floor items: centre of the footprint on the floor (y = 0). Surface items: centre of the base. Wall items: bottom-centre of the back face, model extends towards +Z (into the room). |
 | Facing | Front of the item faces +Z. Backs of sofas, beds, bookshelves and desks sit at -Z. |
-| Triangle budget | Small items under 400, plants under 2 500, furniture under 1 500, wall art under 300. |
-| Materials | One material per colour, named by role. Parts the player can recolour (marked **recolour** below) must be their own material and not share it with any other part. |
-| Glow parts | Candle flame, lantern glow, lamp shades are separate materials so the game can make them emissive. |
-| Smoothing | Flat shading for facets, smooth only on cylinders, pots and cushions. |
-| Textures | None. Vertex colours or flat material colours only. The two framed prints get their art from the game at run time, so leave the canvas as a plain flat quad. |
+| Triangle budget | Decimate to: small items under 400, plants under 2 500, furniture under 1 500, wall art under 300. |
+| Materials | Replace the generated texture with flat colours from the brief, one material per colour, named by role. Parts the player can recolour (marked **recolour** below) must be their own material and not share it with any other part. |
+| Glow parts | Candle flame, lantern glow and lamp shades are separate materials so the game can make them emissive. |
+| Smoothing | Flat shading for facets; smooth only cylinders, pots and cushions. |
+| Textures | None in the final file. The two framed prints get their art from the game, so the canvas is a plain flat quad. |
 
 Footprint cells are width (x) by depth (z). Rotations are quarter turns, so items need not be symmetric.
 

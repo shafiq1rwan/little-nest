@@ -53,7 +53,9 @@ Little Nest is made by Saiss. Music: "Lofi Dreams" (lofi jazz music) from Pixaba
 
 The style uses warm paneled walls, corner windows and blinds, parquet, cream seating, wood furniture, greenery, artwork, and warm lighting.
 
-The current screenshots and original HUD concept are in [docs/design-reference](docs/design-reference). Follow the [style guide](docs/STYLE_GUIDE.md) when extending the game.
+The current screenshots and original HUD concept are in [docs/design-reference](docs/design-reference). Follow the [style guide](docs/STYLE_GUIDE.md) when extending the game. The [48-prop concept sheet](art-source/prop-sheet.png) is the target look for modelled props.
+
+[Prop briefs](docs/PROP_BRIEFS.md) describe every catalog model and the pipeline from concept sheet to game-ready glb. The game still uses its procedural builders until glb loading is implemented.
 
 The header uses a text-only Little Nest wordmark in bundled Fredoka Semibold. [Icon artwork](public/icons/little-nest-icon.png) supplies the browser tab and web app manifest icons.
 

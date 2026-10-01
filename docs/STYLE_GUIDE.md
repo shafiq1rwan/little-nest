@@ -97,6 +97,8 @@ Do not change canvas dimensions while a drag or pinch is active. One finger deco
 
 ## Room and object art
 
+The [48-prop concept sheet](../art-source/prop-sheet.png) is the target look for modelled props; see [PROP_BRIEFS](PROP_BRIEFS.md). It is not yet in the live renderer, so current game screenshots remain the runtime baseline.
+
 - Stylized, rounded procedural 3D with simple, readable silhouettes.
 - Orthographic isometric cutaway with two back walls and a visible complete floor.
 - Paneled warm wood walls, parquet floor, cream edge trim, corner windows, wood blinds, simple framed art.

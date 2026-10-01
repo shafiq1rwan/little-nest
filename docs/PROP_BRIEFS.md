@@ -1,32 +1,31 @@
 # Little Nest prop briefs
 
-Reference descriptions for every catalog item, written so Codex can draw one reference image per prop and Tripo can build a 3D model from that image. Dimensions and colours come from the current procedural models in `src/props.js` and `src/plants.js`; a modelled replacement must keep the same footprint, origin and colour slots so it drops into saved rooms without changes.
+Reference descriptions for every catalog item, used to draw the concept sheet, to generate shapes from it, and to check the results. Dimensions and colours come from the current procedural models in `src/props.js` and `src/plants.js`; a modelled replacement must keep the same footprint, origin and colour slots so it drops into saved rooms without changes.
 
 ## Shared style (paste at the top of every prompt)
 
 > Low-poly cozy isometric furniture for a room-decorating game. Clean flat-shaded facets, soft rounded edges (small bevels, no sharp box corners), chunky readable silhouette, no textures or decals, one flat colour per part. Palette: warm honey wood `#b87946`, dark walnut `#694b35`, cream linen `#f3e4d2`, sage green `#81936a`, leaf green `#4d7639`, pale clay pot `#eee0ca`, soft black `#393932`, brass `#bb9451`, terracotta `#b96949`, caramel `#c38e62`. Isometric three-quarter view from the front-left, soft warm daylight, plain pale background, no floor shadow baked in.
 
-## Pipeline: Codex draws, Tripo models from the drawing
+## Pipeline: concept sheet, crops, local image-to-3D, Blender clean-up
 
-1. **Codex image, one per prop.** Prompt = shared style + the prop brief + this suffix:
-   > Single object only, centred, front three-quarter view from the front-left, slightly above eye level, whole object visible with margin, plain pure white background, no floor, no shadow, no text, no other objects. Square 1024 x 1024.
-   Image-to-3D reads one isolated object best; do not put several views or several props on one image. Name the file after the catalog key (`sofa.png`).
-2. **Optional multi-view.** For items whose back matters (sofa, bed, bookshelf, desk, wardrobe, rocking chair) ask Codex for three extra images with the same suffix but "straight front view", "straight left side view", and "straight back view", and feed all four to Tripo's multi-view mode. Keep the same colours and proportions across the set.
-3. **Tripo.** Image-to-3D with the Codex image(s). Pick low-poly or "cartoon/stylised" output if offered, and request a quad or low-tri mesh. Export glb.
-4. **Check against the brief** before accepting: footprint shape, number of legs/drawers/cushions, the recolourable part exists as a visually separate area, nothing extra was hallucinated (cables, extra cushions, text on the screen).
+1. **Concept sheet.** [art-source/prop-sheet.png](../art-source/prop-sheet.png) is the Codex drawing of all 48 props in the Little Nest style (prompt: shared style block plus the briefs below). Regenerate single props at 1024 px when a tile is too small for thin parts such as lamp legs, chair spindles or fern fronds.
+2. **Crops.** `python art-source/slice-sheet.py` cuts the sheet into one square image per catalog key in `art-source/prop-crops/` (ignored by git). Image-to-3D tools need one isolated object per input; never upload the whole sheet.
+3. **Shape generation.** Hunyuan3D-2 (low-VRAM fork, installed through Pinokio) runs on an 8 GB card with the mini turbo model and profile 4. Generate the shape only; textures are replaced by flat colours anyway. Export glb named after the key.
+4. **Clean-up in Blender.** Scale to the brief's size, move the origin, decimate to budget, flat-shade, assign one material per role with the recolourable part separate. The table below is the contract; `node tools/blender/check-exports.mjs <dir>` re-imports a folder of GLBs with Three.js and checks triangles, bounds and material roles.
+5. **Integration** is a separate step: a loader that swaps a procedural `build()` for the glb by key, with recolour, lamp lights and the blank print canvases handled. Not started.
 
-Tripo output is normalised to roughly a unit cube with an arbitrary origin and merged materials, so every model then needs the clean-up in the next section.
+Alternative: `tools/blender/build-library.py` rebuilds the current procedural props as an editable Blender library (see [tools/blender/README.md](../tools/blender/README.md)). It preserves every contract but looks like the existing game models, so use it for hand refinement, not as a replacement for the concept-led route.
 
-## Clean-up after Tripo (Blender or similar)
+## Blender export requirements
 
 | Step | Target |
 | --- | --- |
 | Format | glTF binary (.glb), Y up, metres |
-| Scale | Resize so the longest side matches the brief's size. 1 grid cell = 1.0 unit; footprints below are in cells, sizes in units. |
+| Scale | Generated meshes arrive normalised; resize so the longest side matches the brief's size. 1 grid cell = 1.0 unit; footprints below are in cells, sizes in units. |
 | Origin | Floor items: centre of the footprint on the floor (y = 0). Surface items: centre of the base. Wall items: bottom-centre of the back face, model extends towards +Z (into the room). |
 | Facing | Front of the item faces +Z. Backs of sofas, beds, bookshelves and desks sit at -Z. |
 | Triangle budget | Decimate to: small items under 400, plants under 2 500, furniture under 1 500, wall art under 300. |
-| Materials | Replace the generated texture with flat colours from the brief, one material per colour, named by role. Parts the player can recolour (marked **recolour** below) must be their own material and not share it with any other part. |
+| Materials | Use flat colours from the brief, one material per colour, named by role. Parts the player can recolour (marked **recolour** below) must be their own material and not share it with any other part. |
 | Glow parts | Candle flame, lantern glow and lamp shades are separate materials so the game can make them emissive. |
 | Smoothing | Flat shading for facets; smooth only cylinders, pots and cushions. |
 | Textures | None in the final file. The two framed prints get their art from the game, so the canvas is a plain flat quad. |

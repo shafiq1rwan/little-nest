@@ -3,3 +3,6 @@ dist
 tests/output
 test-results
 playwright-report
+
+# Generated from art-source/prop-sheet.png by art-source/slice-sheet.py
+art-source/prop-crops/

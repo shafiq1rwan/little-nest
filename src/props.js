@@ -198,7 +198,7 @@ const JAPANDI_CATALOG = {
     g.add(box(.5, .3, .12, J.ash, -.9, .44, -.2, .06).rotateX(-.2));
     return g;
   }},
-  lowTable: { label: 'Low table', category: 'tables', collection: 'japandi', tags: ['japandi', 'coffee table'], w: 2, d: 1, surface: { y: .4, slots: [{ x: -.5, z: 0 }, { x: .5, z: 0 }] }, build() {
+  lowTable: { label: 'Low table', category: 'tables', collection: 'japandi', tags: ['japandi', 'coffee table'], w: 2, d: 1, surface: { y: .4, slots: [{ x: -.5, z: 0 }, { x: .5, z: 0 }] }, model: 'models/lowTable.glb', build() { return modelInstance('lowTable') || this.procedural(); }, procedural() {
     const g = new THREE.Group();
     g.add(box(1.8, .08, .8, J.ash, 0, .32, 0, .015));
     for (const x of [-.7, .7]) g.add(box(.1, .32, .7, J.ash, x, 0, 0, .01));
@@ -236,7 +236,7 @@ const COTTAGE_CATALOG = {
     g.add(box(.5, .18, .1, K.cream, 0, .5, -.16, .04).rotateX(-.2));
     return g;
   }},
-  dresser: { label: 'Painted dresser', category: 'tables', collection: 'cottage', tags: ['cottage', 'drawers', 'storage'], w: 2, d: 1, defaultColor: K.paint, surface: { y: .92, slots: [{ x: -.55, z: 0 }, { x: .55, z: 0 }] }, build() {
+  dresser: { label: 'Painted dresser', category: 'tables', collection: 'cottage', tags: ['cottage', 'drawers', 'storage'], w: 2, d: 1, defaultColor: K.paint, surface: { y: .92, slots: [{ x: -.55, z: 0 }, { x: .55, z: 0 }] }, model: 'models/dresser.glb', build() { return modelInstance('dresser') || this.procedural(); }, procedural() {
     const g = new THREE.Group(); legs(g, 1.5, .45, .1, K.oak);
     const body = box(1.85, .8, .6, K.paint, 0, .1, 0, .02); body.userData.recolor = true; g.add(body);
     g.add(box(1.9, .04, .64, K.oak, 0, .9, 0, .01));
@@ -318,7 +318,7 @@ export const CATALOG = {
     const g = new THREE.Group(); g.add(cyl(.27, .3, .04, C.black), cyl(.035, .035, .43, C.black, 0, .04, 0));
     g.add(cushion(.55, .12, .55, C.dark, 0, .47, 0), cushion(.55, .57, .12, C.dark, 0, .55, -.23)); return g;
   }},
-  ottoman: { label: 'Ottoman', category: 'seating', w: 1, d: 1, build() {
+  ottoman: { label: 'Ottoman', category: 'seating', w: 1, d: 1, model: 'models/ottoman.glb', build() { return modelInstance('ottoman') || this.procedural(); }, procedural() {
     const g = new THREE.Group(); legs(g, .65, .65, .1); g.add(cushion(.87, .36, .87, 0x976444, 0, .1, 0)); return g;
   }},
   sideboard: { label: 'Sideboard', category: 'tables', w: 2, d: 1, surface: { y: .85, slots: [{ x: -.15, z: -.18 }, { x: -.15, z: .2 }] }, build() {
@@ -333,7 +333,7 @@ export const CATALOG = {
   boxes: { label: 'Moving box', category: 'decor', w: 1, d: 1, build() {
     const g = new THREE.Group(); g.add(box(.7, .6, .7, 0xc89b68), box(.71, .012, .12, 0xe6c397, 0, .6, 0)); return g;
   }},
-  bed: { label: 'Bed', category: 'seating', tags: ['bedroom', 'sleep', 'double'], w: 2, d: 3, defaultColor: C.cream, build() {
+  bed: { label: 'Bed', category: 'seating', tags: ['bedroom', 'sleep', 'double'], w: 2, d: 3, defaultColor: C.cream, model: 'models/bed.glb', build() { return modelInstance('bed') || this.procedural(); }, procedural() {
     const g = new THREE.Group(); legs(g, 1.7, 2.7, .18, C.dark);
     g.add(box(1.92, .22, 2.92, C.wood, 0, .18, 0, .03));                          // frame
     const mattress = cushion(1.8, .26, 2.7, C.cream, 0, .4, .05); g.add(mattress);
@@ -343,13 +343,13 @@ export const CATALOG = {
     const fold = cushion(1.84, .1, .3, C.sage, 0, .74, -.08); g.add(fold);
     return g;
   }},
-  nightstand: { label: 'Nightstand', category: 'tables', tags: ['bedroom', 'bedside', 'drawer'], w: 1, d: 1, surface: { y: .58, slots: [{ x: 0, z: -.02 }] }, build() {
+  nightstand: { label: 'Nightstand', category: 'tables', tags: ['bedroom', 'bedside', 'drawer'], w: 1, d: 1, surface: { y: .58, slots: [{ x: 0, z: -.02 }] }, model: 'models/nightstand.glb', build() { return modelInstance('nightstand') || this.procedural(); }, procedural() {
     const g = new THREE.Group(); legs(g, .44, .36, .12);
     g.add(box(.6, .46, .5, C.wood, 0, .12, 0, .02));
     g.add(box(.5, .18, .025, 0xc38a56, 0, .32, .25, .006), box(.12, .02, .025, C.brass, 0, .4, .262));
     return g;
   }},
-  wardrobe: { label: 'Wardrobe', category: 'decor', tags: ['bedroom', 'storage', 'closet'], w: 2, d: 1, build() {
+  wardrobe: { label: 'Wardrobe', category: 'decor', tags: ['bedroom', 'storage', 'closet'], w: 2, d: 1, model: 'models/wardrobe.glb', build() { return modelInstance('wardrobe') || this.procedural(); }, procedural() {
     const g = new THREE.Group();
     g.add(box(1.85, 2.15, .62, C.wood, 0, .05, 0, .02), box(1.9, .05, .66, C.wood, 0, 2.2, 0, .01), box(1.85, .05, .62, C.dark, 0, 0, 0, .01));
     for (const x of [-.46, .46]) {
@@ -369,19 +369,19 @@ export const CATALOG = {
     }
     return g;
   }},
-  bench: { label: 'Bench', category: 'seating', tags: ['seat', 'wood'], w: 2, d: 1, defaultColor: C.sage, build() {
+  bench: { label: 'Bench', category: 'seating', tags: ['seat', 'wood'], w: 2, d: 1, defaultColor: C.sage, model: 'models/bench.glb', build() { return modelInstance('bench') || this.procedural(); }, procedural() {
     const g = new THREE.Group(); legs(g, 1.6, .5, .4, C.dark);
     g.add(box(1.85, .07, .6, C.wood, 0, .4, 0, .02));
     g.add(cushion(1.7, .12, .5, C.sage, 0, .47, 0));
     g.add(box(.06, .06, .5, C.dark, -.86, .2, 0, .01), box(.06, .06, .5, C.dark, .86, .2, 0, .01));
     return g;
   }},
-  sideTable: { label: 'Side table', category: 'tables', tags: ['round', 'small table'], w: 1, d: 1, surface: { y: .55, slots: [{ x: 0, z: 0 }] }, build() {
+  sideTable: { label: 'Side table', category: 'tables', tags: ['round', 'small table'], w: 1, d: 1, surface: { y: .55, slots: [{ x: 0, z: 0 }] }, model: 'models/sideTable.glb', build() { return modelInstance('sideTable') || this.procedural(); }, procedural() {
     const g = new THREE.Group();
     g.add(cyl(.34, .34, .06, C.wood, 0, .49, 0), cyl(.04, .05, .49, C.dark, 0, 0, 0), cyl(.2, .22, .03, C.dark, 0, 0, 0));
     return g;
   }},
-  pouf: { label: 'Pouf', category: 'seating', tags: ['cushion', 'floor', 'soft'], w: 1, d: 1, defaultColor: C.cream, build() {
+  pouf: { label: 'Pouf', category: 'seating', tags: ['cushion', 'floor', 'soft'], w: 1, d: 1, defaultColor: C.cream, model: 'models/pouf.glb', build() { return modelInstance('pouf') || this.procedural(); }, procedural() {
     const g = new THREE.Group();
     const body = mesh(new THREE.CylinderGeometry(.36, .4, .36, 16), C.cream, 0, .18, 0); body.userData.recolor = true; g.add(body);
     const top = mesh(new THREE.SphereGeometry(.36, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), C.cream, 0, .34, 0); top.scale.y = .25; top.userData.recolor = true; g.add(top);

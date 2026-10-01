@@ -34,6 +34,7 @@ out = args.out or os.path.join(ROOT, 'public', 'models', args.key + '.glb')
 COLORS = {
     'cream': 0xf3e4d2, 'wood': 0xb87946, 'dark': 0x694b35, 'sage': 0x81936a, 'caramel': 0xbf895c,
     'black': 0x393932, 'brass': 0xbb9451, 'pot': 0xeee0ca, 'green': 0x4d7639, 'soil': 0x5b4030,
+    'ottoman': 0x976444, 'door': 0xc38a56, 'paint': 0xa7b98e, 'oak': 0xb4885a, 'cottageCream': 0xf6efe2, 'ash': 0xd9c7a7,
 }
 
 def rule_sofa(obj, size):
@@ -87,11 +88,61 @@ def rule_potted(pot_fraction=0.27):
         return parts
     return rule
 
+def rule_bands(bands):
+    """Horizontal bands by height fraction: [(top_fraction, part), ...] from the floor up; None keeps the body."""
+    def rule(obj, size):
+        w, d, h = size
+        parts = {}
+        for p in obj.data.polygons:
+            z = p.center.z / h
+            for top, part in bands:
+                if z < top:
+                    if part: parts[p.index] = part
+                    break
+        return parts
+    return rule
+
+def rule_fronts(part, z_range=(0.1, 0.9), x_limit=0.47, depth=0.25, base=None):
+    """Front-facing faces (drawer or door fronts) within a height range, optionally over a base rule."""
+    def rule(obj, size):
+        w, d, h = size
+        parts = base(obj, size) if base else {}
+        front_y = min(v.co.y for v in obj.data.vertices)
+        for p in obj.data.polygons:
+            c = p.center
+            if p.normal.y < -0.7 and c.y < front_y + d * depth and h * z_range[0] < c.z < h * z_range[1] and abs(c.x) < w * x_limit:
+                parts[p.index] = part
+        return parts
+    return rule
+
+def rule_bed(obj, size):
+    """Wood frame and headboard, cream mattress and pillows at the head, sage blanket over the foot."""
+    w, d, h = size
+    me = obj.data
+    front_y = min(v.co.y for v in me.vertices); back_y = max(v.co.y for v in me.vertices)
+    parts = {}
+    for p in me.polygons:
+        c = p.center
+        if c.z < h * 0.36 or c.y > back_y - d * 0.06:
+            parts[p.index] = 'wood'
+        elif c.y < front_y + d * 0.58:
+            parts[p.index] = 'blanket'
+    return parts
+
 PARTS = {
     # key: (rule, { part: (material role, colour name, recolour?) }, body material)
     'sofa': (rule_sofa, {'legs': ('wood', 'wood', False), 'pillowLeft': ('pillow', 'caramel', False), 'pillowRight': ('pillow', 'sage', False)}, ('fabric', 'cream', True)),
     'armchair': (rule_armchair, {'wood': ('wood', 'wood', False), 'pillow': ('pillow', 'sage', True)}, ('fabric', 'cream', True)),
     'plant': (rule_potted(0.31), {'pot': ('pot', 'pot', True), 'soil': ('soil', 'soil', False)}, ('leaf', 'green', False)),
+    'ottoman': (rule_bands([(0.2, 'legs')]), {'legs': ('wood', 'wood', False)}, ('fabric', 'ottoman', True)),
+    'bed': (rule_bed, {'wood': ('wood', 'wood', False), 'blanket': ('blanket', 'sage', False)}, ('fabric', 'cream', True)),
+    'wardrobe': (rule_fronts('door', (0.06, 0.95), x_limit=0.46), {'door': ('door', 'door', False)}, ('wood', 'wood', False)),
+    'dresser': (rule_fronts('drawer', (0.14, 0.9), base=rule_bands([(0.12, 'oak'), (0.93, None), (1.1, 'oak')])), {'drawer': ('drawer', 'cottageCream', False), 'oak': ('oak', 'oak', False)}, ('paint', 'paint', True)),
+    'nightstand': (rule_fronts('drawer', (0.35, 0.78)), {'drawer': ('drawer', 'door', False)}, ('wood', 'wood', False)),
+    'bench': (rule_bands([(0.66, 'dark'), (0.82, 'wood'), (1.1, 'pad')]), {'dark': ('dark', 'dark', False), 'wood': ('wood', 'wood', False), 'pad': ('pad', 'sage', True)}, ('wood', 'wood', False)),
+    'pouf': (lambda o, sz: {}, {}, ('fabric', 'cream', True)),
+    'sideTable': (rule_bands([(0.86, 'dark')]), {'dark': ('dark', 'dark', False)}, ('wood', 'wood', False)),
+    'lowTable': (lambda o, sz: {}, {}, ('ash', 'ash', False)),
 }
 
 def material(name, hex_color):

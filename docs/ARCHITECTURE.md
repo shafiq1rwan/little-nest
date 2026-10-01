@@ -20,7 +20,7 @@ It is not yet a fully separated foundation for a larger game. src/main.js is app
 | src/ui/music.js | Background music with gesture unlock and remembered mute |
 | src/config/game.js | ROOM, CELL, WALL_H, CAMERA, RENDER, MUSIC, storage keys, save version and item cap |
 | src/config/theme.js | Backdrop and highlight colors, WALL_FINISHES, FLOOR_FINISHES, ITEM_COLORS |
-| src/data/presets.js | ROOM_PRESETS: shell dimensions, window layout, bulb string, and starter layout per preset; presetFixtures() derives blocked wall areas |
+| src/data/presets.js | ROOM_PRESETS: shell dimensions, window layout, bulb string, optional railings, and starter layout per preset; presetFixtures() derives blocked wall areas and presetWallRows() the wall grid height |
 | src/game/placement.js | Pure footprint, bounds, occupancy, snap, and world-position rules (no Three.js, no DOM) |
 | src/game/state.js | Committed item records with stable ids; occupancy derived from them (no Three.js, no DOM) |
 | src/game/commands.js | Undoable mutations over state and finishes; emits add/remove/transform/color/finish/history events; capped history (no Three.js, no DOM) |

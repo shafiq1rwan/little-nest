@@ -28,12 +28,12 @@ test('desktop decorating flow: rotate, recolor, save/load, search, finishes, cam
   expect(await roomState(page)).toEqual(saved);
 
   await page.locator('#search').fill('plant');
-  expect(await page.locator('.catalog-card:visible').count()).toBe(10);   // seven plants, the succulent, the hanging plant, and the botanical print
+  expect(await page.locator('.catalog-card:visible').count()).toBe(11);   // seven plants, the succulent, the hanging plant, the planter, and the botanical print
   await page.locator('#search').fill('rug');
   expect(await page.locator('.catalog-card:visible').count()).toBe(1);
   await page.locator('#search').fill('');
   await page.locator('[data-category="seating"]').click();
-  expect(await page.locator('.catalog-card:visible').count()).toBe(6);
+  expect(await page.locator('.catalog-card:visible').count()).toBe(7);
   await page.locator('[data-category="all"]').click();
 
   await page.locator('#tab-walls').click();

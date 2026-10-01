@@ -7,7 +7,7 @@ import { tintModel as tint, disposeModel, measureModel } from './scene/geometry.
 import { installIcons } from './ui/icons.js';
 import { CELL, CAMERA, RENDER, MUSIC, SAVE_KEY, ROOMS_KEY, MUSIC_KEY, MAX_SAVED_ITEMS } from './config/game.js';
 import { BACKDROP, SELECTION_OUTLINE, GHOST_OK, GHOST_BLOCKED, WALL_FINISHES, FLOOR_FINISHES, ITEM_COLORS } from './config/theme.js';
-import { ROOM_PRESETS, DEFAULT_PRESET, WALL_HEIGHT, MIN_ROOM_SIZE, MAX_ROOM_SIZE, presetFixtures } from './data/presets.js';
+import { ROOM_PRESETS, DEFAULT_PRESET, WALL_HEIGHT, MIN_ROOM_SIZE, MAX_ROOM_SIZE, presetFixtures, presetWallRows } from './data/presets.js';
 import { createPlacement } from './game/placement.js';
 import { createRoomState, newItemId } from './game/state.js';
 import { createCommands } from './game/commands.js';
@@ -43,7 +43,7 @@ function presetFor(room) {
 }
 /** Placement rules for another room size, used to validate saves and imports before they are applied. */
 function placementFor(room) {
-  return createPlacement({ catalog: CATALOG, width: room.width, depth: room.depth, cell: CELL, wallRows: WALL_ROWS, wallRow: 0.5 });
+  return createPlacement({ catalog: CATALOG, width: room.width, depth: room.depth, cell: CELL, wallRows: presetWallRows(presetFor(room)), wallRow: 0.5 });
 }
 function wallBlockedFor(room) {
   return placementFor(room).blockedWallCells(presetFixtures(presetFor(room)));
@@ -64,7 +64,7 @@ function buildShell(room) {
   if (grid) { scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); }
   shell = createRoom(scene, preset, WALL_HEIGHT, { wallColor: finishes.wall, floorColor: finishes.floor });
   shell.walls.visible = wallsVisible;
-  placement.configure({ width: room.width, depth: room.depth });
+  placement.configure({ width: room.width, depth: room.depth, wallRows: presetWallRows(preset) });
   wallBlocked.clear();
   for (const c of placement.blockedWallCells(presetFixtures(preset))) wallBlocked.add(c);
   grid = makeGrid(room.width, room.depth);

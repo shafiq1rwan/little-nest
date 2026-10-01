@@ -10,7 +10,7 @@ Keep the Little Nest style guide and existing saves intact through every phase. 
 | 1 | Structure and portable development | Complete 30 September 2026 | Phase 0 |
 | 2 | Safe creative workflow | Complete 30 September 2026 | Phase 1 |
 | 3 | Richer decorating | Complete 1 October 2026 | Phase 2 |
-| 4 | More rooms and furniture collections | In progress: room presets done 1 October 2026 | Phase 3 |
+| 4 | More rooms and furniture collections | In progress: five room presets done 1 October 2026; collections and filtering remain | Phase 3 |
 | 5 | Lighting and atmosphere | Planned | Phase 4 |
 | 6 | Optional challenges and sharing | Optional backlog | Stable earlier phases |
 
@@ -100,7 +100,7 @@ Goal: offer more creative settings without turning the interface into a list of 
 
 Deliver:
 
-- Done (1 October 2026) for studio and reading nook alongside the living room, each with its own size, window layout, and starter layout, chosen from "Start fresh" in the Rooms dialog. Bedroom and balcony need new furniture (bed, wardrobe, railing) and remain.
+- Done (1 October 2026): living room, studio, reading nook, bedroom (7 × 7 with bed, nightstand, wardrobe), and balcony (6 × 4 with railings instead of walls, planters, bench), each with its own size, window layout, and starter layout, chosen from "Start fresh" in the Rooms dialog.
 - Done (1 October 2026): presets declare width, depth, windows per wall, and the bulb string; the shell, placement rules, wall grid, blocked cells, grid overlay, and camera framing all follow the preset. Free-form sizes are not exposed in the HUD yet.
 - Cohesive furniture collections such as Japandi, cottage, and modern.
 - Useful catalog filtering as content grows.

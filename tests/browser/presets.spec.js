@@ -18,7 +18,7 @@ for (const [width, height, label] of [[1440, 900, 'desktop'], [390, 844, 'phone'
 
       // Start a studio from the Rooms dialog.
       await page.locator('#load').click();
-      await expect(page.locator('#gallery-presets .preset-card')).toHaveCount(3);
+      await expect(page.locator('#gallery-presets .preset-card')).toHaveCount(5);
       await page.getByRole('button', { name: 'Start a new studio', exact: true }).click();
       await expect(page.locator('#gallery')).toBeHidden();
       await twoFrames(page);
@@ -67,6 +67,24 @@ for (const [width, height, label] of [[1440, 900, 'desktop'], [390, 844, 'phone'
       const nook = await roomInfo();
       expect(nook).toMatchObject({ preset: 'readingNook', width: 5, depth: 5 });
       expect(nook.zoomSpan).toBeCloseTo(living.zoomSpan, 3);   // small rooms keep the baseline framing
+
+      // The balcony has railings instead of walls: no wall items can be hung, and the wall tab's items refuse.
+      await page.locator('#load').click();
+      await page.getByRole('button', { name: 'Start a new balcony', exact: true }).click();
+      await twoFrames(page);
+      expect(await roomInfo()).toMatchObject({ preset: 'balcony', width: 6, depth: 4 });
+      expect(await page.evaluate(() => window.__sim.placement.wallRows)).toBe(0);
+      expect(await page.evaluate(() => window.__sim.state.canMount('clock', 'back', 0, 0))).toBe(false);
+      expect(await page.evaluate(() => window.__sim.items.filter((i) => i.wall).length)).toBe(0);
+      expect(await page.evaluate(() => window.__sim.wallPanels.back.geometry.parameters.height)).toBeLessThan(0.2);   // a rail, not a wall
+
+      // The bedroom's bed is a 2 x 3 footprint and its lantern sits on the nightstand.
+      await page.locator('#load').click();
+      await page.getByRole('button', { name: 'Start a new bedroom', exact: true }).click();
+      await twoFrames(page);
+      expect(await roomInfo()).toMatchObject({ preset: 'bedroom', width: 7, depth: 7 });
+      expect(await page.evaluate(() => window.__sim.occupancy.has('1,2') && !window.__sim.occupancy.has('2,2'))).toBe(true);
+      expect(await page.evaluate(() => { const n = window.__sim.items.find((i) => i.type === 'nightstand'); return window.__sim.items.filter((i) => i.parent === n.id).map((i) => i.type); })).toEqual(['lantern']);
       expect(errors).toEqual([]);
     });
   });

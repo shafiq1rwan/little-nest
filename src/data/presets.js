@@ -2,6 +2,7 @@
 // Coordinates are grid cells; rot is quarter turns. Small items sit on a supporter: give the
 // supporter a `key` and the small item `on: key, slot`. Wall items use wall/col/row.
 // Windows are centred `at` world units along their wall (0 is the wall's middle) with a width in units.
+// `walls: 'railing'` swaps the two walls for low railings (open air): nothing can be wall-mounted there.
 // Keys are stored in saved rooms: never rename them; add migrations before removing one.
 
 export const WALL_HEIGHT = 4;
@@ -61,6 +62,47 @@ export const ROOM_PRESETS = {
       { type: 'bookStack', on: 'shelf', slot: 1, rot: 0 },
     ],
   },
+  bedroom: {
+    name: 'Bedroom',
+    blurb: 'A restful room with a double bed, a wardrobe, and a reading chair.',
+    width: 7, depth: 7,
+    windows: [{ wall: 'left', at: 0, width: 3 }],
+    lights: false,
+    items: [
+      { type: 'bed', gx: 0, gz: 0, rot: 0, select: true },
+      { type: 'nightstand', gx: 2, gz: 0, rot: 0, key: 'nightstand' },
+      { type: 'lantern', on: 'nightstand', slot: 0, rot: 0 },
+      { type: 'wardrobe', gx: 5, gz: 0, rot: 0 },
+      { type: 'rug', gx: 1, gz: 3, rot: 0 },
+      { type: 'armchair', gx: 6, gz: 4, rot: 3, color: 0xc38e62 },
+      { type: 'fern', gx: 6, gz: 6, rot: 0 },
+      { type: 'sideboard', gx: 3, gz: 6, rot: 2, key: 'sideboard' },
+      { type: 'frame', on: 'sideboard', slot: 0, rot: 0 },
+      { type: 'basket', gx: 0, gz: 6, rot: 0 },
+      { type: 'botanicalPrint', wall: 'back', col: 4, row: 4 },
+      { type: 'mirror', wall: 'left', col: 6, row: 3 },
+      { type: 'macrame', wall: 'back', col: 6, row: 4 },
+    ],
+  },
+  balcony: {
+    name: 'Balcony',
+    blurb: 'An open-air corner with railings, planters, and a bench in the sun.',
+    width: 6, depth: 4,
+    walls: 'railing',
+    windows: [],
+    lights: false,
+    items: [
+      { type: 'rug', gx: 1, gz: 1, rot: 0 },
+      { type: 'bench', gx: 0, gz: 0, rot: 0, select: true },
+      { type: 'planter', gx: 2, gz: 0, rot: 0 },
+      { type: 'planter', gx: 4, gz: 0, rot: 0 },
+      { type: 'sideTable', gx: 5, gz: 3, rot: 0, key: 'sideTable' },
+      { type: 'lantern', on: 'sideTable', slot: 0, rot: 0 },
+      { type: 'pouf', gx: 4, gz: 3, rot: 0 },
+      { type: 'palm', gx: 0, gz: 3, rot: 0 },
+      { type: 'basket', gx: 1, gz: 3, rot: 0 },
+    ],
+  },
   readingNook: {
     name: 'Reading nook',
     blurb: 'A small, quiet corner for an armchair, a lamp, and your books.',
@@ -84,6 +126,11 @@ export const ROOM_PRESETS = {
 };
 
 export const DEFAULT_PRESET = 'livingRoom';
+
+/** Rows of the wall grid for a preset: none when the shell has railings instead of walls. */
+export function presetWallRows(preset) {
+  return preset.walls === 'railing' ? 0 : WALL_HEIGHT / 0.5;
+}
 
 /** Wall fixtures (blocked wall areas) for a preset: windows plus the optional bulb string. */
 export function presetFixtures(preset) {

@@ -40,7 +40,7 @@ Keep package-lock.json when moving computers. The runtime itself is browser-base
 - Right-drag to orbit and scroll to zoom.
 - The HUD uses floating game controls and a tactile Decorating box. On phones, Browse/Hide controls the bottom drawer. Choosing furniture hides it for placement; selecting an item opens controls in the drawer. Landscape phones use a side drawer.
 - One finger moves furniture; two fingers orbit/pinch.
-- Save room keeps the open room in this browser (the first save is named "Living room"). Rooms also offers "Start fresh" presets: living room, studio, and reading nook, each with its own size, windows, and furniture; starting one is undoable. Rooms opens your saved designs to load, rename, duplicate, export, or delete them, to import a room file, and to save the current room under a new name. Clear removes furniture.
+- Save room keeps the open room in this browser (the first save is named "Living room"). Rooms also offers "Start fresh" presets: living room, studio, reading nook, bedroom, and an open-air balcony, each with its own size, windows, and furniture; starting one is undoable. Rooms opens your saved designs to load, rename, duplicate, export, or delete them, to import a room file, and to save the current room under a new name. Clear removes furniture.
 - Lo-fi background music starts after the first click or tap. The music button in the top bar turns it off or on, and the choice is remembered in this browser.
 - The help button explains controls. Keyboard shortcuts are inactive while typing in search.
 

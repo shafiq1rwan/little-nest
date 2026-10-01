@@ -246,6 +246,42 @@ export const CATALOG = {
   boxes: { label: 'Moving box', category: 'decor', w: 1, d: 1, build() {
     const g = new THREE.Group(); g.add(box(.7, .6, .7, 0xc89b68), box(.71, .012, .12, 0xe6c397, 0, .6, 0)); return g;
   }},
+  bed: { label: 'Bed', category: 'seating', tags: ['bedroom', 'sleep', 'double'], w: 2, d: 3, defaultColor: C.cream, build() {
+    const g = new THREE.Group(); legs(g, 1.7, 2.7, .18, C.dark);
+    g.add(box(1.92, .22, 2.92, C.wood, 0, .18, 0, .03));                          // frame
+    const mattress = cushion(1.8, .26, 2.7, C.cream, 0, .4, .05); g.add(mattress);
+    g.add(box(1.92, .9, .12, C.wood, 0, .18, -1.4, .03));                           // headboard
+    for (const x of [-.45, .45]) { const p = cushion(.72, .16, .44, C.cream, x, .66, -1.05); p.rotation.x = -.12; g.add(p); }
+    const blanket = cushion(1.84, .12, 1.5, C.sage, 0, .64, .62); g.add(blanket);
+    const fold = cushion(1.84, .1, .3, C.sage, 0, .74, -.08); g.add(fold);
+    return g;
+  }},
+  nightstand: { label: 'Nightstand', category: 'tables', tags: ['bedroom', 'bedside', 'drawer'], w: 1, d: 1, surface: { y: .58, slots: [{ x: 0, z: -.02 }] }, build() {
+    const g = new THREE.Group(); legs(g, .44, .36, .12);
+    g.add(box(.6, .46, .5, C.wood, 0, .12, 0, .02));
+    g.add(box(.5, .18, .025, 0xc38a56, 0, .32, .25, .006), box(.12, .02, .025, C.brass, 0, .4, .262));
+    return g;
+  }},
+  wardrobe: { label: 'Wardrobe', category: 'decor', tags: ['bedroom', 'storage', 'closet'], w: 2, d: 1, build() {
+    const g = new THREE.Group();
+    g.add(box(1.85, 2.15, .62, C.wood, 0, .05, 0, .02), box(1.9, .05, .66, C.wood, 0, 2.2, 0, .01), box(1.85, .05, .62, C.dark, 0, 0, 0, .01));
+    for (const x of [-.46, .46]) {
+      g.add(box(.84, 1.95, .03, 0xc38a56, x, .12, .31, .01));
+      g.add(cyl(.025, .025, .04, C.brass, x - Math.sign(x) * .36, 1.05, .33).rotateX(Math.PI / 2));
+    }
+    return g;
+  }},
+  planter: { label: 'Planter box', category: 'decor', tags: ['plant', 'flowers', 'balcony', 'garden'], w: 2, d: 1, defaultColor: C.wood, build() {
+    const g = new THREE.Group();
+    const boxMesh = box(1.8, .5, .6, C.wood, 0, 0, 0, .02); boxMesh.userData.recolor = true; g.add(boxMesh);
+    g.add(box(1.66, .04, .46, 0x5b4030, 0, .48, 0, .01));
+    for (let i = 0; i < 6; i++) {
+      const x = -.7 + i * .28, z = (i % 2 ? .12 : -.12);
+      g.add(mesh(new THREE.SphereGeometry(.14, 8, 6), i % 2 ? 0x6f965a : 0x8daa6a, x, .6, z));
+      g.add(mesh(new THREE.SphereGeometry(.06, 8, 6), [0xd79c9c, 0xe9bd6c, 0xf3e4d2][i % 3], x + .04, .76, z - .02));
+    }
+    return g;
+  }},
   bench: { label: 'Bench', category: 'seating', tags: ['seat', 'wood'], w: 2, d: 1, defaultColor: C.sage, build() {
     const g = new THREE.Group(); legs(g, 1.6, .5, .4, C.dark);
     g.add(box(1.85, .07, .6, C.wood, 0, .4, 0, .02));

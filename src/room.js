@@ -94,13 +94,31 @@ export function createRoom(scene, preset, wallHeight = 4, { wallColor = 0x92725c
   block(width, .15, depth, floorMat, 0, -.075, 0, root);
   block(width, .15, .15, trim, 0, -.05, halfD + .07, root);
   block(.15, .15, depth, trim, halfW + .07, -.05, 0, root);
-  // The two wall panels double as raycast targets for wall-mounted decorations.
-  const backPanel = block(width, wallHeight, .2, wallMat, 0, wallHeight / 2, -halfD - .1); backPanel.userData.wall = 'back';
-  const leftPanel = block(.2, wallHeight, depth + .2, wallMat, -halfW - .1, wallHeight / 2, -.1); leftPanel.userData.wall = 'left';
-  block(width + .25, .1, .3, trim, 0, wallHeight, -halfD - .1);
-  block(.3, .1, depth + .25, trim, -halfW - .1, wallHeight, -.1);
-  block(width, .16, .09, wood, 0, .09, -halfD + .06);
-  block(.09, .16, depth, wood, -halfW + .06, .09, 0);
+  let backPanel, leftPanel;
+  if (preset.walls === 'railing') {
+    // Open air: low railings with posts every unit. The top rails stand in for the wall panels so
+    // raycasts still resolve, but the wall grid has no rows, so nothing can be mounted on them.
+    const railH = 1.0;
+    function railing(along, wall) {
+      const g = new THREE.Group(); walls.add(g);
+      const place = (x, y, z, w, h, d, mat) => (wall === 'back' ? block(w, h, d, mat, x, y, -halfD - .1 + z, g) : block(d, h, w, mat, -halfW - .1 + z, y, x, g));
+      for (let i = 0; i <= along; i++) place(-along / 2 + i, railH / 2, 0, .08, railH, .08, wood);
+      place(0, railH - .04, 0, along + .08, .08, .12, wood);
+      place(0, .55, 0, along, .05, .05, wood);
+      place(0, .15, 0, along, .05, .05, wood);
+      return g.children[g.children.length - 3];
+    }
+    backPanel = railing(width, 'back'); backPanel.userData.wall = 'back';
+    leftPanel = railing(depth, 'left'); leftPanel.userData.wall = 'left';
+  } else {
+    // The two wall panels double as raycast targets for wall-mounted decorations.
+    backPanel = block(width, wallHeight, .2, wallMat, 0, wallHeight / 2, -halfD - .1); backPanel.userData.wall = 'back';
+    leftPanel = block(.2, wallHeight, depth + .2, wallMat, -halfW - .1, wallHeight / 2, -.1); leftPanel.userData.wall = 'left';
+    block(width + .25, .1, .3, trim, 0, wallHeight, -halfD - .1);
+    block(.3, .1, depth + .25, trim, -halfW - .1, wallHeight, -.1);
+    block(width, .16, .09, wood, 0, .09, -halfD + .06);
+    block(.09, .16, depth, wood, -halfW + .06, .09, 0);
+  }
 
   const viewMat = new THREE.MeshStandardMaterial({ map: tex.view, emissive: 0xc9d498, emissiveIntensity: .2, roughness: 1 });
   const cord = new THREE.MeshStandardMaterial({ color: 0xe6ccad });

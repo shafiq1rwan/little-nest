@@ -86,7 +86,7 @@ for (const [width, height] of VIEWPORTS) {
       await page.getByRole('button', { name: 'Clay', exact: true }).tap();
       await page.locator('#tab-furniture').tap();
       await page.locator('#search').fill('plant');
-      expect(await page.locator('.catalog-card:visible').count()).toBe(10);   // seven plants, the succulent, the hanging plant, and the botanical print
+      expect(await page.locator('.catalog-card:visible').count()).toBe(11);   // seven plants, the succulent, the hanging plant, the planter, and the botanical print
       await page.locator('#save').tap();
       expect(errors).toEqual([]);
     });

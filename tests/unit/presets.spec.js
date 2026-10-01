@@ -3,7 +3,7 @@ import { createPlacement } from '../../src/game/placement.js';
 import { createRoomState } from '../../src/game/state.js';
 import { createCommands } from '../../src/game/commands.js';
 import { parseRoom, migrateRoom, SaveError, CURRENT_VERSION, LEGACY_ROOM } from '../../src/persistence/schema.js';
-import { ROOM_PRESETS, DEFAULT_PRESET, WALL_HEIGHT, MIN_ROOM_SIZE, MAX_ROOM_SIZE, presetFixtures } from '../../src/data/presets.js';
+import { ROOM_PRESETS, DEFAULT_PRESET, MIN_ROOM_SIZE, MAX_ROOM_SIZE, presetFixtures, presetWallRows } from '../../src/data/presets.js';
 
 // The real catalog's footprints and surfaces, without Three.js: only the fields the rules read.
 const catalog = {
@@ -15,8 +15,10 @@ const catalog = {
   mug: { w: 1, d: 1, layer: 'surface' }, frame: { w: 1, d: 1, layer: 'surface' }, lantern: { w: 1, d: 1, layer: 'surface' }, candle: { w: 1, d: 1, layer: 'surface' }, succulent: { w: 1, d: 1, layer: 'surface' }, bookStack: { w: 1, d: 1, layer: 'surface' },
   worldMap: { w: 2, d: 1, layer: 'wall', wall: { w: 2, h: 3 } }, botanicalPrint: { w: 2, d: 1, layer: 'wall', wall: { w: 2, h: 3 } }, clock: { w: 1, d: 1, layer: 'wall', wall: { w: 1, h: 1 } },
   wallShelf: { w: 2, d: 1, layer: 'wall', wall: { w: 2, h: 1 }, surface: { y: 0.4, slots: [{ x: 0, z: 0 }, { x: 0, z: 0 }] } }, macrame: { w: 1, d: 1, layer: 'wall', wall: { w: 1, h: 3 } },
+  mirror: { w: 1, d: 1, layer: 'wall', wall: { w: 1, h: 2 } },
+  bed: { w: 2, d: 3 }, nightstand: { w: 1, d: 1, surface: { y: 0.6, slots: [{ x: 0, z: 0 }] } }, wardrobe: { w: 2, d: 1 }, planter: { w: 2, d: 1 }, bench: { w: 2, d: 1 },
 };
-const placementFor = (room) => createPlacement({ catalog, width: room.width, depth: room.depth, wallRows: WALL_HEIGHT / 0.5 });
+const placementFor = (room) => createPlacement({ catalog, width: room.width, depth: room.depth, wallRows: presetWallRows(ROOM_PRESETS[room.preset] ?? {}) });
 const wallBlockedFor = (room) => placementFor(room).blockedWallCells(presetFixtures({ ...ROOM_PRESETS[room.preset], width: room.width, depth: room.depth }));
 let n = 0;
 const opts = { catalog, placementFor, wallBlockedFor, presets: ROOM_PRESETS, maxItems: 200, newId: () => 'n' + n++, sizeRange: [MIN_ROOM_SIZE, MAX_ROOM_SIZE] };
@@ -61,7 +63,16 @@ test('every preset is well formed and its starter layout validates in its own ro
     expect(parsed.room).toEqual({ preset: id, width: preset.width, depth: preset.depth });
     expect(preset.items.filter((it) => it.select).length, id + ' has exactly one selected starter item').toBe(1);
   }
-  expect(Object.keys(ROOM_PRESETS).length).toBeGreaterThanOrEqual(3);
+  expect(Object.keys(ROOM_PRESETS).length).toBeGreaterThanOrEqual(5);
+});
+
+test('a railing preset has no wall grid, so wall items are refused on load', () => {
+  expect(presetWallRows(ROOM_PRESETS.balcony)).toBe(0);
+  expect(presetWallRows(ROOM_PRESETS.bedroom)).toBe(8);
+  const balcony = layoutOf('balcony');
+  balcony.items.push({ id: 'w', type: 'clock', gx: null, gz: null, rot: 0, color: null, parent: null, slot: null, wall: 'back', col: 0, row: 0 });
+  expect(() => parseRoom(balcony, opts)).toThrow('Wall spot not free');
+  expect(presetFixtures(ROOM_PRESETS.balcony)).toEqual([]);
 });
 
 test('older saves migrate to the 8 x 8 living room and bad rooms are refused', () => {

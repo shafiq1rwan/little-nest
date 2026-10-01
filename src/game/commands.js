@@ -8,9 +8,10 @@
 //   transform record                gx/gz/rot (floor), parent/slot/rot (surface), or wall/col/row changed; move its mesh
 //   color     record                color changed; recolor its mesh
 //   finish    { key, color }        wall or floor color changed
+//   room      { preset, width, depth }  the shell changed; rebuild walls, floor, and grid (items were cleared first)
 //   history   { canUndo, canRedo }  undo/redo availability changed
 
-export function createCommands({ state, finishes, limit = 100 }) {
+export function createCommands({ state, finishes, room = { preset: null, width: 0, depth: 0 }, limit = 100 }) {
   const listeners = new Set();
   const undoStack = [];
   const redoStack = [];
@@ -70,6 +71,13 @@ export function createCommands({ state, finishes, limit = 100 }) {
     const prev = finishes[key];
     finishes[key] = color;
     emit('finish', { key, color });
+    return prev;
+  }
+  /** Changes the room shell. The scene rebuilds on the event; the caller clears items first. */
+  function opRoom(next) {
+    const prev = { preset: room.preset, width: room.width, depth: room.depth };
+    Object.assign(room, { preset: next.preset, width: next.width, depth: next.depth });
+    emit('room', { ...room });
     return prev;
   }
   function opClear() {
@@ -175,12 +183,16 @@ export function createCommands({ state, finishes, limit = 100 }) {
     push({ undo: () => opRestore(snapshot), redo: () => opClear() });
     return true;
   }
-  /** Replaces items and finishes (for example from a loaded save) as a single history entry. */
-  function replaceRoom({ wall, floor, items }) {
-    const before = { wall: finishes.wall, floor: finishes.floor, items: state.serialize() };
+  /**
+   * Replaces the shell (when `room` is given), items, and finishes as a single history entry,
+   * for example from a loaded save or a fresh preset. The shell changes before items are restored.
+   */
+  function replaceRoom({ room: nextRoom = null, wall, floor, items }) {
+    const before = { room: { ...room }, wall: finishes.wall, floor: finishes.floor, items: state.serialize() };
     const ordered = [...items.filter((i) => !i.parent), ...items.filter((i) => i.parent)];
-    const after = { wall, floor, items: ordered.map(snapshotOf) };
-    const apply = (room) => { opClear(); opFinish('wall', room.wall); opFinish('floor', room.floor); opRestore(room.items); };
+    const after = { room: nextRoom ? { ...nextRoom } : { ...room }, wall, floor, items: ordered.map(snapshotOf) };
+    const sameRoom = (a, b) => a.preset === b.preset && a.width === b.width && a.depth === b.depth;
+    const apply = (r) => { opClear(); if (!sameRoom(r.room, room)) opRoom(r.room); opFinish('wall', r.wall); opFinish('floor', r.floor); opRestore(r.items); };
     apply(after);
     push({ undo: () => apply(before), redo: () => apply(after) });
   }

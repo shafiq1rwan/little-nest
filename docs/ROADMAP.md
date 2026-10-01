@@ -10,7 +10,7 @@ Keep the Little Nest style guide and existing saves intact through every phase. 
 | 1 | Structure and portable development | Complete 30 September 2026 | Phase 0 |
 | 2 | Safe creative workflow | Complete 30 September 2026 | Phase 1 |
 | 3 | Richer decorating | Complete 1 October 2026 | Phase 2 |
-| 4 | More rooms and furniture collections | Planned — recommended next | Phase 3 |
+| 4 | More rooms and furniture collections | In progress: room presets done 1 October 2026 | Phase 3 |
 | 5 | Lighting and atmosphere | Planned | Phase 4 |
 | 6 | Optional challenges and sharing | Optional backlog | Stable earlier phases |
 
@@ -29,7 +29,7 @@ Goal: make the code easier to extend on any computer without changing the game's
 Small steps:
 
 1. Done: portable browser-check harness in tests/browser with @playwright/test as a devDependency, `npm test`, and `npm run test:install`. All Codex scenarios were ported and pass.
-2. Done: src/config/game.js, src/config/theme.js, and src/data/starter-room.js.
+2. Done: src/config/game.js, src/config/theme.js, and src/data/starter-room.js (now src/data/presets.js).
 3. Done: src/game/placement.js and src/game/state.js are pure and unit-tested; items carry stable ids and version 2 saves migrate on load.
 4. Done: src/game/input.js owns the gesture lifecycle and raycasting; main.js keeps the pending-selection decision.
 5. Done: src/persistence for saves (legacy key kept); src/ui/hud.js, responsive.js, and music.js for the HUD.
@@ -100,15 +100,15 @@ Goal: offer more creative settings without turning the interface into a list of 
 
 Deliver:
 
-- Bedroom, studio, reading corner, and balcony presets.
-- Configurable room dimensions, walls, and window layouts.
+- Done (1 October 2026) for studio and reading nook alongside the living room, each with its own size, window layout, and starter layout, chosen from "Start fresh" in the Rooms dialog. Bedroom and balcony need new furniture (bed, wardrobe, railing) and remain.
+- Done (1 October 2026): presets declare width, depth, windows per wall, and the bulb string; the shell, placement rules, wall grid, blocked cells, grid overlay, and camera framing all follow the preset. Free-form sizes are not exposed in the HUD yet.
 - Cohesive furniture collections such as Japandi, cottage, and modern.
 - Useful catalog filtering as content grows.
 
 Completion criteria:
 
-- Each room preset has its own valid starter layout and camera framing.
-- Room dimensions and preset identity are saved and migrated.
+- Each room preset has its own valid starter layout and camera framing. (Done: a unit test validates every preset's layout in its own room.)
+- Room dimensions and preset identity are saved and migrated. (Done: save format version 6; older saves become the 8 × 8 living room.)
 - UI text, thumbnails, lighting, and controls remain consistent between presets.
 - Every collection is distinct but still belongs to the Little Nest visual language.
 

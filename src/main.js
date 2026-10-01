@@ -5,9 +5,9 @@ import { createScene } from './scene/create-scene.js';
 import { createThumbnails } from './scene/thumbnails.js';
 import { tintModel as tint, disposeModel, measureModel } from './scene/geometry.js';
 import { installIcons } from './ui/icons.js';
-import { ROOM, CELL, WALL_H, CAMERA, RENDER, MUSIC, SAVE_KEY, ROOMS_KEY, MUSIC_KEY, MAX_SAVED_ITEMS } from './config/game.js';
+import { CELL, CAMERA, RENDER, MUSIC, SAVE_KEY, ROOMS_KEY, MUSIC_KEY, MAX_SAVED_ITEMS } from './config/game.js';
 import { BACKDROP, SELECTION_OUTLINE, GHOST_OK, GHOST_BLOCKED, WALL_FINISHES, FLOOR_FINISHES, ITEM_COLORS } from './config/theme.js';
-import { STARTER_ROOM } from './data/starter-room.js';
+import { ROOM_PRESETS, DEFAULT_PRESET, WALL_HEIGHT, MIN_ROOM_SIZE, MAX_ROOM_SIZE, presetFixtures } from './data/presets.js';
 import { createPlacement } from './game/placement.js';
 import { createRoomState, newItemId } from './game/state.js';
 import { createCommands } from './game/commands.js';
@@ -24,25 +24,60 @@ const $ = (id) => document.getElementById(id);
 
 // ---------- renderer / scene ----------
 const canvas = $('scene');
-const { renderer, scene, camera, controls, resetView, zoomBy, resize } = createScene({ canvas, camera: CAMERA, render: RENDER, backdrop: BACKDROP });
+const { renderer, scene, camera, controls, resetView, zoomBy, resize, setFrame } = createScene({ canvas, camera: CAMERA, render: RENDER, backdrop: BACKDROP });
 
-// ---------- room ----------
-const { floorMat, wallMat, walls, wallPanels, fixtures } = createRoom(scene, ROOM, WALL_H);
-
-const grid = new THREE.GridHelper(ROOM, ROOM, 0xffffff, 0xffffff);
-grid.material.opacity = 0.12;
-grid.material.transparent = true;
-grid.position.y = 0.055;
-grid.visible = false;
-scene.add(grid);
+// ---------- room shell ----------
+// The shell (floor, walls, windows, grid) is rebuilt whenever the room preset changes. `placement`
+// and `wallBlocked` are reconfigured in place so everything holding them keeps working.
+const roomConfig = { preset: DEFAULT_PRESET, width: ROOM_PRESETS[DEFAULT_PRESET].width, depth: ROOM_PRESETS[DEFAULT_PRESET].depth };
+const finishes = { wall: WALL_FINISHES[0].color, floor: FLOOR_FINISHES[0].color };
+const WALL_ROWS = WALL_HEIGHT / 0.5;
+const placement = createPlacement({ catalog: CATALOG, width: roomConfig.width, depth: roomConfig.depth, cell: CELL, wallRows: WALL_ROWS, wallRow: 0.5 });
+const wallBlocked = new Set();
+let shell = null;      // { root, floorMat, wallMat, walls, wallPanels, dispose }
+let grid = null;
+let gridVisible = false;
+let wallsVisible = true;
+function presetFor(room) {
+  return { ...ROOM_PRESETS[room.preset], width: room.width, depth: room.depth };
+}
+/** Placement rules for another room size, used to validate saves and imports before they are applied. */
+function placementFor(room) {
+  return createPlacement({ catalog: CATALOG, width: room.width, depth: room.depth, cell: CELL, wallRows: WALL_ROWS, wallRow: 0.5 });
+}
+function wallBlockedFor(room) {
+  return placementFor(room).blockedWallCells(presetFixtures(presetFor(room)));
+}
+function makeGrid(width, depth) {
+  const pts = [];
+  for (let x = 0; x <= width; x++) pts.push(x - width / 2, 0, -depth / 2, x - width / 2, 0, depth / 2);
+  for (let z = 0; z <= depth; z++) pts.push(-width / 2, 0, z - depth / 2, width / 2, 0, z - depth / 2);
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+  const lines = new THREE.LineSegments(geometry, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.12 }));
+  lines.position.y = 0.055;
+  return lines;
+}
+function buildShell(room) {
+  const preset = presetFor(room);
+  if (shell) shell.dispose();
+  if (grid) { scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); }
+  shell = createRoom(scene, preset, WALL_HEIGHT, { wallColor: finishes.wall, floorColor: finishes.floor });
+  shell.walls.visible = wallsVisible;
+  placement.configure({ width: room.width, depth: room.depth });
+  wallBlocked.clear();
+  for (const c of placement.blockedWallCells(presetFixtures(preset))) wallBlocked.add(c);
+  grid = makeGrid(room.width, room.depth);
+  grid.visible = gridVisible;
+  scene.add(grid);
+  setFrame(Math.max(room.width, room.depth));
+}
+buildShell(roomConfig);
 
 // ---------- placement state ----------
 // Committed state lives in `state` as serializable records; meshes are looked up by record id.
-const placement = createPlacement({ catalog: CATALOG, room: ROOM, cell: CELL, wallRows: WALL_H / 0.5, wallRow: 0.5 });
-const wallBlocked = placement.blockedWallCells(fixtures);   // windows and lights keep decorations off those wall cells
 const state = createRoomState({ placement, wallBlocked });
-const finishes = { wall: wallMat.color.getHex(), floor: floorMat.color.getHex() };
-const commands = createCommands({ state, finishes });   // every room mutation goes through here so it can be undone
+const commands = createCommands({ state, finishes, room: roomConfig });   // every room mutation goes through here so it can be undone
 const meshes = new Map();             // record id -> THREE.Group
 let selectedType = null;              // catalog key while placing
 let ghost = null;                     // preview mesh while placing
@@ -94,7 +129,7 @@ function applyTransform(record) {
 function wallUnder(ev, type, ignoreId = null) {
   // Furniture in front of the wall blocks the spot, so nothing can be hung where it cannot be seen.
   const others = [...meshes.entries()].filter(([id]) => id !== ignoreId).map(([, m]) => m);
-  const hit = input.hitFirst(ev, [wallPanels.back, wallPanels.left, ...others]);
+  const hit = input.hitFirst(ev, [shell.wallPanels.back, shell.wallPanels.left, ...others]);
   const wall = hit?.object.userData.wall;
   if (!wall) return null;
   const { col, row } = placement.wallSnap(type, wall, hit.point);
@@ -149,8 +184,10 @@ commands.subscribe((kind, p) => {
     recolor(meshOf(p), p.color);
     if (selected === p) updateSelection();
   } else if (kind === 'finish') {
-    (p.key === 'wall' ? wallMat : floorMat).color.setHex(p.color);
+    (p.key === 'wall' ? shell.wallMat : shell.floorMat).color.setHex(p.color);
     syncFinishSwatches();
+  } else if (kind === 'room') {
+    buildShell(p);
   } else if (kind === 'history') {
     $('undo-tool').disabled = !p.canUndo;
     $('redo-tool').disabled = !p.canRedo;
@@ -388,8 +425,9 @@ $('duplicate-selected').onclick = duplicateSelected;
 $('deselect').onclick = () => setSelected(null);
 $('move-tool').onclick = () => { cancelPlacing(); toast('Drag any furniture to move it.'); };
 $('move-selected').onclick = () => { if (hud.isCompact()) hud.setExpanded(false); toast('Drag the selected furniture to a free tile.'); };
-$('grid-tool').onclick = () => { grid.visible = !grid.visible; setPressed($('grid-tool'), grid.visible); };
-$('walls-tool').onclick = () => { walls.visible = !walls.visible; $('walls-tool').setAttribute('aria-pressed', String(walls.visible)); };
+function showGrid(on) { gridVisible = on; grid.visible = on; setPressed($('grid-tool'), on); }
+$('grid-tool').onclick = () => showGrid(!gridVisible);
+$('walls-tool').onclick = () => { wallsVisible = !wallsVisible; shell.walls.visible = wallsVisible; $('walls-tool').setAttribute('aria-pressed', String(wallsVisible)); };
 $('help-toggle').onclick = () => { $('help-panel').hidden = !$('help-panel').hidden; };
 
 const music = createMusic({ src: MUSIC.src, volume: MUSIC.volume, storageKey: MUSIC_KEY, button: $('music-toggle'), installIcons, onToggle: (on) => toast(on ? 'Music on.' : 'Music off.') });
@@ -402,7 +440,38 @@ $('reset-view').onclick = resetView;
 function settle() { finishDrag(); cancelPlacing(); setSelected(null); }
 function clearRoom() { settle(); commands.clear(); }
 
-const gallery = createGallery({ key: ROOMS_KEY, legacyKey: SAVE_KEY, catalog: CATALOG, placement, maxItems: MAX_SAVED_ITEMS, newId: newItemId, wallBlocked });
+/** Saved-room data for a preset's starter layout, with fresh ids. Returns the data and the id to select. */
+function presetRoomData(presetId) {
+  const preset = ROOM_PRESETS[presetId];
+  const byKey = new Map();
+  const items = [];
+  let selectId = null;
+  for (const it of preset.items) {
+    const id = newItemId();
+    if (it.key) byKey.set(it.key, id);
+    if (it.select) selectId = id;
+    items.push({
+      id, type: it.type, rot: it.wall ? 0 : it.rot ?? 0, color: it.color ?? null,
+      gx: it.on || it.wall ? null : it.gx, gz: it.on || it.wall ? null : it.gz,
+      parent: it.on ? byKey.get(it.on) : null, slot: it.on ? it.slot : null,
+      wall: it.wall ?? null, col: it.wall ? it.col : null, row: it.wall ? it.row : null,
+    });
+  }
+  return {
+    data: { room: { preset: presetId, width: preset.width, depth: preset.depth }, wall: WALL_FINISHES[0].color, floor: FLOOR_FINISHES[0].color, items },
+    selectId,
+  };
+}
+/** Replaces the room with a preset's fresh layout as one undoable step. */
+function startPreset(presetId) {
+  settle();
+  const { data, selectId } = presetRoomData(presetId);
+  commands.replaceRoom(data);
+  return { selectId };
+}
+
+const parseOptions = { catalog: CATALOG, placementFor, wallBlockedFor, presets: ROOM_PRESETS, maxItems: MAX_SAVED_ITEMS, newId: newItemId, sizeRange: [MIN_ROOM_SIZE, MAX_ROOM_SIZE] };
+const gallery = createGallery({ key: ROOMS_KEY, legacyKey: SAVE_KEY, ...parseOptions });
 let currentRoom = null;   // { id, name } of the gallery entry the open design belongs to
 function setCurrentRoom(summary) {
   currentRoom = summary ? { id: summary.id, name: summary.name } : null;
@@ -410,7 +479,7 @@ function setCurrentRoom(summary) {
 }
 function currentRoomData() {
   finishDrag();
-  return serializeRoom({ wall: finishes.wall, floor: finishes.floor, items: state.items });
+  return serializeRoom({ room: roomConfig, wall: finishes.wall, floor: finishes.floor, items: state.items });
 }
 /** Saves into entry `id` (or a new entry when null). Returns the summary, or null when storage refused. */
 function saveRoom(id, name) {
@@ -453,7 +522,7 @@ async function importFile(file) {
   let parsed;
   try {
     const text = await file.text();
-    parsed = parseImport(text, { catalog: CATALOG, placement, maxItems: MAX_SAVED_ITEMS, newId: newItemId, wallBlocked, fallbackName: file.name.replace(/\.littlenest\.json$|\.json$/i, '') });
+    parsed = parseImport(text, { ...parseOptions, fallbackName: file.name.replace(/\.littlenest\.json$|\.json$/i, '') });
   } catch { toast('That file is not a Little Nest room. Nothing was changed.'); return; }
   const summary = gallery.save(null, parsed.name, serializeRoom(parsed.room));
   toast(summary ? '"' + summary.name + '" imported. Load it from the list.' : 'Your browser could not store the imported room.');
@@ -461,7 +530,14 @@ async function importFile(file) {
 const galleryDialog = createGalleryDialog({
   dialog: $('gallery'), list: $('gallery-list'), saveForm: $('gallery-save'), nameInput: $('gallery-name'),
   emptyEl: $('gallery-empty'), closeButton: $('gallery-close'), importButton: $('gallery-import'), importInput: $('gallery-import-file'),
+  presetList: $('gallery-presets'), presets: ROOM_PRESETS,
   handlers: {
+    onNewRoom: (presetId) => {
+      const { selectId } = startPreset(presetId);
+      setCurrentRoom(null);
+      if (!hud.isCompact() && selectId) setSelected(state.get(selectId));
+      toast('New ' + ROOM_PRESETS[presetId].name.toLowerCase() + ' ready. Undo brings the old room back.');
+    },
     onExport: exportEntry,
     onImport: importFile,
     entries: () => gallery.list(),
@@ -486,7 +562,7 @@ let photoRestore = null;   // HUD state to put back when leaving
 function enterPhotoMode() {
   if (photoMode) return;
   settle();
-  photoRestore = { grid: grid.visible, panelExpanded: hud.isExpanded() };
+  photoRestore = { grid: gridVisible, panelExpanded: hud.isExpanded() };
   photoMode = true;
   grid.visible = false;
   document.body.classList.add('photo');
@@ -502,7 +578,7 @@ function exitPhotoMode() {
   $('photo-bar').hidden = true;
   setPressed($('photo-tool'), false);
   $('photo-tool').setAttribute('aria-label', 'Photo mode');
-  grid.visible = photoRestore.grid;
+  showGrid(photoRestore.grid);
   hud.setExpanded(photoRestore.panelExpanded);
   photoRestore = null;
   canvas.style.cursor = 'grab';
@@ -536,19 +612,9 @@ $('photo-exit').onclick = exitPhotoMode;
 $('photo-save').onclick = savePhoto;
 
 // ---------- starter room ----------
-let starterSelection = null;
-const starterByKey = new Map();
-for (const it of STARTER_ROOM) {
-  const item = it.on
-    ? addItem(it.type, null, null, it.rot, it.color ?? null, null, starterByKey.get(it.on)?.id, it.slot)
-    : it.wall
-      ? addItem(it.type, null, null, 0, it.color ?? null, null, null, null, it.wall, it.col, it.row)
-      : addItem(it.type, it.gx, it.gz, it.rot, it.color ?? null);
-  if (it.key && item) starterByKey.set(it.key, item);
-  if (it.select) starterSelection = item;
-}
+const { selectId: starterSelectId } = startPreset(DEFAULT_PRESET);
 commands.clearHistory();   // the starter layout is the baseline, not something to undo
-setSelected(hud.isCompact() ? null : starterSelection);
+setSelected(hud.isCompact() || !starterSelectId ? null : state.get(starterSelectId));
 canvas.style.cursor = 'grab';
 
 // ---------- loop ----------
@@ -563,10 +629,11 @@ renderer.setAnimationLoop(() => {
 // record copies with their mesh attached, so checks can inspect both data and visuals.
 const withMesh = (r) => (r ? { ...r, mesh: meshOf(r) } : null);
 window.__sim = {
-  state, placement, commands, finishes, gallery, occupancy: state.occupancy, bgm: music.audio, scene, camera, controls, grid, walls, wallMat, floorMat,
+  state, placement, commands, finishes, gallery, roomConfig, presets: ROOM_PRESETS, occupancy: state.occupancy, bgm: music.audio, scene, camera, controls,
+  get grid() { return grid; }, get walls() { return shell.walls; }, get wallMat() { return shell.wallMat; }, get floorMat() { return shell.floorMat; }, get wallPanels() { return shell.wallPanels; },
   get currentRoom() { return currentRoom; },
   get photoMode() { return photoMode; },
-  pointerToFloor: input.floorHit, snap, isFree, worldPos, meshOf, addItem, setSelected, rotateSelected, slotWorld, surfaceUnder, supporterMeshes, hitAmong: input.hitAmong, wallPanels, wallBlocked,
+  pointerToFloor: input.floorHit, snap, isFree, worldPos, meshOf, addItem, setSelected, rotateSelected, slotWorld, surfaceUnder, supporterMeshes, hitAmong: input.hitAmong, wallBlocked, startPreset,
   measure: measureModel,
   measureType: (type) => { const m = CATALOG[type].build(); const size = measureModel(m); disposeModel(m); return size; },
   catalogTypes: Object.keys(CATALOG),

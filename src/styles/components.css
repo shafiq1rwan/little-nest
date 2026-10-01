@@ -90,3 +90,10 @@ button.icon-button[aria-pressed="true"]:not(.active):not(.primary) { background:
 #photo-bar kbd { margin-left: 4px; }
 body.photo .tool-rail, body.photo .mode-pill, body.photo .selection-card, body.photo .hint-strip, body.photo #help-panel, body.photo #panel { display: none !important; }
 body.photo .topbar { display: none; }
+
+/* Room presets inside the rooms dialog */
+.gallery-subheading { font-family: var(--font-heading); font-size: 15px; font-weight: 500; margin: 14px 0 8px; color: var(--muted); }
+.preset-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
+.preset-card { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 10px 12px; text-align: left; border-radius: 14px; }
+.preset-card strong { font-family: var(--font-heading); font-size: 15px; }
+.preset-card small { font-size: 11px; color: var(--muted); line-height: 1.4; }

@@ -27,7 +27,7 @@ export function exportRoom({ name, room, now = () => new Date().toISOString() })
  * Parses file text into { name, room } with a validated, migrated room, or throws SaveError.
  * `fallbackName` is used when the file carries no name (for example a bare room).
  */
-export function parseImport(text, { catalog, placement, maxItems, newId, wallBlocked = new Set(), fallbackName = 'Imported room' }) {
+export function parseImport(text, { fallbackName = 'Imported room', ...parseOptions }) {
   if (typeof text !== 'string') throw new SaveError('Not a file');
   if (text.length > MAX_IMPORT_BYTES) throw new SaveError('File too large');
   let data;
@@ -45,6 +45,6 @@ export function parseImport(text, { catalog, placement, maxItems, newId, wallBlo
   } else if (!Array.isArray(data.items)) {
     throw new SaveError('Not a room file');
   }
-  const room = parseRoom(raw, { catalog, placement, maxItems, newId, wallBlocked });
+  const room = parseRoom(raw, parseOptions);
   return { name: cleanName(name, fallbackName), room };
 }

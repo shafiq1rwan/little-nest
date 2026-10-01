@@ -62,59 +62,86 @@ export function artTexture(botanical) {
     }
   }, 512);
 }
-export function createRoom(scene, size, wallHeight) {
-  const half = size / 2;
-  const floorMat = new THREE.MeshStandardMaterial({ color: 0xe3a372, map: woodTexture(true), roughness: .85 });
-  const wallMat = new THREE.MeshStandardMaterial({ color: 0x92725c, map: woodTexture(), roughness: .93 });
-  const walls = new THREE.Group(); scene.add(walls);
+
+// Textures are shared across rebuilds; only the shell geometry is recreated per preset.
+let sharedTextures = null;
+function textures() {
+  if (!sharedTextures) sharedTextures = { floor: woodTexture(true), wall: woodTexture(false), view: viewTexture() };
+  return sharedTextures;
+}
+
+/**
+ * Builds the room shell for a preset: floor, two walls, trim, windows, optional bulb string, and the
+ * ground plane. `preset` is { width, depth, windows: [{ wall, at, width }], lights }.
+ * Returns the materials the finishes recolor, the wall panels used for raycasting, the fixture
+ * rectangles that block wall cells, and dispose() for rebuilding with another preset.
+ */
+export function createRoom(scene, preset, wallHeight = 4, { wallColor = 0x92725c, floorColor = 0xe3a372 } = {}) {
+  const { width, depth } = preset;
+  const halfW = width / 2, halfD = depth / 2;
+  const tex = textures();
+  const root = new THREE.Group(); scene.add(root);
+  const floorMat = new THREE.MeshStandardMaterial({ color: floorColor, map: tex.floor, roughness: .85 });
+  const wallMat = new THREE.MeshStandardMaterial({ color: wallColor, map: tex.wall, roughness: .93 });
+  const walls = new THREE.Group(); root.add(walls);
   const wood = new THREE.MeshStandardMaterial({ color: 0x9b623d, roughness: .8 });
   const trim = new THREE.MeshStandardMaterial({ color: 0xe7ca9f, roughness: .9 });
-  function block(w,h,d,mat,x,y,z,parent=walls) {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat); m.position.set(x,y,z); m.receiveShadow = m.castShadow = true; parent.add(m); return m;
+  const owned = [floorMat, wallMat, wood, trim];
+  function block(w, h, d, mat, x, y, z, parent = walls) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); m.receiveShadow = m.castShadow = true; parent.add(m); return m;
   }
-  block(size + .48,.23,size + .48,trim,0,-.2,0,scene);
-  block(size,.15,size,floorMat,0,-.075,0,scene);
-  block(size,.15,.15,trim,0,-.05,half+.07,scene);
-  block(.15,.15,size,trim,half+.07,-.05,0,scene);
+  block(width + .48, .23, depth + .48, trim, 0, -.2, 0, root);
+  block(width, .15, depth, floorMat, 0, -.075, 0, root);
+  block(width, .15, .15, trim, 0, -.05, halfD + .07, root);
+  block(.15, .15, depth, trim, halfW + .07, -.05, 0, root);
   // The two wall panels double as raycast targets for wall-mounted decorations.
-  const backPanel = block(size,wallHeight,.2,wallMat,0,wallHeight/2,-half-.1); backPanel.userData.wall = 'back';
-  const leftPanel = block(.2,wallHeight,size+.2,wallMat,-half-.1,wallHeight/2,-.1); leftPanel.userData.wall = 'left';
-  block(size+.25,.1,.3,trim,0,wallHeight,-half-.1);
-  block(.3,.1,size+.25,trim,-half-.1,wallHeight,-.1);
-  block(size,.16,.09,wood,0,.09,-half+.06);
-  block(.09,.16,size,wood,-half+.06,.09,0);
-  const viewMat = new THREE.MeshStandardMaterial({ map: viewTexture(), emissive: 0xc9d498, emissiveIntensity: .2, roughness: 1 });
-  function windowAt(x,z,rotation,width) {
-    const g = new THREE.Group(); g.position.set(x,2.22,z); g.rotation.y = rotation; walls.add(g);
-    block(width+.18,2.25,.13,wood,0,0,0,g);
-    block(width,2.06,.025,viewMat,0,0,.08,g);
-    for (const xx of [-width/2,0,width/2]) block(.055,2.15,.07,trim,xx,0,.11,g);
-    block(width,.055,.07,trim,0,-.45,.11,g);
-    block(width+.28,.07,.35,wood,0,-1.13,.12,g);
-    for (let i=0;i<10;i++) block(width+.1,.065,.12,wood,0,1.09-i*.073,.2,g);
-    const cord = new THREE.MeshStandardMaterial({ color: 0xe6ccad });
-    for (const xx of [-width*.32,width*.32]) block(.012,.73,.015,cord,xx,.78,.27,g);
+  const backPanel = block(width, wallHeight, .2, wallMat, 0, wallHeight / 2, -halfD - .1); backPanel.userData.wall = 'back';
+  const leftPanel = block(.2, wallHeight, depth + .2, wallMat, -halfW - .1, wallHeight / 2, -.1); leftPanel.userData.wall = 'left';
+  block(width + .25, .1, .3, trim, 0, wallHeight, -halfD - .1);
+  block(.3, .1, depth + .25, trim, -halfW - .1, wallHeight, -.1);
+  block(width, .16, .09, wood, 0, .09, -halfD + .06);
+  block(.09, .16, depth, wood, -halfW + .06, .09, 0);
+
+  const viewMat = new THREE.MeshStandardMaterial({ map: tex.view, emissive: 0xc9d498, emissiveIntensity: .2, roughness: 1 });
+  const cord = new THREE.MeshStandardMaterial({ color: 0xe6ccad });
+  owned.push(viewMat, cord);
+  function windowAt(x, z, rotation, w) {
+    const g = new THREE.Group(); g.position.set(x, 2.22, z); g.rotation.y = rotation; walls.add(g);
+    block(w + .18, 2.25, .13, wood, 0, 0, 0, g);
+    block(w, 2.06, .025, viewMat, 0, 0, .08, g);
+    for (const xx of [-w / 2, 0, w / 2]) block(.055, 2.15, .07, trim, xx, 0, .11, g);
+    block(w, .055, .07, trim, 0, -.45, .11, g);
+    block(w + .28, .07, .35, wood, 0, -1.13, .12, g);
+    for (let i = 0; i < 10; i++) block(w + .1, .065, .12, wood, 0, 1.09 - i * .073, .2, g);
+    for (const xx of [-w * .32, w * .32]) block(.012, .73, .015, cord, xx, .78, .27, g);
   }
-  windowAt(-1.5,-half+.05,0,4.7);
-  windowAt(-half+.05,-1.9,Math.PI/2,3.9);
-  // The framed prints are catalog wall items now (see props.js) so they can be moved and swapped.
-  // A short string of warm bulbs above the cabinet.
-  const wireMat = new THREE.MeshStandardMaterial({ color: 0x5d4938 });
-  const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(half-1.1,3.6,-half+.18),new THREE.Vector3(half-.65,3.25,-half+.18),new THREE.Vector3(half-.2,3.6,-half+.18)]);
-  walls.add(new THREE.Mesh(new THREE.TubeGeometry(curve,24,.008,5,false),wireMat));
-  const bulbMat = new THREE.MeshStandardMaterial({ color:0xffe2a4,emissive:0xffc76b,emissiveIntensity:2 });
-  for (const t of [.12,.4,.7,.92]) {
-    const p=curve.getPoint(t), bulb=new THREE.Mesh(new THREE.SphereGeometry(.055,10,8),bulbMat); bulb.position.copy(p); walls.add(bulb);
+  for (const win of preset.windows) {
+    if (win.wall === 'back') windowAt(win.at, -halfD + .05, 0, win.width);
+    else windowAt(-halfW + .05, win.at, Math.PI / 2, win.width);
   }
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshBasicMaterial({color:0xdf9d80,toneMapped:false}));
-  ground.rotation.x=-Math.PI/2; ground.position.y=-.34; scene.add(ground);
-  const groundShadow = new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.ShadowMaterial({opacity:.18}));
-  groundShadow.rotation.x=-Math.PI/2;groundShadow.position.y=-.335;groundShadow.receiveShadow=true;scene.add(groundShadow);
-  // Wall areas covered by fixtures, in world units along each wall, so decorations cannot overlap them.
-  const fixtures = [
-    { wall: 'back', from: -3.85, to: .85, bottom: 1.05, top: 3.4 },   // back window with sill and blinds
-    { wall: 'left', from: -3.85, to: .05, bottom: 1.05, top: 3.4 },   // side window
-    { wall: 'back', from: 2.9, to: 3.8, bottom: 3.2, top: 3.65 },     // string of bulbs
-  ];
-  return { floorMat, wallMat, walls, wallPanels: { back: backPanel, left: leftPanel }, fixtures };
+  if (preset.lights) {
+    // A short string of warm bulbs high on the back wall, near its right end.
+    const wireMat = new THREE.MeshStandardMaterial({ color: 0x5d4938 });
+    const bulbMat = new THREE.MeshStandardMaterial({ color: 0xffe2a4, emissive: 0xffc76b, emissiveIntensity: 2 });
+    owned.push(wireMat, bulbMat);
+    const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(halfW - 1.1, 3.6, -halfD + .18), new THREE.Vector3(halfW - .65, 3.25, -halfD + .18), new THREE.Vector3(halfW - .2, 3.6, -halfD + .18)]);
+    walls.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 24, .008, 5, false), wireMat));
+    for (const t of [.12, .4, .7, .92]) {
+      const p = curve.getPoint(t), bulb = new THREE.Mesh(new THREE.SphereGeometry(.055, 10, 8), bulbMat); bulb.position.copy(p); walls.add(bulb);
+    }
+  }
+  const groundMat = new THREE.MeshBasicMaterial({ color: 0xdf9d80, toneMapped: false });
+  const shadowMat = new THREE.ShadowMaterial({ opacity: .18 });
+  owned.push(groundMat, shadowMat);
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), groundMat);
+  ground.rotation.x = -Math.PI / 2; ground.position.y = -.34; root.add(ground);
+  const groundShadow = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), shadowMat);
+  groundShadow.rotation.x = -Math.PI / 2; groundShadow.position.y = -.335; groundShadow.receiveShadow = true; root.add(groundShadow);
+
+  function dispose() {
+    scene.remove(root);
+    root.traverse((o) => { if (o.isMesh) o.geometry.dispose(); });
+    for (const m of owned) m.dispose();
+  }
+  return { root, floorMat, wallMat, walls, wallPanels: { back: backPanel, left: leftPanel }, dispose };
 }

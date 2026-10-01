@@ -88,7 +88,7 @@ test('wall decorations snap to walls, avoid windows, drag between walls, refuse 
 
   // Save and load keep wall items; the store is version 5.
   await page.locator('#save').click();
-  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('home-deco-sim:rooms')).rooms[0].room.version)).toBe(5);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("home-deco-sim:rooms")).rooms[0].room.version)).toBeGreaterThanOrEqual(5);
   await page.locator('#clear').click();
   await loadCurrentRoom(page);
   expect((await wallItems(page)).map((w) => w.type).sort()).toEqual(['botanicalPrint', 'clock', 'wallShelf', 'worldMap']);

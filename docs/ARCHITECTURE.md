@@ -20,7 +20,7 @@ It is not yet a fully separated foundation for a larger game. src/main.js is app
 | src/ui/music.js | Background music with gesture unlock and remembered mute |
 | src/config/game.js | ROOM, CELL, WALL_H, CAMERA, RENDER, MUSIC, storage keys, save version and item cap |
 | src/config/theme.js | Backdrop and highlight colors, WALL_FINISHES, FLOOR_FINISHES, ITEM_COLORS |
-| src/data/starter-room.js | STARTER_ROOM item list |
+| src/data/presets.js | ROOM_PRESETS: shell dimensions, window layout, bulb string, and starter layout per preset; presetFixtures() derives blocked wall areas |
 | src/game/placement.js | Pure footprint, bounds, occupancy, snap, and world-position rules (no Three.js, no DOM) |
 | src/game/state.js | Committed item records with stable ids; occupancy derived from them (no Three.js, no DOM) |
 | src/game/commands.js | Undoable mutations over state and finishes; emits add/remove/transform/color/finish/history events; capped history (no Three.js, no DOM) |
@@ -99,7 +99,7 @@ Introduce these incrementally, while keeping a working game after every extracti
         responsive.js            panel state and selection docking
         icons.js                 inline SVG helpers
       data/
-        starter-room.js
+        presets.js
       styles/
         tokens.css
         components.css
@@ -138,10 +138,11 @@ Named rooms live under home-deco-sim:rooms as { version: 1, rooms: [{ id, name, 
 
 Export files (src/persistence/transfer.js) wrap a room as { app: "little-nest", format: 1, exportedAt, name, room } and are named <slug>.littlenest.json. Import accepts that envelope or a bare room, caps the text at 1 MB, validates and migrates through parseRoom, and adds a new gallery entry; nothing else changes. Item ids are preserved through export and import.
 
-Room shape (src/persistence/schema.js, version 5; parent and slot arrived in version 4, wall/col/row in version 5; older versions migrate with nulls):
+Room shape (src/persistence/schema.js, version 6; parent and slot arrived in version 4, wall/col/row in version 5, and room in version 6; older versions migrate with nulls and the 8 × 8 living room):
 
     {
-      "version": 3,
+      "version": 6,
+      "room": { "preset": "livingRoom", "width": 8, "depth": 8 },
       "wall": 9597532,
       "floor": 14918514,
       "items": [
@@ -153,7 +154,7 @@ Room shape (src/persistence/schema.js, version 5; parent and slot arrived in ver
 
 The example shows the shape; colors are numeric 24-bit RGB values. There are no room names, room dimensions, parent IDs, or save-slot IDs in this format.
 
-parseRoom migrates by version before validating: saves with no version or version 2 (no ids) are read as version 3 and each item receives a fresh id; unknown versions are rejected. Validation covers known types, integer coordinates/rotation, bounds, collisions, optional color ranges, string ids (duplicates are replaced), at most 200 items, and for surface items an existing supporter with that slot and no other occupant; wall items need a known wall, integer col/row, and a spot that is in bounds, unoccupied, and not covered by a fixture (the parser takes the same wallBlocked set the game uses). Parsed rooms list floor and wall items before surface items. Add a new version and a migration step in schema.js before changing the shape again.
+parseRoom migrates by version before validating: saves with no version or version 2 (no ids) are read as version 3 and each item receives a fresh id; unknown versions are rejected. Validation builds placement rules for the saved room's size (parseRoom takes placementFor and wallBlockedFor) and covers a known preset and sane size, known types, integer coordinates/rotation, bounds, collisions, optional color ranges, string ids (duplicates are replaced), at most 200 items, and for surface items an existing supporter with that slot and no other occupant; wall items need a known wall, integer col/row, and a spot that is in bounds, unoccupied, and not covered by a fixture (the parser takes the same wallBlocked set the game uses). Parsed rooms list floor and wall items before surface items. Add a new version and a migration step in schema.js before changing the shape again.
 
 Browser storage belongs to a browser profile and origin. The project directory does not contain these saves. The gallery is capped at 50 rooms; a refused write returns null and the HUD shows a toast.
 

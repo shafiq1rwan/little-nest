@@ -37,6 +37,9 @@
 <dialog id="gallery" aria-labelledby="gallery-title">
 <div class="gallery-heading"><h2 id="gallery-title">Your rooms</h2><div class="gallery-tools"><button id="gallery-import" type="button" title="Import a room file"><span data-icon="upload"></span>Import</button><input id="gallery-import-file" type="file" accept=".json,application/json" class="sr-only" tabindex="-1" aria-hidden="true"/><button id="gallery-close" class="icon-button" aria-label="Close"><span data-icon="close"></span></button></div></div>
 <form id="gallery-save" class="gallery-save"><label class="sr-only" for="gallery-name">Name for the current room</label><input id="gallery-name" type="text" placeholder="Name this room" autocomplete="off"/><button type="submit" class="primary">Save current room</button></form>
+<h3 class="gallery-subheading">Start fresh</h3>
+<div id="gallery-presets" class="preset-list" aria-label="New room presets"></div>
+<h3 class="gallery-subheading">Saved rooms</h3>
 <p id="gallery-empty" hidden>No saved rooms yet. Save the current room to keep it.</p>
 <ul id="gallery-list" class="room-list"></ul>
 <p class="gallery-note">Rooms are kept in this browser. Export a room to a file to keep a copy or open it on another device.</p>

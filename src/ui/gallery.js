@@ -10,8 +10,26 @@ function formatDate(iso) {
   return d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' }) + ', ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 }
 
-export function createGalleryDialog({ dialog, list, saveForm, nameInput, emptyEl, closeButton, importButton, importInput, handlers }) {
-  const { entries, currentId, onSaveAs, onLoad, onRename, onDuplicate, onDelete, onExport, onImport } = handlers;
+export function createGalleryDialog({ dialog, list, saveForm, nameInput, emptyEl, closeButton, importButton, importInput, presetList = null, presets = {}, handlers }) {
+  const { entries, currentId, onSaveAs, onLoad, onRename, onDuplicate, onDelete, onExport, onImport, onNewRoom } = handlers;
+
+  // "Start fresh" buttons, one per room preset.
+  if (presetList) {
+    for (const [id, preset] of Object.entries(presets)) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'preset-card';
+      b.dataset.preset = id;
+      const name = document.createElement('strong');
+      name.textContent = preset.name;
+      const meta = document.createElement('small');
+      meta.textContent = preset.width + ' × ' + preset.depth + ' tiles · ' + preset.blurb;
+      b.append(name, meta);
+      b.setAttribute('aria-label', 'Start a new ' + preset.name.toLowerCase());
+      b.onclick = () => { onNewRoom(id); dialog.close(); };
+      presetList.append(b);
+    }
+  }
   let pendingDelete = null;
   let renaming = null;
 
@@ -66,7 +84,8 @@ export function createGalleryDialog({ dialog, list, saveForm, nameInput, emptyEl
       const name = document.createElement('h3');
       name.textContent = entry.name;
       const meta = document.createElement('p');
-      meta.textContent = entry.itemCount + (entry.itemCount === 1 ? ' item' : ' items') + (entry.updatedAt ? ' · ' + formatDate(entry.updatedAt) : '') + (entry.id === currentId() ? ' · open now' : '');
+      const presetName = presets[entry.preset]?.name;
+      meta.textContent = (presetName ? presetName + ' · ' : '') + entry.itemCount + (entry.itemCount === 1 ? ' item' : ' items') + (entry.updatedAt ? ' · ' + formatDate(entry.updatedAt) : '') + (entry.id === currentId() ? ' · open now' : '');
       head.append(name, meta);
     }
 

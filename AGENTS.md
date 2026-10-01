@@ -4,7 +4,7 @@ This file travels with the project. Read it before editing this repository; do n
 
 ## Read first
 
-1. [README.md](README.md) — how to run the game and where to start.
+1. [README.md](README.md) — how to run the game and where to start. ([CLAUDE.md](CLAUDE.md) holds Claude-specific working notes and defers to this file.)
 2. [docs/STYLE_GUIDE.md](docs/STYLE_GUIDE.md) — visual identity, room art, and HUD behavior.
 3. [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — current structure, contracts, and planned module boundaries.
 4. [docs/ROADMAP.md](docs/ROADMAP.md) — phased work and completion criteria.

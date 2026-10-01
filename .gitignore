@@ -12,3 +12,5 @@ output/blender/
 output/blender-reference/
 output/imagegen/
 output/prop-references/
+art-source/generated/*.glb
+art-source/generated/*.obj

@@ -8,6 +8,7 @@
 // - disposeModel() releases geometry and the two owned material kinds above, nothing else.
 
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const cache = new Map();
 
@@ -71,6 +72,42 @@ export function disposeModel(model) {
     if (o.userData.tintMaterial) o.userData.tintMaterial.dispose();
     if (o.userData.ownedMaterial) o.userData.ownedMaterial.dispose();
   });
+}
+
+/**
+ * Merges a model's static meshes into one mesh per shared material, cutting draw calls several-fold.
+ * Parts that must stay separate keep their own mesh: recolorable parts, parts with owned materials
+ * (glows, art), and anything that is not a plain mesh (lights). Nested group transforms are baked in.
+ * Call on a freshly built model before placing it.
+ */
+export function compactModel(group) {
+  group.updateMatrixWorld(true);
+  // Bake each part relative to the root, so a scaled or rotated root (plants scale their group) is not applied twice.
+  const rootInverse = group.matrixWorld.clone().invert();
+  const relative = new THREE.Matrix4();
+  const buckets = new Map();   // material + attribute signature -> { material, geometries, meshes }
+  group.traverse((o) => {
+    if (!o.isMesh || o === group) return;
+    if (o.userData.recolor || o.userData.ownedMaterial || o.material.transparent || Array.isArray(o.material)) return;
+    const signature = Object.keys(o.geometry.attributes).sort().join(',');
+    const key = o.material.uuid + '|' + signature;
+    if (!buckets.has(key)) buckets.set(key, { material: o.material, geometries: [], meshes: [] });
+    const geometry = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+    geometry.applyMatrix4(relative.multiplyMatrices(rootInverse, o.matrixWorld));
+    buckets.get(key).geometries.push(geometry);
+    buckets.get(key).meshes.push(o);
+  });
+  for (const { material, geometries, meshes } of buckets.values()) {
+    if (meshes.length < 2) { geometries.forEach((g) => g.dispose()); continue; }
+    const merged = mergeGeometries(geometries, false);
+    geometries.forEach((g) => g.dispose());
+    if (!merged) continue;
+    for (const m of meshes) { m.removeFromParent(); m.geometry.dispose(); }
+    const mesh = new THREE.Mesh(merged, material);
+    mesh.castShadow = mesh.receiveShadow = true;
+    group.add(mesh);
+  }
+  return group;
 }
 
 /** Axis-aligned size of a model in world units. */

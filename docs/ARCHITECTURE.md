@@ -35,8 +35,9 @@ It is not yet a fully separated foundation for a larger game. src/main.js is app
 | src/props.js | Furniture models and catalog registry (materials via scene/geometry.js) |
 | src/plants.js | Four additional plant models, pot materials, plant catalog entries |
 | src/scene/create-scene.js | Renderer, orthographic camera, orbit controls, lighting, resize, zoom and reset helpers |
-| src/scene/geometry.js | Shared material cache, owned-material rule, recolor, tint, dispose, measure |
-| src/scene/thumbnails.js | Offscreen catalog previews, disposed through geometry.js |
+| src/scene/geometry.js | Shared material cache, owned-material rule, recolor, tint, dispose, measure, compactModel (per-material merge) |
+| src/scene/thumbnails.js | Offscreen catalog previews cached in browser storage under a catalog signature |
+| tests/perf | Opt-in benchmark (PERF=1) for startup, draw calls, and frame time |
 | src/ui/icons.js | Inline SVG icon registry |
 | src/styles/ | index.css imports tokens.css (fonts, colors, tactile HUD tokens), components.css, layout.css (desktop floating controls and Decorating box), responsive.css (compact and landscape drawers) |
 | public/fonts | Bundled OFL fonts with licences: Fredoka for the wordmark, Gelasio and Source Sans 3 as heading/body fallbacks |

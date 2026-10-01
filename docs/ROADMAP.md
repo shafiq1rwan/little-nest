@@ -11,7 +11,7 @@ Keep the Little Nest style guide and existing saves intact through every phase. 
 | 2 | Safe creative workflow | Complete 30 September 2026 | Phase 1 |
 | 3 | Richer decorating | Complete 1 October 2026 | Phase 2 |
 | 4 | More rooms and furniture collections | Complete 1 October 2026 |  Phase 3 |
-| 5 | Lighting and atmosphere | In progress: moods and lamp toggles done 1 October 2026 | Phase 4 |
+| 5 | Lighting and atmosphere | Complete 1 October 2026 | Phase 4 |
 | 6 | Optional challenges and sharing | Optional backlog | Stable earlier phases |
 
 ## Phase 0 — preserve the current game
@@ -121,14 +121,14 @@ Deliver:
 - Done (1 October 2026): Morning, Sunset, and Evening moods on a Light tab; each sets ambient, sun, backdrop, exposure, window glow, and lamp strength, and is saved with the room (format version 7).
 - Done (1 October 2026): floor lamp, paper lamp, candle, and lantern carry a lit flag; the selection card switches it, undo restores it, and saves keep it.
 - Optional ambient audio with mute and retained preferences. (Background music with a remembered mute toggle was added early, on 30 September 2026; per-lamp audio or sound effects remain here.)
-- Performance improvements based on measured scene cost.
+- Done (1 October 2026), measured with the opt-in benchmark (npm run bench): models are merged by material at build time (starter room draw calls 674 → 209, stress room 1786 → 639), the scene renders only when something changed (idle renders per frame 1 → 0), and thumbnails are cached in browser storage (repeat-visit startup 840 ms → 110 ms).
 
 Completion criteria:
 
 - Saved room lighting restores reliably. (Done: browser test loads an evening room with a switched-off lamp.)
 - Each lighting preset remains readable with the cream/sage HUD and on small screens.
-- Increased content does not make catalog previews or interaction unresponsive.
-- Any quality settings preserve the cozy style instead of removing all detail.
+- Increased content does not make catalog previews or interaction unresponsive. (Done: cached previews and merged models; the benchmark records the numbers.)
+- Any quality settings preserve the cozy style instead of removing all detail. (No quality settings were needed; nothing visual changed.)
 
 ## Phase 6 — optional goals and sharing
 

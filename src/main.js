@@ -3,7 +3,7 @@ import { CATALOG, recolor } from './props.js';
 import { createRoom } from './room.js';
 import { createScene } from './scene/create-scene.js';
 import { createThumbnails } from './scene/thumbnails.js';
-import { tintModel as tint, disposeModel, measureModel } from './scene/geometry.js';
+import { tintModel as tint, disposeModel, measureModel, compactModel } from './scene/geometry.js';
 import { installIcons } from './ui/icons.js';
 import { CELL, CAMERA, RENDER, MUSIC, SAVE_KEY, ROOMS_KEY, MUSIC_KEY, MAX_SAVED_ITEMS } from './config/game.js';
 import { BACKDROP, SELECTION_OUTLINE, GHOST_OK, GHOST_BLOCKED, WALL_FINISHES, FLOOR_FINISHES, ITEM_COLORS } from './config/theme.js';
@@ -41,6 +41,9 @@ let grid = null;
 let gridVisible = false;
 let wallsVisible = true;
 let lampsReady = false;   // state is created after the first shell build; lamps are applied as they are added
+let dirty = true;         // true when the next animation frame must render
+function invalidate() { dirty = true; }
+controls.addEventListener('change', invalidate);   // orbit, zoom, pinch, and programmatic camera moves
 function presetFor(room) {
   return { ...ROOM_PRESETS[room.preset], width: room.width, depth: room.depth };
 }
@@ -80,6 +83,7 @@ function buildShell(room) {
 // ---------- lighting moods and lamps ----------
 /** Applies a mood to the sky, sun, backdrop, exposure, window glow, and every lamp. */
 function applyLighting(key) {
+  invalidate();
   const mood = LIGHTING[key] || LIGHTING[DEFAULT_LIGHTING];
   hemisphere.color.setHex(mood.hemisphere.sky);
   hemisphere.groundColor.setHex(mood.hemisphere.ground);
@@ -204,8 +208,9 @@ function surfaceUnder(ev, type, ignoreId = null) {
 // The scene mirrors the command log: meshes are created, moved, recolored, and dropped from events,
 // so undo and redo need no special handling here.
 commands.subscribe((kind, p) => {
+  invalidate();
   if (kind === 'add') {
-    const mesh = CATALOG[p.type].build();
+    const mesh = compactModel(CATALOG[p.type].build());
     if (p.color !== null) recolor(mesh, p.color);
     mesh.userData.itemId = p.id;
     meshes.set(p.id, mesh);
@@ -257,6 +262,7 @@ function undoRedo(direction) {
   if (!done) toast(direction === 'undo' ? 'Nothing to undo.' : 'Nothing to redo.');
 }
 function setSelected(item, showControls = true) {
+  invalidate();
   if (selected && meshOf(selected)) tint(meshOf(selected), null);
   selected = item ? state.get(item.id) : null;
   selectionBox.visible = !!selected;
@@ -268,7 +274,7 @@ function startPlacing(type) {
   cancelPlacing();
   setSelected(null);
   selectedType = type;
-  ghost = CATALOG[type].build();
+  ghost = compactModel(CATALOG[type].build());
   ghost.userData.rot = 0;
   tint(ghost, GHOST_OK);
   ghost.visible = false;
@@ -320,6 +326,7 @@ const input = createInput({
   idOf: (o) => o.userData.itemId || null,
 }, {
   move(hit, ev) {
+    invalidate();
     if (photoMode) return;
     if (ghost && placement.isWallItem(selectedType)) {
       ghostTarget = wallUnder(ev, selectedType);
@@ -368,6 +375,7 @@ const input = createInput({
     }
   },
   down({ hit, pick, shiftKey }) {
+    invalidate();
     if (photoMode) return;
     if (ghost && placement.isWallItem(selectedType)) {
       if (!ghostTarget) { toast('Wall decorations go on the two walls. Point at one to place it.'); return; }
@@ -401,6 +409,7 @@ const input = createInput({
     if (item) { dragging = item; dragTarget = null; }
   },
   up({ allReleased }) {
+    invalidate();
     finishDrag(true, allReleased);
   },
   secondTouch() {
@@ -409,6 +418,7 @@ const input = createInput({
     pendingSelection = true;
   },
   key(action, ev) {
+    invalidate();
     if (photoMode) { if (action === 'cancel') exitPhotoMode(); return; }
     if (action === 'cancel') { cancelPlacing(); setSelected(null); }
     if (action === 'rotate') rotateSelected();
@@ -419,8 +429,12 @@ const input = createInput({
 });
 
 // ---------- HUD ----------
+const perf = { startedAt: performance.now(), thumbnailsMs: 0, readyMs: 0 };
 installIcons();
-const thumbnails = createThumbnails(CATALOG);
+const thumbnailsStart = performance.now();
+const { thumbnails, cached: thumbnailsCached } = createThumbnails(CATALOG);
+perf.thumbnailsMs = performance.now() - thumbnailsStart;
+perf.thumbnailsCached = thumbnailsCached;
 const toast = createToast($('toast'));
 const hud = createResponsiveHUD({
   panel: $('panel'),
@@ -476,16 +490,16 @@ $('duplicate-selected').onclick = duplicateSelected;
 $('deselect').onclick = () => setSelected(null);
 $('move-tool').onclick = () => { cancelPlacing(); toast('Drag any furniture to move it.'); };
 $('move-selected').onclick = () => { if (hud.isCompact()) hud.setExpanded(false); toast('Drag the selected furniture to a free tile.'); };
-function showGrid(on) { gridVisible = on; grid.visible = on; setPressed($('grid-tool'), on); }
+function showGrid(on) { gridVisible = on; grid.visible = on; setPressed($('grid-tool'), on); invalidate(); }
 $('grid-tool').onclick = () => showGrid(!gridVisible);
-$('walls-tool').onclick = () => { wallsVisible = !wallsVisible; shell.walls.visible = wallsVisible; $('walls-tool').setAttribute('aria-pressed', String(wallsVisible)); };
+$('walls-tool').onclick = () => { wallsVisible = !wallsVisible; shell.walls.visible = wallsVisible; invalidate(); $('walls-tool').setAttribute('aria-pressed', String(wallsVisible)); };
 $('help-toggle').onclick = () => { $('help-panel').hidden = !$('help-panel').hidden; };
 
 const music = createMusic({ src: MUSIC.src, volume: MUSIC.volume, storageKey: MUSIC_KEY, button: $('music-toggle'), installIcons, onToggle: (on) => toast(on ? 'Music on.' : 'Music off.') });
 
-$('zoom-in').onclick = () => zoomBy(CAMERA.zoomStep);
-$('zoom-out').onclick = () => zoomBy(1 / CAMERA.zoomStep);
-$('reset-view').onclick = resetView;
+$('zoom-in').onclick = () => { zoomBy(CAMERA.zoomStep); invalidate(); };
+$('zoom-out').onclick = () => { zoomBy(1 / CAMERA.zoomStep); invalidate(); };
+$('reset-view').onclick = () => { resetView(); invalidate(); };
 
 // ---------- saved rooms ----------
 function settle() { finishDrag(); cancelPlacing(); setSelected(null); }
@@ -612,6 +626,7 @@ let photoMode = false;
 let photoRestore = null;   // HUD state to put back when leaving
 function enterPhotoMode() {
   if (photoMode) return;
+  invalidate();
   settle();
   photoRestore = { grid: gridVisible, panelExpanded: hud.isExpanded() };
   photoMode = true;
@@ -624,6 +639,7 @@ function enterPhotoMode() {
 }
 function exitPhotoMode() {
   if (!photoMode) return;
+  invalidate();
   photoMode = false;
   document.body.classList.remove('photo');
   $('photo-bar').hidden = true;
@@ -669,24 +685,31 @@ setSelected(hud.isCompact() || !starterSelectId ? null : state.get(starterSelect
 canvas.style.cursor = 'grab';
 
 // ---------- loop ----------
+perf.readyMs = performance.now() - perf.startedAt;
+// Render on demand: a frame is drawn only when something changed (state, camera, selection, HUD size).
+// The loop itself keeps running so damping and resizes are still noticed.
+perf.renders = 0;
 renderer.setAnimationLoop(() => {
-  resize();
-  controls.update();
+  if (resize()) dirty = true;
+  if (controls.update()) dirty = true;
+  if (!dirty) return;
+  dirty = false;
   if (selected) { selectionBox.box.setFromObject(meshOf(selected)); selectionBox.updateMatrixWorld(true); }
   renderer.render(scene, camera);
+  perf.renders++;
 });
 
 // Expose scene state for development checks. Items and the selection are returned as
 // record copies with their mesh attached, so checks can inspect both data and visuals.
 const withMesh = (r) => (r ? { ...r, mesh: meshOf(r) } : null);
 window.__sim = {
-  state, placement, commands, finishes, gallery, roomConfig, presets: ROOM_PRESETS, lighting: LIGHTING, hemisphere, sun, renderer, occupancy: state.occupancy, bgm: music.audio, scene, camera, controls,
+  state, placement, commands, finishes, gallery, roomConfig, presets: ROOM_PRESETS, lighting: LIGHTING, hemisphere, sun, renderer, perf, occupancy: state.occupancy, bgm: music.audio, scene, camera, controls,
   get grid() { return grid; }, get walls() { return shell.walls; }, get wallMat() { return shell.wallMat; }, get floorMat() { return shell.floorMat; }, get wallPanels() { return shell.wallPanels; },
   get currentRoom() { return currentRoom; },
   get photoMode() { return photoMode; },
   pointerToFloor: input.floorHit, snap, isFree, worldPos, meshOf, addItem, setSelected, rotateSelected, slotWorld, surfaceUnder, supporterMeshes, hitAmong: input.hitAmong, wallBlocked, startPreset,
   measure: measureModel,
-  measureType: (type) => { const m = CATALOG[type].build(); const size = measureModel(m); disposeModel(m); return size; },
+  measureType: (type) => { const m = compactModel(CATALOG[type].build()); const size = measureModel(m); disposeModel(m); return size; },
   catalogTypes: Object.keys(CATALOG),
   catalogTags: (type) => CATALOG[type].tags || [],
   catalogCollection: (type) => CATALOG[type].collection,

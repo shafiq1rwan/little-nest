@@ -16,6 +16,13 @@ export default defineConfig({
   reporter: [['list']],
   projects: [
     { name: 'unit', testDir: 'tests/unit' },
+    // Opt-in benchmark: PERF=1 npx playwright test --project perf (or npm run bench). Not part of npm test.
+    {
+      name: 'perf',
+      testDir: 'tests/perf',
+      testMatch: process.env.PERF ? /.*.spec.js/ : /$^/,
+      use: { baseURL: 'http://localhost:' + port, ...(channel ? { channel } : {}), launchOptions: { args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] } },
+    },
     {
       name: 'browser',
       testDir: 'tests/browser',

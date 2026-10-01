@@ -82,7 +82,7 @@ See [Architecture](docs/ARCHITECTURE.md) for the Phase 1 target structure.
 
 ## Validation and moving computers
 
-Run the browser checks on any machine:
+Run the browser checks on any machine (and `npm run bench` for the opt-in performance numbers):
 
     npm run test:install   # once per machine: downloads Playwright Chromium
     npm test

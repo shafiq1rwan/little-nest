@@ -58,14 +58,16 @@ export function createScene({ canvas, camera: cam, render, backdrop }) {
   /** Fits the orthographic frustum to the canvas so the whole room stays framed at any aspect. */
   let lastWidth = 0, lastHeight = 0;
   let frame = 1;   // 1 frames an 8 x 8 room; larger rooms scale it up
+  /** True when the canvas size changed (and the frustum was refitted). */
   function resize(force = false) {
     const w = canvas.clientWidth, h = canvas.clientHeight;
-    if (!w || !h || (!force && w === lastWidth && h === lastHeight)) return;
+    if (!w || !h || (!force && w === lastWidth && h === lastHeight)) return false;
     lastWidth = w; lastHeight = h;
     renderer.setSize(w, h, false);
     const aspect = w / h, span = Math.max(10.6, 13.6 / aspect) * frame;
     camera.left = -span * aspect / 2; camera.right = span * aspect / 2; camera.top = span / 2; camera.bottom = -span / 2;
     camera.updateProjectionMatrix();
+    return true;
   }
   /** Re-frames for a room whose longest side is `cells` wide (8 is the baseline). Smaller rooms keep the baseline. */
   function setFrame(cells) {

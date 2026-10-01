@@ -1,10 +1,32 @@
 // Renders a small isometric preview of every catalog model with an offscreen renderer.
-// Returns { [type]: dataURL }. The offscreen context is released when done.
+// Returns { [type]: dataURL }. Results are cached in browser storage under a signature of the
+// catalog, so repeat visits skip the WebGL work; a changed model invalidates the cache.
 
 import * as THREE from 'three';
-import { disposeModel } from './geometry.js';
+import { disposeModel, compactModel } from './geometry.js';
+import { readJSON, writeJSON } from '../persistence/storage.js';
 
-export function createThumbnails(catalog, { width = 240, height = 200 } = {}) {
+export const THUMBNAIL_CACHE_KEY = 'home-deco-sim:thumbnails';
+
+/** A cheap fingerprint of the catalog: every type plus the length of its builder source. */
+export function catalogSignature(catalog) {
+  let hash = 0;
+  for (const [key, def] of Object.entries(catalog)) {
+    const text = key + ':' + String(def.build).length + ':' + (def.defaultColor ?? '');
+    for (let i = 0; i < text.length; i++) hash = (hash * 31 + text.charCodeAt(i)) | 0;
+  }
+  return 'v3:' + (hash >>> 0).toString(36);
+}
+
+export function createThumbnails(catalog, { width = 240, height = 200, cache = true } = {}) {
+  const signature = catalogSignature(catalog);
+  if (cache) {
+    const stored = readJSON(THUMBNAIL_CACHE_KEY);
+    if (stored?.signature === signature && stored.thumbnails && Object.keys(catalog).every((k) => typeof stored.thumbnails[k] === 'string')) {
+      return { thumbnails: stored.thumbnails, cached: true };
+    }
+  }
+
   const r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
   r.setSize(width, height);
   r.setPixelRatio(1);
@@ -18,7 +40,7 @@ export function createThumbnails(catalog, { width = 240, height = 200 } = {}) {
 
   const thumbnails = {};
   for (const [key, def] of Object.entries(catalog)) {
-    const model = def.build();
+    const model = compactModel(def.build());
     s.add(model);
     const bounds = new THREE.Box3().setFromObject(model);
     const center = bounds.getCenter(new THREE.Vector3());
@@ -41,5 +63,6 @@ export function createThumbnails(catalog, { width = 240, height = 200 } = {}) {
   }
   r.dispose();
   r.forceContextLoss();
-  return thumbnails;
+  if (cache) writeJSON(THUMBNAIL_CACHE_KEY, { signature, thumbnails });   // a refused write just means no cache next time
+  return { thumbnails, cached: false };
 }

@@ -9,7 +9,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "playwright test",
-    "test:install": "playwright install chromium"
+    "test:install": "playwright install chromium",
+    "bench": "node -e \"process.env.PERF='1'; require('child_process').execSync('npx playwright test --project perf', { stdio: 'inherit', env: process.env })\""
   },
   "dependencies": {
     "three": "^0.170.0"

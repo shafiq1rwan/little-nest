@@ -27,7 +27,9 @@ The user's latest explicit instructions take precedence over these guidelines. T
 ## Implementation
 
 - The app uses vanilla JavaScript ES modules, Three.js, and Vite. Do not introduce a framework or replace the build system as incidental cleanup.
-- Materials: get shared ones from sharedMaterial() in src/scene/geometry.js and never dispose them; give a mesh its own material only through ownMaterial() so disposeModel() can release it.
+- Materials: get shared ones from sharedMaterial() in src/scene/geometry.js and never dispose them; give a mesh its own material only through ownMaterial() so disposeModel() can release it. Models are merged per material by compactModel() when placed: flag parts that must stay separate with userData.recolor or an owned material.
+- Rendering is on demand: anything that changes what the scene looks like outside the commands/input/camera paths must call invalidate() in main.js, or the change will not be drawn until the next interaction.
+- Before performance work, run `npm run bench` and record before/after numbers in HANDOFF.
 - Styles: add colors and fonts as tokens in src/styles/tokens.css; desktop rules go in layout.css and compact/landscape overrides in responsive.css. Keep COMPACT_QUERY in src/ui/responsive.js equal to the compact media query.
 - main.js is still the prototype coordinator. Phase 1 extracts responsibilities in small steps. So far src/config (game and theme constants) and src/data (starter room) exist; the other proposed folders do not yet.
 - Put new constants in src/config and new preset layouts in src/data rather than inline in main.js.

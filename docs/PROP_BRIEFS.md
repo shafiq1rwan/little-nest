@@ -10,7 +10,7 @@ Reference descriptions for every catalog item, used to draw the concept sheet, t
 
 1. **Concept sheet.** [art-source/prop-sheet.png](../art-source/prop-sheet.png) is the Codex drawing of all 48 props in the Little Nest style (prompt: shared style block plus the briefs below). Regenerate single props at 1024 px when a tile is too small for thin parts such as lamp legs, chair spindles or fern fronds.
 2. **Crops.** `python art-source/slice-sheet.py` cuts the sheet into one square image per catalog key in `art-source/prop-crops/` (ignored by git). Image-to-3D tools need one isolated object per input; never upload the whole sheet.
-3. **Shape generation.** Hunyuan3D-2 (low-VRAM fork, installed through Pinokio) runs on an 8 GB card with the mini turbo model and profile 4. Generate the shape only; textures are replaced by flat colours anyway. Export glb named after the key.
+3. **Shape generation.** Hunyuan3D-2 (low-VRAM fork, installed through Pinokio) runs on an 8 GB card with the mini turbo model and profile 4. Generate the shape only; textures are replaced by flat colours anyway. With the app running, `python tools/hunyuan/generate.py <key> [<key>...]` sends the crop to its Gen Shape endpoint and saves `art-source/generated/<key>.glb` (about 7 seconds per prop); the web UI's download button does the same by hand.
 4. **Clean-up in Blender**, one command per prop:
    ```
    blender --background --python tools/blender/clean-generated.py -- --key sofa --size 2.9 0.9 1.0 --tris 1600 --preview <dir>

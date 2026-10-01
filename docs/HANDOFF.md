@@ -104,6 +104,7 @@ Current browser checks previously passed placement, saving, plants, HUD/touch in
 
 ## Current handoff
 
+- 1 October 2026, Phase 4 increment 3 (Phase 4 complete): furniture collections. src/data/collections.js names Nest classics, Japandi, and Cottage; every catalog entry has a `collection` (default cozy). Eight new models: low sofa, low table, paper lamp (with a point light), bonsai; cottage armchair, painted dresser, rocking chair, teapot. A collection selector in the Decorating box combines with search and categories; cards label non-default collections. Catalog: 48 entries. Suite: 72 checks (44 unit, 28 browser). Next: Phase 5 (lighting moods, lamp toggles, performance).
 - 1 October 2026, Phase 4 increment 2: bedroom and balcony presets with four new models (bed 2 × 3, nightstand with one slot, wardrobe, planter box). Presets may set `walls: 'railing'`: room.js builds low railings instead of wall panels, presetWallRows() gives that preset a wall grid of zero rows, so wall items cannot be mounted or loaded there. Five presets in total. Suite: 71 checks (44 unit, 27 browser). Next: furniture collections and catalog filtering.
 - 1 October 2026, Phase 4 increment 1: room presets. src/data/presets.js replaces starter-room.js and defines livingRoom (8 × 8), studio (6 × 6), and readingNook (5 × 5) with windows, lights, and starter layouts. Placement now has width/depth and configure(); room.js builds the shell from a preset and returns dispose(); main.js rebuilds the shell, grid, blocked wall cells, and camera frame on the commands 'room' event, which replaceRoom emits after clearing items. Save format is version 6 with { room: { preset, width, depth } }; older saves load as the living room; parsers validate against a placement built for the saved room. The Rooms dialog has a "Start fresh" section (one undoable step) and lists each saved room's preset. Suite: 70 checks (43 unit, 27 browser). Next: bedroom and balcony presets with their furniture, then collections.
 - 1 October 2026, wordmark refinement: removed the house image from the HUD header and replaced the serif Little Nest title with locally bundled Fredoka Semibold. Added its OFL licence and --font-brand token, simplified header markup, and tuned desktop/compact title sizes. Browser-tab and installed-app icons remain. Updated branding checks for the text-only header and font loading; production build and all 64 tests pass. Reviewed desktop, 320px and 390px phones, tablet, and landscape; refreshed the five baseline images. No gameplay or saved-data changes. Phase 4 remains next.
@@ -124,12 +125,12 @@ Current browser checks previously passed placement, saving, plants, HUD/touch in
 - Product: Little Nest, playable decorating prototype.
 - Current structure: main.js composes config/, data/, game/ (placement, state, input), persistence/, scene/ (create-scene, geometry, thumbnails), ui/ (hud, responsive, music, icons), plus room, props, plants; one HTML HUD; src/styles split into four files.
 - Current rooms: five presets (living room 8 × 8 with 20 starter items, studio 6 × 6, reading nook 5 × 5, bedroom 7 × 7, balcony 6 × 4 with railings); 4-unit walls with a half-unit wall grid except on the balcony; orthographic camera framed per room size.
-- Catalog: 40 entries: 27 floor items including seven plants, seven small tabletop items, six wall decorations.
+- Catalog: 48 entries across three collections: 33 floor items including seven plants, nine small tabletop items, six wall decorations.
 - Storage: a named-room gallery (home-deco-sim:rooms) of version-3 rooms with item ids; the legacy single save is imported once and retained.
 - Visual identity: cream, sage, peach, warm wood, cozy procedural models.
 - Work completed in this documentation task: structure review, phased plan, persistent coding instructions, style guide, transfer guide, and five current visual baseline screenshots.
 - No architecture refactor or new gameplay phase was implemented in this task.
-- Next recommended work: Phase 4 continued (furniture collections and catalog filtering).
+- Next recommended work: Phase 5 (morning/sunset/evening light presets, lamp toggles, measured performance work).
 
 ## Update after future work
 

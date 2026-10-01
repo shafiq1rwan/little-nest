@@ -3,6 +3,7 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 import { PLANT_CATALOG } from './plants.js';
 import { sharedMaterial, ownMaterial, recolorModel } from './scene/geometry.js';
 import { artTexture } from './room.js';
+import { DEFAULT_COLLECTION } from './data/collections.js';
 
 const C = { cream: 0xf3e4d2, wood: 0xb87946, dark: 0x694b35, sage: 0x81936a, green: 0x4d7639, pot: 0xeee0ca, black: 0x393932, brass: 0xbb9451 };
 const material = (color) => sharedMaterial(color, .85);
@@ -182,6 +183,90 @@ const WALL_CATALOG = {
   }},
 };
 
+// Japandi: low platforms, pale ash, charcoal upholstery, paper light.
+const J = { ash: 0xd9c7a7, charcoal: 0x3f3d3a, paper: 0xfff1dc, moss: 0x5f7a4a };
+const JAPANDI_CATALOG = {
+  lowSofa: { label: 'Low sofa', category: 'seating', collection: 'japandi', tags: ['japandi', 'platform', 'couch'], w: 3, d: 1, defaultColor: J.charcoal, build() {
+    const g = new THREE.Group();
+    g.add(box(2.9, .16, .96, J.ash, 0, .06, 0, .02), box(2.9, .06, .06, J.ash, 0, 0, .45, .01));
+    for (let i = 0; i < 3; i++) {
+      const x = (i - 1) * .93;
+      g.add(cushion(.88, .2, .78, J.charcoal, x, .22, .04));
+      const back = cushion(.88, .42, .2, J.charcoal, x, .42, -.33); back.rotation.x = -.12; g.add(back);
+    }
+    g.add(box(.5, .3, .12, J.ash, -.9, .44, -.2, .06).rotateX(-.2));
+    return g;
+  }},
+  lowTable: { label: 'Low table', category: 'tables', collection: 'japandi', tags: ['japandi', 'coffee table'], w: 2, d: 1, surface: { y: .4, slots: [{ x: -.5, z: 0 }, { x: .5, z: 0 }] }, build() {
+    const g = new THREE.Group();
+    g.add(box(1.8, .08, .8, J.ash, 0, .32, 0, .015));
+    for (const x of [-.7, .7]) g.add(box(.1, .32, .7, J.ash, x, 0, 0, .01));
+    return g;
+  }},
+  paperLamp: { label: 'Paper lamp', category: 'decor', collection: 'japandi', tags: ['japandi', 'light', 'lantern'], w: 1, d: 1, build() {
+    const g = new THREE.Group();
+    g.add(cyl(.2, .2, .03, J.charcoal), cyl(.02, .02, .55, J.charcoal, 0, .03, 0));
+    const shade = cyl(.26, .26, .6, J.paper, 0, .55, 0);
+    shade.material = material(J.paper).clone(); shade.material.emissive.setHex(0xffcf94); shade.material.emissiveIntensity = .3; shade.userData.ownedMaterial = shade.material; g.add(shade);
+    for (const y of [.7, .85, 1.0]) g.add(mesh(new THREE.TorusGeometry(.265, .006, 4, 24), J.charcoal, 0, y, 0).rotateX(Math.PI / 2));
+    const light = new THREE.PointLight(0xffd3a0, 2.2, 3.5, 2); light.position.set(0, .85, 0); g.add(light);
+    return g;
+  }},
+  bonsai: { label: 'Bonsai', category: 'small', collection: 'japandi', layer: 'surface', tags: ['japandi', 'plant', 'tree'], w: 1, d: 1, defaultColor: J.charcoal, build() {
+    const g = new THREE.Group();
+    const pot = box(.28, .07, .18, J.charcoal, 0, 0, 0, .01); pot.userData.recolor = true; g.add(pot);
+    g.add(box(.25, .01, .15, 0x5b4030, 0, .07, 0, .003));
+    g.add(cyl(.012, .02, .12, 0x6b4a2e, -.02, .07, 0).rotateZ(.25), cyl(.008, .012, .1, 0x6b4a2e, .05, .14, 0).rotateZ(-.6));
+    for (const [x, y, z, s] of [[-.07, .2, 0, .08], [.06, .17, .02, .06], [.11, .22, -.02, .05]]) {
+      const pad = mesh(new THREE.SphereGeometry(1, 8, 6), J.moss, x, y, z); pad.scale.set(s, s * .45, s * .8); g.add(pad);
+    }
+    return g;
+  }},
+};
+
+// Cottage: painted wood, rose and sage, soft rounded shapes.
+const K = { paint: 0xa7b98e, rose: 0xd9a3a3, cream: 0xf6efe2, oak: 0xb4885a };
+const COTTAGE_CATALOG = {
+  floralArmchair: { label: 'Cottage armchair', category: 'seating', collection: 'cottage', tags: ['cottage', 'floral', 'chair'], w: 1, d: 1, defaultColor: K.rose, build() {
+    const g = new THREE.Group(); legs(g, .6, .6, .14, K.oak);
+    const seat = cushion(.9, .34, .9, K.rose, 0, .14, 0); g.add(seat);
+    const back = cushion(.9, .5, .24, K.rose, 0, .46, -.33); back.rotation.x = -.1; g.add(back);
+    for (const x of [-.38, .38]) g.add(cushion(.14, .28, .8, K.rose, x, .46, .02));
+    g.add(box(.5, .18, .1, K.cream, 0, .5, -.16, .04).rotateX(-.2));
+    return g;
+  }},
+  dresser: { label: 'Painted dresser', category: 'tables', collection: 'cottage', tags: ['cottage', 'drawers', 'storage'], w: 2, d: 1, defaultColor: K.paint, surface: { y: .92, slots: [{ x: -.55, z: 0 }, { x: .55, z: 0 }] }, build() {
+    const g = new THREE.Group(); legs(g, 1.5, .45, .1, K.oak);
+    const body = box(1.85, .8, .6, K.paint, 0, .1, 0, .02); body.userData.recolor = true; g.add(body);
+    g.add(box(1.9, .04, .64, K.oak, 0, .9, 0, .01));
+    for (const x of [-.46, .46]) for (const y of [.2, .55]) { g.add(box(.8, .26, .025, K.cream, x, y, .3, .01), cyl(.025, .025, .04, C.brass, x, y + .13, .33).rotateX(Math.PI / 2)); }
+    return g;
+  }},
+  rockingChair: { label: 'Rocking chair', category: 'seating', collection: 'cottage', tags: ['cottage', 'porch', 'chair'], w: 1, d: 1, build() {
+    const g = new THREE.Group();
+    for (const x of [-.32, .32]) {
+      // An arc of a torus, centred below its pivot so the lowest point rests on the floor, turned to run along z.
+      const rocker = new THREE.Mesh(new THREE.TorusGeometry(.62, .025, 6, 24, 1.1, -Math.PI / 2 - .55), material(K.oak));
+      rocker.position.set(x, .62, 0); rocker.rotation.y = Math.PI / 2; rocker.castShadow = rocker.receiveShadow = true; g.add(rocker);
+      g.add(cyl(.025, .03, .34, K.oak, x, .1, .28), cyl(.025, .03, .34, K.oak, x, .1, -.28));
+    }
+    g.add(box(.72, .05, .66, K.oak, 0, .44, 0, .01));
+    for (let i = 0; i < 5; i++) g.add(box(.05, .6, .05, K.oak, -.3 + i * .15, .49, -.3, .01).rotateX(-.15));
+    g.add(box(.72, .05, .05, K.oak, 0, 1.0, -.38, .01));
+    const pad = cushion(.62, .07, .56, K.rose, 0, .49, .02); g.add(pad);
+    return g;
+  }},
+  teapot: { label: 'Teapot', category: 'small', collection: 'cottage', layer: 'surface', tags: ['cottage', 'tea', 'kitchen'], w: 1, d: 1, defaultColor: K.cream, build() {
+    const g = new THREE.Group();
+    const body = mesh(new THREE.SphereGeometry(.1, 12, 8), K.cream, 0, .1, 0); body.scale.y = .85; body.userData.recolor = true; g.add(body);
+    g.add(cyl(.04, .04, .01, K.cream, 0, 0, 0));
+    g.add(cyl(.012, .02, .11, K.cream, .11, .1, 0).rotateZ(-.9));
+    const handle = mesh(new THREE.TorusGeometry(.05, .01, 6, 12), K.cream, -.1, .1, 0); handle.userData.recolor = true; g.add(handle);
+    g.add(cyl(.045, .05, .015, K.paint, 0, .18, 0), mesh(new THREE.SphereGeometry(.015, 6, 4), K.paint, 0, .205, 0));
+    return g;
+  }},
+};
+
 export const CATALOG = {
   sofa: { label: 'Sofa', category: 'seating', w: 3, d: 1, build: () => seating(true) },
   armchair: { label: 'Armchair', category: 'seating', w: 1, d: 1, build: () => seating(false) },
@@ -312,6 +397,10 @@ export const CATALOG = {
   ...PLANT_CATALOG,
   ...SMALL_CATALOG,
   ...WALL_CATALOG,
+  ...JAPANDI_CATALOG,
+  ...COTTAGE_CATALOG,
 };
+// Entries that name no collection belong to the default Nest classics set.
+for (const def of Object.values(CATALOG)) def.collection ??= DEFAULT_COLLECTION;
 
 export const recolor = recolorModel;

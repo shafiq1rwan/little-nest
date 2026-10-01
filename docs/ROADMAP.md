@@ -10,8 +10,8 @@ Keep the Little Nest style guide and existing saves intact through every phase. 
 | 1 | Structure and portable development | Complete 30 September 2026 | Phase 0 |
 | 2 | Safe creative workflow | Complete 30 September 2026 | Phase 1 |
 | 3 | Richer decorating | Complete 1 October 2026 | Phase 2 |
-| 4 | More rooms and furniture collections | In progress: five room presets done 1 October 2026; collections and filtering remain | Phase 3 |
-| 5 | Lighting and atmosphere | Planned | Phase 4 |
+| 4 | More rooms and furniture collections | Complete 1 October 2026 |  Phase 3 |
+| 5 | Lighting and atmosphere | Planned — recommended next | Phase 4 |
 | 6 | Optional challenges and sharing | Optional backlog | Stable earlier phases |
 
 ## Phase 0 — preserve the current game
@@ -102,15 +102,15 @@ Deliver:
 
 - Done (1 October 2026): living room, studio, reading nook, bedroom (7 × 7 with bed, nightstand, wardrobe), and balcony (6 × 4 with railings instead of walls, planters, bench), each with its own size, window layout, and starter layout, chosen from "Start fresh" in the Rooms dialog.
 - Done (1 October 2026): presets declare width, depth, windows per wall, and the bulb string; the shell, placement rules, wall grid, blocked cells, grid overlay, and camera framing all follow the preset. Free-form sizes are not exposed in the HUD yet.
-- Cohesive furniture collections such as Japandi, cottage, and modern.
-- Useful catalog filtering as content grows.
+- Done (1 October 2026): Nest classics (the existing catalog), Japandi (low sofa, low table, paper lamp, bonsai), and Cottage (cottage armchair, painted dresser, rocking chair, teapot). Every entry carries a collection key; cards show it when it is not the default.
+- Done (1 October 2026): a collection selector in the Decorating box that combines with search and category chips.
 
 Completion criteria:
 
 - Each room preset has its own valid starter layout and camera framing. (Done: a unit test validates every preset's layout in its own room.)
 - Room dimensions and preset identity are saved and migrated. (Done: save format version 6; older saves become the 8 × 8 living room.)
-- UI text, thumbnails, lighting, and controls remain consistent between presets.
-- Every collection is distinct but still belongs to the Little Nest visual language.
+- UI text, thumbnails, lighting, and controls remain consistent between presets. (Done; the same HUD, thumbnails, and framing serve every preset.)
+- Every collection is distinct but still belongs to the Little Nest visual language. (Japandi uses ash and charcoal; Cottage uses painted sage, rose, and oak; both keep the rounded low-poly treatment.)
 
 ## Phase 5 — atmosphere
 

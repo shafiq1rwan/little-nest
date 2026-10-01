@@ -8,6 +8,7 @@ import { installIcons } from './ui/icons.js';
 import { CELL, CAMERA, RENDER, MUSIC, SAVE_KEY, ROOMS_KEY, MUSIC_KEY, MAX_SAVED_ITEMS } from './config/game.js';
 import { BACKDROP, SELECTION_OUTLINE, GHOST_OK, GHOST_BLOCKED, WALL_FINISHES, FLOOR_FINISHES, ITEM_COLORS } from './config/theme.js';
 import { ROOM_PRESETS, DEFAULT_PRESET, WALL_HEIGHT, MIN_ROOM_SIZE, MAX_ROOM_SIZE, presetFixtures, presetWallRows } from './data/presets.js';
+import { COLLECTIONS, DEFAULT_COLLECTION } from './data/collections.js';
 import { createPlacement } from './game/placement.js';
 import { createRoomState, newItemId } from './game/state.js';
 import { createCommands } from './game/commands.js';
@@ -408,8 +409,8 @@ function updateSelection() {
   });
 }
 
-buildCatalog({ container: $('catalog'), catalog: CATALOG, thumbnails, onChoose: (key) => (selectedType === key ? cancelPlacing() : startPlacing(key)) });
-bindCatalogFilter({ container: $('catalog'), catalog: CATALOG, search: $('search'), categoryButtons: [...document.querySelectorAll('[data-category]')], emptyEl: $('empty-catalog') });
+buildCatalog({ container: $('catalog'), catalog: CATALOG, thumbnails, onChoose: (key) => (selectedType === key ? cancelPlacing() : startPlacing(key)), collectionLabel: (def) => (def.collection === DEFAULT_COLLECTION ? null : COLLECTIONS[def.collection]?.name) });
+bindCatalogFilter({ container: $('catalog'), catalog: CATALOG, search: $('search'), categoryButtons: [...document.querySelectorAll('[data-category]')], emptyEl: $('empty-catalog'), collectionSelect: $('collection'), collections: COLLECTIONS });
 bindTabs({ buttons: [...document.querySelectorAll('[data-tab]')], onChange: () => cancelPlacing() });
 const syncFinishSwatches = buildFinishSwatches([
   { el: $('wall-swatches'), finishes: WALL_FINISHES, current: () => finishes.wall, onPick: (c) => commands.setFinish('wall', c) },
@@ -638,6 +639,8 @@ window.__sim = {
   measureType: (type) => { const m = CATALOG[type].build(); const size = measureModel(m); disposeModel(m); return size; },
   catalogTypes: Object.keys(CATALOG),
   catalogTags: (type) => CATALOG[type].tags || [],
+  catalogCollection: (type) => CATALOG[type].collection,
+  collections: COLLECTIONS,
   get musicOn() { return music.isOn(); },
   get items() { return state.items.map(withMesh); },
   get ghost() { return ghost; },

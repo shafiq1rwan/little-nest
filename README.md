@@ -32,7 +32,7 @@ Keep package-lock.json when moving computers. The runtime itself is browser-base
 
 ## Decorating
 
-- Browse furniture by category or search. Choose an item and click a free tile to place it; hold Shift to place several. Small items (the Small category) go on tables and shelves: point at the surface and a preview snaps to a free spot. They move and rotate with the furniture they sit on. Wall decorations (the Wall category) hang on the two walls: point at a clear stretch of wall and they snap to it; windows and spots behind furniture are refused. The wall shelf holds small items too.
+- Browse furniture by category, by collection (Nest classics, Japandi, Cottage), or search. Choose an item and click a free tile to place it; hold Shift to place several. Small items (the Small category) go on tables and shelves: point at the surface and a preview snaps to a free spot. They move and rotate with the furniture they sit on. Wall decorations (the Wall category) hang on the two walls: point at a clear stretch of wall and they snap to it; windows and spots behind furniture are refused. The wall shelf holds small items too.
 - Drag furniture to move it. R rotates; Delete removes; Copy or Ctrl+D duplicates into the nearest free spot; Escape cancels. Undo and redo with the toolbar arrows or Ctrl+Z and Ctrl+Shift+Z.
 - Change colors on upholstery, rugs, and the marked parts of plant pots.
 - Use Walls and Floor tabs to choose finishes.
@@ -63,6 +63,7 @@ The header uses a text-only Little Nest wordmark in bundled Fredoka Semibold. [I
 | src/config/game.js | Room size, camera limits, renderer, music, and storage constants |
 | src/config/theme.js | Scene palette, selectable wall/floor finishes, item colors |
 | src/data/presets.js | Room presets: size, windows, and the starter layout for each |
+| src/data/collections.js | Furniture collections (Nest classics, Japandi, Cottage) |
 | src/game/placement.js, state.js, commands.js | Pure placement rules, committed item records with stable ids, and undoable commands |
 | src/persistence/schema.js, storage.js, gallery.js, transfer.js | Saved-room format, validation, migrations, guarded localStorage, named room gallery, room file export/import |
 | tests/unit | Node unit tests for placement, state, and schema |

@@ -116,7 +116,7 @@ Avoid creating empty folders before their responsibilities have been extracted. 
 
 ### Catalog and model contract
 
-Catalog entries are keyed by a stable saved type and define label, category, w, d, and build(). Optional fields are layer, tags, defaultColor, and surface. Existing category names are seating, tables, decor, and small.
+Catalog entries are keyed by a stable saved type and define label, category, collection, w, d, and build(). Optional fields are layer, tags, defaultColor, and surface. Existing category names are seating, tables, decor, small, and wall; collection keys come from src/data/collections.js and default to cozy.
 
 layer: 'floor' marks rugs (no floor occupancy). layer: 'surface' marks small items that live in a supporter's slot and never on the floor grid. layer: 'wall' marks decorations that hang on the back or left wall; they declare wall: { w, h } in columns (1 unit) and rows (0.5 unit), are built with their origin at the bottom-centre of the back face extending +z, never rotate, and may also declare a surface for small items (the wall shelf does). A supporter declares surface: { y, slots: [{ x, z, y? }] } in its own local space (before rotation); slots should avoid the model's baked decoration and stay visible from the default camera. Small-item meshes are added as Three.js children of the supporter's group, so they inherit its position and rotation.
 

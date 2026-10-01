@@ -14,7 +14,7 @@ export function createToast(el, duration = 3000) {
 const hex = (color) => '#' + color.toString(16).padStart(6, '0');
 
 /** Renders a card per catalog entry. `onChoose(type)` runs when a card is pressed. */
-export function buildCatalog({ container, catalog, thumbnails, onChoose }) {
+export function buildCatalog({ container, catalog, thumbnails, onChoose, collectionLabel = null }) {
   for (const [key, def] of Object.entries(catalog)) {
     const b = document.createElement('button');
     b.className = 'catalog-card';
@@ -25,7 +25,7 @@ export function buildCatalog({ container, catalog, thumbnails, onChoose }) {
     const name = document.createElement('strong');
     name.textContent = def.label;
     const size = document.createElement('small');
-    size.textContent = def.layer === 'surface' ? 'Tabletop' : def.layer === 'wall' ? 'Wall' : def.w + ' × ' + def.d + ' tiles';
+    size.textContent = (def.layer === 'surface' ? 'Tabletop' : def.layer === 'wall' ? 'Wall' : def.w + ' × ' + def.d + ' tiles') + (collectionLabel ? ' · ' + collectionLabel(def) : '');
     b.append(img, name, size);
     b.setAttribute('aria-label', 'Place ' + def.label);
     b.setAttribute('aria-pressed', 'false');
@@ -42,17 +42,28 @@ export function setCatalogActive(container, type) {
   });
 }
 
-/** Search box and category chips filter the catalog cards in place. */
-export function bindCatalogFilter({ container, catalog, search, categoryButtons, emptyEl }) {
+/** Search box, category chips, and the collection selector filter the catalog cards in place. */
+export function bindCatalogFilter({ container, catalog, search, categoryButtons, emptyEl, collectionSelect = null, collections = {} }) {
   let category = 'all';
+  if (collectionSelect) {
+    for (const [key, c] of Object.entries(collections)) {
+      const o = document.createElement('option');
+      o.value = key;
+      o.textContent = c.name;
+      collectionSelect.append(o);
+    }
+    collectionSelect.onchange = apply;
+  }
   function apply() {
     const query = search.value.trim().toLowerCase();
+    const collection = collectionSelect?.value ?? 'all';
     let count = 0;
     container.querySelectorAll('.catalog-card').forEach((b) => {
       const def = catalog[b.dataset.type];
       const inCategory = category === 'all' || def.category === category;
+      const inCollection = collection === 'all' || def.collection === collection;
       const matches = [def.label, ...(def.tags || [])].join(' ').toLowerCase().includes(query);
-      b.hidden = !(inCategory && matches);
+      b.hidden = !(inCategory && inCollection && matches);
       if (!b.hidden) count++;
     });
     emptyEl.hidden = !!count;

@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import { disposeModel, compactModel } from './geometry.js';
 import { readJSON, writeJSON } from '../persistence/storage.js';
+import { MODELS_VERSION } from '../config/game.js';
 
 export const THUMBNAIL_CACHE_KEY = 'home-deco-sim:thumbnails';
 
@@ -12,10 +13,10 @@ export const THUMBNAIL_CACHE_KEY = 'home-deco-sim:thumbnails';
 export function catalogSignature(catalog) {
   let hash = 0;
   for (const [key, def] of Object.entries(catalog)) {
-    const text = key + ':' + String(def.build).length + ':' + (def.defaultColor ?? '');
+    const text = key + ':' + String(def.build).length + ':' + (def.defaultColor ?? '') + ':' + (def.model ? def.model + '@' + MODELS_VERSION : '');
     for (let i = 0; i < text.length; i++) hash = (hash * 31 + text.charCodeAt(i)) | 0;
   }
-  return 'v3:' + (hash >>> 0).toString(36);
+  return 'v4:' + (hash >>> 0).toString(36);
 }
 
 export function createThumbnails(catalog, { width = 240, height = 200, cache = true } = {}) {

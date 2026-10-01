@@ -42,3 +42,19 @@ test('every catalog model builds, has a rendered thumbnail, and fits its footpri
   expect(problems).toEqual([]);
   expect(errors).toEqual([]);
 });
+
+test('glb props load, replace their procedural shape, and keep the recolour part separate', async ({ page }) => {
+  const errors = await openGame(page);
+  const info = await page.evaluate(() => {
+    const sofa = window.__sim.items.find((i) => i.type === 'sofa');
+    const parts = [];
+    sofa.mesh.traverse((o) => { if (o.isMesh) parts.push({ name: o.name, recolor: !!o.userData.recolor }); });
+    return { keys: window.__sim.modelKeys, parts, size: window.__sim.measure(sofa.mesh) };
+  });
+  expect(info.keys).toContain('sofa');
+  expect(info.parts.some((p) => p.name === 'sofa_fabric' && p.recolor)).toBe(true);     // the body recolours
+  expect(info.parts.some((p) => p.name === 'sofa_wood' && !p.recolor)).toBe(true);      // the legs do not
+  expect(info.size.w).toBeGreaterThan(2.7);
+  expect(info.size.h).toBeGreaterThan(0.8);
+  expect(errors).toEqual([]);
+});

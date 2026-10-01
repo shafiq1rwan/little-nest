@@ -34,7 +34,8 @@ It is not yet a fully separated foundation for a larger game. src/main.js is app
 | tests/unit | Node unit tests for placement, state, and schema |
 | tests/browser | Playwright specs and helpers; playwright.config.js starts the dev server |
 | src/room.js | Room shell, procedural textures, windows, blinds, bulb string, shadow receiver; exports the wall panels and fixture rectangles |
-| src/props.js | Furniture models and catalog registry (materials via scene/geometry.js) |
+| src/props.js | Furniture models and catalog registry (materials via scene/geometry.js); entries with `model` load a glb |
+| src/scene/models.js | Preloads public/models/*.glb and hands out instances with shared materials and the recolor flag |
 | src/plants.js | Four additional plant models, pot materials, plant catalog entries |
 | src/scene/create-scene.js | Renderer, orthographic camera, orbit controls, lighting, resize, zoom and reset helpers |
 | src/scene/geometry.js | Shared material cache, owned-material rule, recolor, tint, dispose, measure, compactModel (per-material merge) |

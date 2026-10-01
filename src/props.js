@@ -4,6 +4,7 @@ import { PLANT_CATALOG } from './plants.js';
 import { sharedMaterial, ownMaterial, recolorModel } from './scene/geometry.js';
 import { artTexture } from './room.js';
 import { DEFAULT_COLLECTION } from './data/collections.js';
+import { modelInstance } from './scene/models.js';
 
 const C = { cream: 0xf3e4d2, wood: 0xb87946, dark: 0x694b35, sage: 0x81936a, green: 0x4d7639, pot: 0xeee0ca, black: 0x393932, brass: 0xbb9451 };
 const material = (color) => sharedMaterial(color, .85);
@@ -268,7 +269,8 @@ const COTTAGE_CATALOG = {
 };
 
 export const CATALOG = {
-  sofa: { label: 'Sofa', category: 'seating', w: 3, d: 1, build: () => seating(true) },
+  // `model` names a game-ready glb (see docs/PROP_BRIEFS.md); build() falls back to the procedural shape if it did not load.
+  sofa: { label: 'Sofa', category: 'seating', w: 3, d: 1, model: 'models/sofa.glb', build: () => modelInstance('sofa') || seating(true) },
   armchair: { label: 'Armchair', category: 'seating', w: 1, d: 1, build: () => seating(false) },
   coffeeTable: { label: 'Coffee table', category: 'tables', w: 2, d: 1, surface: { y: .56, slots: [{ x: -.62, z: .25 }, { x: .02, z: -.32 }] }, build() {
     const g = new THREE.Group(); legs(g, 1.25, .52, .47);

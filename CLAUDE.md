@@ -37,6 +37,7 @@ Run `npm run build` and `npm test` before every commit that touches src/. Docume
 - `buildShell()` runs before `state` exists at startup; anything it calls must guard with `lampsReady`.
 - A surface slot or wall spot the default camera cannot see is unusable, because placement raycasts what is under the pointer. Keep slots in visible places.
 - Compact screens (width ≤ 900px or height ≤ 600px) keep 44px touch targets. Desktop controls are deliberately smaller; see STYLE_GUIDE.
+- Modelled props: `art-source/generated/<key>.glb` is raw image-to-3D output (ignored), `public/models/<key>.glb` is game-ready (tracked). `tools/blender/clean-generated.py` converts one to the other; the catalog entry gets `model:` plus a `modelInstance(key) || procedural` build. Bump `MODELS_VERSION` after re-exporting a file. Blender 5.2 is at `C:/Program Files/Blender Foundation/Blender 5.2/blender.exe` on this machine. Three.js strips dots from glTF node names, so part objects use underscores.
 - The author credit is "Saiss". The music is "Lofi Dreams" from Pixabay; fonts are OFL and bundled in `public/fonts` with their licences.
 
 ## Commits

@@ -3,6 +3,7 @@ import { CATALOG, recolor } from './props.js';
 import { createRoom } from './room.js';
 import { createScene } from './scene/create-scene.js';
 import { createThumbnails } from './scene/thumbnails.js';
+import { preloadModels, loadedModelKeys } from './scene/models.js';
 import { tintModel as tint, disposeModel, measureModel, compactModel } from './scene/geometry.js';
 import { installIcons } from './ui/icons.js';
 import { CELL, CAMERA, RENDER, MUSIC, SAVE_KEY, ROOMS_KEY, MUSIC_KEY, MAX_SAVED_ITEMS } from './config/game.js';
@@ -26,6 +27,7 @@ export async function initializeGame({ onProgress = async () => {}, onOpenRoom =
 const $ = (id) => document.getElementById(id);
 let editing = false;
 await onProgress(25, 'Building your little nest…');
+await preloadModels(CATALOG);   // glb props must be ready before the first build()
 
 // ---------- renderer / scene ----------
 const canvas = $('scene');
@@ -722,6 +724,7 @@ window.__sim = {
   measure: measureModel,
   measureType: (type) => { const m = compactModel(CATALOG[type].build()); const size = measureModel(m); disposeModel(m); return size; },
   catalogTypes: Object.keys(CATALOG),
+  modelKeys: loadedModelKeys(),
   catalogTags: (type) => CATALOG[type].tags || [],
   catalogCollection: (type) => CATALOG[type].collection,
   collections: COLLECTIONS,

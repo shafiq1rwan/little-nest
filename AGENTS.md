@@ -35,7 +35,7 @@ The user's latest explicit instructions take precedence over these guidelines. T
 - main.js is still the prototype coordinator. Phase 1 extracts responsibilities in small steps. So far src/config (game and theme constants) and src/data (starter room) exist; the other proposed folders do not yet.
 - Put new constants in src/config and new preset layouts in src/data rather than inline in main.js.
 - Placement rules, room state, and the saved-room schema live in src/game and src/persistence. Keep those modules free of Three.js and DOM so tests/unit can run them in Node. Change saved data only by adding a version and a migration in schema.js.
-- Put new plant models in src/plants.js and other furniture in src/props.js until the catalog split is implemented.
+- Put new plant models in src/plants.js and other furniture in src/props.js until the catalog split is implemented. A catalog entry may name a `model` glb in public/models; its build() must still return synchronously, falling back to procedural geometry (see docs/PROP_BRIEFS.md). Bump MODELS_VERSION in src/config/game.js when a model file changes.
 - Keep catalog keys stable: they are stored in saved rooms. Add migrations before renaming or removing keys. Surface slot indexes are stored too: append new slots rather than reordering existing ones. Wall fixtures (windows, lights) are declared in room.js; changing them changes which wall cells are blocked, so check saved rooms still load.
 - Keep localStorage keys home-deco-sim:room (legacy single save, imported once) and home-deco-sim:rooms (gallery) for compatibility. The brand name is different intentionally.
 - Validate imported/saved room data before replacing the current scene.

@@ -45,6 +45,17 @@ The concept is art guidance rather than an exact replacement specification: the 
 
 ## Edit and export
 
+### Shadow-free contact sheets
+
+Render the saved geometry with ground shadows disabled, retaining accurate item labels and triangle counts:
+
+```sh
+blender --background output/blender-reference/little-nest-props.blend --python tools/blender/render-shadow-free.py
+python tools/blender/contact-sheet.py output/blender-reference/shadow-free
+```
+
+Use `output/blender` in the two commands for the original library. Renders and the new sheet live under each library's `shadow-free` directory; the script never saves changes to the `.blend` or GLBs. The reference pass hides the preview ground, while the original Workbench pass disables cast shadows. Props retain surface shading. Convenient sheet copies are named `contact-sheet-shadow-free.jpg` beside each original sheet. The [concept sheet without shadows](../../output/imagegen/little-nest-48-props-shadow-free.png) is a separate image edit.
+
 Blender is Z-up: game `(x,y,z)` becomes Blender `(x,-z,y)`. Front is Blender **-Y**. One metre equals one game cell. Library root offsets are for browsing only: set the chosen root's location to `(0,0,0)` before exporting. Select the root and all children, then export GLB with Selected Objects, +Y Up, Apply Modifiers, and Custom Properties enabled.
 
 Recolorable objects retain `recolor = true`; materials are isolated per prop and named `<key>.recolor.<hex>`. Keep those separate from fixed decoration. `glow` and `canvas` materials are named separately. Framed-print canvases are blank as requested in the briefs. Preview materials are flat colors, with no generated textures.

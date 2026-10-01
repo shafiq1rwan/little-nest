@@ -20,6 +20,7 @@ ap.add_argument('--tris', type=int, default=1500)
 ap.add_argument('--angle', type=float, default=38, help='smooth-by-angle threshold in degrees')
 ap.add_argument('--wall', action='store_true', help='wall item: origin at the back face, model extends to the front')
 ap.add_argument('--plate', type=float, default=0.03, help='remove faces in this bottom fraction of the raw height (ground plate); 0 keeps them')
+ap.add_argument('--smooth-passes', type=int, default=2, help='label smoothing passes at part boundaries; 0 disables')
 ap.add_argument('--preview', default=None)
 ap.add_argument('--src', default=None)
 ap.add_argument('--out', default=None)
@@ -32,7 +33,7 @@ out = args.out or os.path.join(ROOT, 'public', 'models', args.key + '.glb')
 # Colours from docs/PROP_BRIEFS.md. Blender axes: x = width, y = depth (front is -Y), z = up.
 COLORS = {
     'cream': 0xf3e4d2, 'wood': 0xb87946, 'dark': 0x694b35, 'sage': 0x81936a, 'caramel': 0xbf895c,
-    'black': 0x393932, 'brass': 0xbb9451, 'pot': 0xeee0ca, 'green': 0x4d7639,
+    'black': 0x393932, 'brass': 0xbb9451, 'pot': 0xeee0ca, 'green': 0x4d7639, 'soil': 0x5b4030,
 }
 
 def rule_sofa(obj, size):
@@ -53,9 +54,44 @@ def rule_sofa(obj, size):
             parts[p.index] = 'pillowLeft' if c.x < 0 else 'pillowRight'
     return parts
 
+def rule_armchair(obj, size):
+    """Wood frame: side posts, arms and legs at the outer edges, rails at the bottom. The pillow sits
+    forward of the back cushion in the middle; everything else is cushion."""
+    w, d, h = size
+    me = obj.data
+    front_y = min(v.co.y for v in me.vertices)
+    ys = sorted(p.center.y for p in me.polygons
+                if w * 0.3 < abs(p.center.x) < w * 0.4 and h * 0.5 < p.center.z < h * 0.8 and p.normal.y < -0.6)
+    front_of_back = ys[len(ys) // 2] if ys else None
+    parts = {}
+    for p in me.polygons:
+        c = p.center
+        if abs(c.x) > w * 0.43 or c.z < h * 0.14:
+            parts[p.index] = 'wood'
+        elif front_of_back is not None and h * 0.5 < c.z < h * 0.88 and abs(c.x) < w * 0.3 and front_y + d * 0.3 < c.y < front_of_back - d * 0.04:
+            parts[p.index] = 'pillow'
+    return parts
+
+def rule_potted(pot_fraction=0.27):
+    """Pot below a fraction of the height, soil on the upward faces just inside its rim, foliage above."""
+    def rule(obj, size):
+        w, d, h = size
+        me = obj.data
+        parts = {}
+        for p in me.polygons:
+            c = p.center
+            if c.z < h * pot_fraction:
+                parts[p.index] = 'pot'
+            elif c.z < h * (pot_fraction + 0.05) and p.normal.z > 0.6 and (c.x * c.x + c.y * c.y) ** 0.5 < w * 0.3:
+                parts[p.index] = 'soil'
+        return parts
+    return rule
+
 PARTS = {
     # key: (rule, { part: (material role, colour name, recolour?) }, body material)
     'sofa': (rule_sofa, {'legs': ('wood', 'wood', False), 'pillowLeft': ('pillow', 'caramel', False), 'pillowRight': ('pillow', 'sage', False)}, ('fabric', 'cream', True)),
+    'armchair': (rule_armchair, {'wood': ('wood', 'wood', False), 'pillow': ('pillow', 'sage', True)}, ('fabric', 'cream', True)),
+    'plant': (rule_potted(0.31), {'pot': ('pot', 'pot', True), 'soil': ('soil', 'soil', False)}, ('leaf', 'green', False)),
 }
 
 def material(name, hex_color):
@@ -118,11 +154,37 @@ except Exception:
 # --- split colour parts and assign flat materials ---
 rule, part_specs, body_spec = PARTS.get(args.key, (lambda o, sz: {}, {}, ('body', 'cream', True)))
 assignment = rule(obj, (W, D, H))
+
+def smooth_labels(me, labels, passes=3):
+    """Majority vote over edge neighbours so part boundaries follow the shape, not the triangulation."""
+    edge_faces = {}
+    for p in me.polygons:
+        for e in p.edge_keys: edge_faces.setdefault(e, []).append(p.index)
+    neighbours = {p.index: [] for p in me.polygons}
+    for faces in edge_faces.values():
+        for a in faces:
+            for b in faces:
+                if a != b: neighbours[a].append(b)
+    for _ in range(passes):
+        changed = {}
+        for i, ns in neighbours.items():
+            if not ns: continue
+            votes = {}
+            for n in ns: votes[labels.get(n)] = votes.get(labels.get(n), 0) + 1
+            best, count = max(votes.items(), key=lambda kv: kv[1])
+            if count > len(ns) / 2 and best != labels.get(i): changed[i] = best
+        for i, label in changed.items():
+            if label is None: labels.pop(i, None)
+            else: labels[i] = label
+    return labels
+assignment = smooth_labels(me, assignment, args.smooth_passes) if args.smooth_passes else assignment
 body_mat = material(f'{args.key}.{body_spec[0]}.{COLORS[body_spec[1]]:06x}', COLORS[body_spec[1]])
 me.materials.append(body_mat)
+recolors = {body_mat.name: body_spec[2]}
 slot_of = {}
-for part, (role, color, _) in part_specs.items():
-    me.materials.append(material(f'{args.key}.{role}.{COLORS[color]:06x}', COLORS[color])); slot_of[part] = len(me.materials) - 1
+for part, (role, color, recolor) in part_specs.items():
+    m = material(f'{args.key}.{role}.{COLORS[color]:06x}', COLORS[color]); recolors[m.name] = recolor
+    me.materials.append(m); slot_of[part] = len(me.materials) - 1
 for p in me.polygons: p.material_index = slot_of.get(assignment.get(p.index), 0)
 me.update()
 
@@ -138,7 +200,7 @@ for o in [o for o in bpy.context.scene.objects if o.type == 'MESH']:
     o.name = args.key + '_' + (next(iter(used)).split('.')[1] if used else 'part')   # underscores: Three.js strips dots from node names
     for slot in list(o.material_slots):
         if slot.material and slot.material.name not in used: pass
-    if body_mat.name in used and body_spec[2]: o['recolor'] = True
+    if any(recolors.get(n) for n in used): o['recolor'] = True
     o.data.materials.clear()
     for n in used: o.data.materials.append(bpy.data.materials[n])
     for p in o.data.polygons: p.material_index = 0

@@ -271,7 +271,7 @@ const COTTAGE_CATALOG = {
 export const CATALOG = {
   // `model` names a game-ready glb (see docs/PROP_BRIEFS.md); build() falls back to the procedural shape if it did not load.
   sofa: { label: 'Sofa', category: 'seating', w: 3, d: 1, model: 'models/sofa.glb', build: () => modelInstance('sofa') || seating(true) },
-  armchair: { label: 'Armchair', category: 'seating', w: 1, d: 1, build: () => seating(false) },
+  armchair: { label: 'Armchair', category: 'seating', w: 1, d: 1, model: 'models/armchair.glb', build: () => modelInstance('armchair') || seating(false) },
   coffeeTable: { label: 'Coffee table', category: 'tables', w: 2, d: 1, surface: { y: .56, slots: [{ x: -.62, z: .25 }, { x: .02, z: -.32 }] }, build() {
     const g = new THREE.Group(); legs(g, 1.25, .52, .47);
     const top = cyl(.5, .5, .09, C.wood, 0, .47, 0); top.scale.x = 1.7; g.add(top);
@@ -289,7 +289,7 @@ export const CATALOG = {
     const plant = smallPlant(.36); plant.position.set(.55, 1.86, 0); g.add(plant);
     g.add(cyl(.12, .09, .23, C.cream, -.55, 1.34, 0)); return g;
   }},
-  plant: { label: 'Plant', category: 'decor', w: 1, d: 1, build: () => smallPlant(1.3) },
+  plant: { label: 'Plant', category: 'decor', w: 1, d: 1, defaultColor: C.pot, model: 'models/plant.glb', build: () => modelInstance('plant') || smallPlant(1.3) },
   floorLamp: { label: 'Floor lamp', category: 'decor', lamp: true, w: 1, d: 1, build() {
     const g = new THREE.Group();
     for (let i = 0; i < 3; i++) {

@@ -35,7 +35,7 @@ Keep package-lock.json when moving computers. The runtime itself is browser-base
 - Browse furniture by category, by collection (Nest classics, Japandi, Cottage), or search. Choose an item and click a free tile to place it; hold Shift to place several. Small items (the Small category) go on tables and shelves: point at the surface and a preview snaps to a free spot. They move and rotate with the furniture they sit on. Wall decorations (the Wall category) hang on the two walls: point at a clear stretch of wall and they snap to it; windows and spots behind furniture are refused. The wall shelf holds small items too.
 - Drag furniture to move it. R rotates; Delete removes; Copy or Ctrl+D duplicates into the nearest free spot; Escape cancels. Undo and redo with the toolbar arrows or Ctrl+Z and Ctrl+Shift+Z.
 - Change colors on upholstery, rugs, and the marked parts of plant pots.
-- Use Walls and Floor tabs to choose finishes.
+- Use Walls and Floor tabs to choose finishes, and the Light tab to pick Morning, Sunset, or Evening. Lamps have an On/Off switch on their card and glow brighter as the light fades.
 - Toggle grid/walls with the left toolbar; use the camera buttons to zoom or reset. The camera button opens photo mode: the controls hide, you frame the view, and Save photo downloads a PNG.
 - Right-drag to orbit and scroll to zoom.
 - The HUD uses floating game controls and a tactile Decorating box. On phones, Browse/Hide controls the bottom drawer. Choosing furniture hides it for placement; selecting an item opens controls in the drawer. Landscape phones use a side drawer.
@@ -64,6 +64,7 @@ The header uses a text-only Little Nest wordmark in bundled Fredoka Semibold. [I
 | src/config/theme.js | Scene palette, selectable wall/floor finishes, item colors |
 | src/data/presets.js | Room presets: size, windows, and the starter layout for each |
 | src/data/collections.js | Furniture collections (Nest classics, Japandi, Cottage) |
+| src/data/lighting.js | Lighting moods (Morning, Sunset, Evening) |
 | src/game/placement.js, state.js, commands.js | Pure placement rules, committed item records with stable ids, and undoable commands |
 | src/persistence/schema.js, storage.js, gallery.js, transfer.js | Saved-room format, validation, migrations, guarded localStorage, named room gallery, room file export/import |
 | tests/unit | Node unit tests for placement, state, and schema |

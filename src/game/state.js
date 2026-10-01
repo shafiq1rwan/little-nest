@@ -1,5 +1,6 @@
 // Committed room state: serializable item records and the occupancy derived from them.
-// Records are { id, type, gx, gz, rot, color, parent, slot, wall, col, row }.
+// Records are { id, type, gx, gz, rot, color, parent, slot, wall, col, row, lit }.
+//   lit is true/false for lamps (catalog `lamp: true`) and null for everything else.
 //   floor items:   gx/gz on the grid; parent/slot/wall/col/row null
 //   surface items: parent = supporting item id, slot = index on its surface; gx/gz/wall null
 //   wall items:    wall = 'back' | 'left', col/row on that wall's grid; gx/gz/parent null; rot is 0
@@ -12,6 +13,10 @@ export function newItemId() {
 }
 
 const EMPTY = { gx: null, gz: null, parent: null, slot: null, wall: null, col: null, row: null };
+/** Lamps start lit; everything else has no light state. */
+function defaultLit(placement, type) {
+  return placement.isLamp(type) ? true : null;
+}
 
 export function createRoomState({ placement, wallBlocked = new Set() }) {
   const items = [];
@@ -80,17 +85,18 @@ export function createRoomState({ placement, wallBlocked = new Set() }) {
   }
 
   /** Adds a record. Returns it, or null when the position is not free. */
-  function add({ type, gx = null, gz = null, rot = 0, color = null, id = null, parent = null, slot = null, wall = null, col = null, row = null }) {
+  function add({ type, gx = null, gz = null, rot = 0, color = null, id = null, parent = null, slot = null, wall = null, col = null, row = null, lit = undefined }) {
     let record;
+    const litValue = placement.isLamp(type) ? (lit == null ? true : !!lit) : null;
     if (parent) {
       if (!canPlaceOn(type, parent, slot)) return null;
-      record = { type, rot, color, ...EMPTY, parent, slot };
+      record = { type, rot, color, lit: litValue, ...EMPTY, parent, slot };
     } else if (wall) {
       if (!canMount(type, wall, col, row)) return null;
-      record = { type, rot: 0, color, ...EMPTY, wall, col, row };
+      record = { type, rot: 0, color, lit: litValue, ...EMPTY, wall, col, row };
     } else {
       if (!canPlace(type, gx, gz, rot)) return null;
-      record = { type, rot, color, ...EMPTY, gx, gz };
+      record = { type, rot, color, lit: litValue, ...EMPTY, gx, gz };
     }
     let key = id;
     while (!key || byId.has(key)) key = newItemId();
@@ -210,6 +216,14 @@ export function createRoomState({ placement, wallBlocked = new Set() }) {
     return null;
   }
 
+  /** Switches a lamp on or off. Returns false for non-lamps. */
+  function setLit(id, on) {
+    const record = byId.get(id);
+    if (!record || record.lit === null) return false;
+    record.lit = !!on;
+    return true;
+  }
+
   function setColor(id, color) {
     const record = byId.get(id);
     if (!record) return false;
@@ -227,9 +241,9 @@ export function createRoomState({ placement, wallBlocked = new Set() }) {
 
   /** Plain copies of every record, parents before their children, safe to JSON.stringify. */
   function serialize() {
-    const copy = ({ id, type, gx, gz, rot, color, parent, slot, wall, col, row }) => ({ id, type, gx, gz, rot, color, parent, slot, wall, col, row });
+    const copy = ({ id, type, gx, gz, rot, color, parent, slot, wall, col, row, lit }) => ({ id, type, gx, gz, rot, color, parent, slot, wall, col, row, lit });
     return [...items.filter((r) => !r.parent), ...items.filter((r) => r.parent)].map(copy);
   }
 
-  return { items, occupancy, wallOccupancy, slotsUsed, get, childrenOf, canPlace, canPlaceOn, canMount, findFreeNear, add, remove, move, rotate, transform, place, mount, setColor, clear, serialize, cellKey };
+  return { items, occupancy, wallOccupancy, slotsUsed, get, childrenOf, canPlace, canPlaceOn, canMount, findFreeNear, add, remove, move, rotate, transform, place, mount, setColor, setLit, clear, serialize, cellKey };
 }

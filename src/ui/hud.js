@@ -123,12 +123,24 @@ export function buildFinishSwatches(groups) {
 }
 
 /** Fills the selection card. `item` is null to hide it. */
-export function renderSelectionCard({ card, item, def, thumbnail, sizeText, canRecolor, colors, activeColor, onColor }) {
+export function renderSelectionCard({ card, item, def, thumbnail, sizeText, canRecolor, colors, activeColor, onColor, onLight = null }) {
   card.hidden = !item;
   if (!item) return;
   card.querySelector('#selection-image').src = thumbnail;
   card.querySelector('#selection-name').textContent = def.label;
   card.querySelector('#selection-size').textContent = sizeText;
+  const light = card.querySelector('#light-selected');
+  if (light) {
+    const isLamp = item.lit !== null && item.lit !== undefined;
+    light.hidden = !isLamp;
+    if (isLamp) {
+      light.setAttribute('aria-pressed', String(item.lit));
+      light.setAttribute('aria-label', item.lit ? 'Light on. Switch off' : 'Light off. Switch on');
+      light.title = item.lit ? 'Switch the light off' : 'Switch the light on';
+      light.lastChild.textContent = item.lit ? 'On' : 'Off';
+      light.onclick = () => onLight?.(!item.lit);
+    }
+  }
   const swatches = card.querySelector('#item-swatches');
   swatches.replaceChildren();
   swatches.hidden = !canRecolor;
@@ -143,6 +155,33 @@ export function renderSelectionCard({ card, item, def, thumbnail, sizeText, canR
     b.onclick = () => onColor(color);
     swatches.append(b);
   }
+}
+
+/** Lighting mood buttons. `current()` is the active key; `onPick(key)` applies one. Returns a sync function. */
+export function buildLightingOptions({ container, moods, icons = {}, current, onPick }) {
+  const buttons = [];
+  for (const [key, mood] of Object.entries(moods)) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'lighting-option';
+    b.dataset.lighting = key;
+    const icon = document.createElement('span');
+    icon.dataset.icon = icons[key] || 'sun';
+    const name = document.createElement('strong');
+    name.textContent = mood.name;
+    const blurb = document.createElement('small');
+    blurb.textContent = mood.blurb;
+    b.append(icon, name, blurb);
+    b.setAttribute('aria-label', mood.name + ' light');
+    b.onclick = () => onPick(key);
+    container.append(b);
+    buttons.push(b);
+  }
+  function sync() {
+    for (const b of buttons) b.setAttribute('aria-pressed', String(b.dataset.lighting === current()));
+  }
+  sync();
+  return sync;
 }
 
 export function setPressed(button, on) {

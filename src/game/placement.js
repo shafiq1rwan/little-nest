@@ -47,6 +47,10 @@ export function createPlacement({ catalog, room = 8, width = room, depth = room,
     return layer !== 'floor' && layer !== 'surface' && layer !== 'wall';
   }
   /** Surface items live on a supporting item's slots rather than the floor grid. */
+  /** Lamps can be switched on and off. */
+  function isLamp(type) {
+    return !!catalog[type].lamp;
+  }
   function isSurfaceItem(type) {
     return catalog[type].layer === 'surface';
   }
@@ -175,7 +179,7 @@ export function createPlacement({ catalog, room = 8, width = room, depth = room,
     get wallRows() { return dims.wallRows; },
     cell, wallRow, configure,
     footprint, cellsOf, inBounds, occupies, isFree, worldPos, snap,
-    isSurfaceItem, surfaceOf, slotCount, slotLocal, nearestSlot,
+    isLamp, isSurfaceItem, surfaceOf, slotCount, slotLocal, nearestSlot,
     isWallItem, wallSize, wallColumns, wallCellsOf, wallInBounds, wallFree, wallWorld, wallSnap, blockedWallCells,
   };
 }

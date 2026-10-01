@@ -32,7 +32,7 @@ function layoutOf(presetId) {
     if (it.key) byKey.set(it.key, id);
     return { id, type: it.type, rot: it.wall ? 0 : it.rot ?? 0, color: it.color ?? null, gx: it.on || it.wall ? null : it.gx, gz: it.on || it.wall ? null : it.gz, parent: it.on ? byKey.get(it.on) : null, slot: it.on ? it.slot : null, wall: it.wall ?? null, col: it.wall ? it.col : null, row: it.wall ? it.row : null };
   });
-  return { version: CURRENT_VERSION, room: { preset: presetId, width: preset.width, depth: preset.depth }, wall: 1, floor: 2, items };
+  return { version: CURRENT_VERSION, room: { preset: presetId, width: preset.width, depth: preset.depth }, wall: 1, floor: 2, lighting: 'morning', items };
 }
 
 test('placement handles rectangular rooms', () => {
@@ -87,7 +87,7 @@ test('older saves migrate to the 8 x 8 living room and bad rooms are refused', (
     [{ ...old, version: 6, room: { preset: 'attic', width: 8, depth: 8 } }, 'Unknown room preset'],
     [{ ...old, version: 6, room: { preset: 'livingRoom', width: 2, depth: 8 } }, 'Invalid room size'],
     [{ ...old, version: 6, room: { preset: 'livingRoom', width: 8, depth: 40 } }, 'Invalid room size'],
-    [{ ...old, version: 7 }, 'Unsupported save version'],
+    [{ ...old, version: 99 }, 'Unsupported save version'],
   ];
   for (const [data, message] of cases) {
     expect(() => parseRoom(data, opts), message).toThrow(SaveError);

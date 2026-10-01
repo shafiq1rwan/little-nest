@@ -74,7 +74,7 @@ const SMALL_CATALOG = {
     const handle = mesh(new THREE.TorusGeometry(.04, .012, 6, 12), C.cream, .095, .07, 0); handle.userData.recolor = true; g.add(handle);
     g.add(cyl(.062, .062, .012, 0x5b3d2a, 0, .125, 0)); return g;
   }},
-  candle: { label: 'Candle', category: 'small', layer: 'surface', tags: ['light', 'cozy'], w: 1, d: 1, defaultColor: C.cream, build() {
+  candle: { label: 'Candle', category: 'small', layer: 'surface', lamp: true, tags: ['light', 'cozy'], w: 1, d: 1, defaultColor: C.cream, build() {
     const g = new THREE.Group(); g.add(cyl(.09, .1, .03, C.brass));
     const wax = cyl(.06, .06, .16, C.cream, 0, .03, 0); wax.userData.recolor = true; g.add(wax);
     g.add(cyl(.006, .006, .03, C.black, 0, .19, 0));
@@ -106,7 +106,7 @@ const SMALL_CATALOG = {
     g.add(box(.02, .2, .1, C.wood, 0, 0, -.06, .003).rotateX(.35));
     return g;
   }},
-  lantern: { label: 'Lantern', category: 'small', layer: 'surface', tags: ['light', 'candle', 'cozy'], w: 1, d: 1, defaultColor: C.black, build() {
+  lantern: { label: 'Lantern', category: 'small', layer: 'surface', lamp: true, tags: ['light', 'candle', 'cozy'], w: 1, d: 1, defaultColor: C.black, build() {
     const g = new THREE.Group();
     const base = cyl(.085, .09, .02, C.black); base.userData.recolor = true; g.add(base);
     const cage = mesh(new THREE.CylinderGeometry(.07, .07, .18, 6, 1, true), C.black, 0, .11, 0);
@@ -203,7 +203,7 @@ const JAPANDI_CATALOG = {
     for (const x of [-.7, .7]) g.add(box(.1, .32, .7, J.ash, x, 0, 0, .01));
     return g;
   }},
-  paperLamp: { label: 'Paper lamp', category: 'decor', collection: 'japandi', tags: ['japandi', 'light', 'lantern'], w: 1, d: 1, build() {
+  paperLamp: { label: 'Paper lamp', category: 'decor', collection: 'japandi', lamp: true, tags: ['japandi', 'light', 'lantern'], w: 1, d: 1, build() {
     const g = new THREE.Group();
     g.add(cyl(.2, .2, .03, J.charcoal), cyl(.02, .02, .55, J.charcoal, 0, .03, 0));
     const shade = cyl(.26, .26, .6, J.paper, 0, .55, 0);
@@ -288,7 +288,7 @@ export const CATALOG = {
     g.add(cyl(.12, .09, .23, C.cream, -.55, 1.34, 0)); return g;
   }},
   plant: { label: 'Plant', category: 'decor', w: 1, d: 1, build: () => smallPlant(1.3) },
-  floorLamp: { label: 'Floor lamp', category: 'decor', w: 1, d: 1, build() {
+  floorLamp: { label: 'Floor lamp', category: 'decor', lamp: true, w: 1, d: 1, build() {
     const g = new THREE.Group();
     for (let i = 0; i < 3; i++) {
       const a = i * Math.PI * 2 / 3, leg = cyl(.025, .035, 1.36, C.wood);

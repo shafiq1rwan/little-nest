@@ -161,5 +161,5 @@ export function createRoom(scene, preset, wallHeight = 4, { wallColor = 0x92725c
     root.traverse((o) => { if (o.isMesh) o.geometry.dispose(); });
     for (const m of owned) m.dispose();
   }
-  return { root, floorMat, wallMat, walls, wallPanels: { back: backPanel, left: leftPanel }, dispose };
+  return { root, floorMat, wallMat, viewMat, groundMat, walls, wallPanels: { back: backPanel, left: leftPanel }, dispose };
 }

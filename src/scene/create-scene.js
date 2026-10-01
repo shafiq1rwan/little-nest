@@ -31,7 +31,8 @@ export function createScene({ canvas, camera: cam, render, backdrop }) {
   controls.minZoom = cam.minZoom;
   controls.maxZoom = cam.maxZoom;
 
-  scene.add(new THREE.HemisphereLight(0xfff3df, 0xaa7652, 2));
+  const hemisphere = new THREE.HemisphereLight(0xfff3df, 0xaa7652, 2);
+  scene.add(hemisphere);
   const sun = new THREE.DirectionalLight(0xffe2b3, 3.2);
   sun.position.set(-3, 10, 6);
   sun.castShadow = true;
@@ -72,5 +73,5 @@ export function createScene({ canvas, camera: cam, render, backdrop }) {
     resize(true);
   }
 
-  return { renderer, scene, camera, controls, resetView, zoomBy, resize, setFrame };
+  return { renderer, scene, camera, controls, hemisphere, sun, resetView, zoomBy, resize, setFrame };
 }

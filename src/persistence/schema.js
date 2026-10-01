@@ -6,12 +6,14 @@
 //   4           items gain parent (supporting item id or null) and slot (surface slot index or null)
 //   5           items gain wall ('back' | 'left' | null), col, row for wall-mounted decorations
 //   6           { room: { preset, width, depth } } describes the shell; older saves are the 8 x 8 living room
+//   7           { lighting } names the mood (default morning); items gain lit (true/false for lamps, null otherwise)
 //
 // Older versions are migrated on read; the writer always emits the current version.
 
 import { WALLS } from '../game/placement.js';
 
-export const CURRENT_VERSION = 6;
+export const CURRENT_VERSION = 7;
+export const DEFAULT_LIGHTING_KEY = 'morning';
 export const LEGACY_ROOM = { preset: 'livingRoom', width: 8, depth: 8 };
 
 export class SaveError extends Error {}
@@ -20,16 +22,16 @@ function fail(message) {
   throw new SaveError(message);
 }
 
-const FIELDS = ['id', 'type', 'gx', 'gz', 'rot', 'color', 'parent', 'slot', 'wall', 'col', 'row'];
+const FIELDS = ['id', 'type', 'gx', 'gz', 'rot', 'color', 'parent', 'slot', 'wall', 'col', 'row', 'lit'];
 function record(it) {
   const out = {};
   for (const f of FIELDS) out[f] = it[f] ?? null;
   return out;
 }
 
-export function serializeRoom({ room = LEGACY_ROOM, wall, floor, items }) {
+export function serializeRoom({ room = LEGACY_ROOM, wall, floor, lighting = DEFAULT_LIGHTING_KEY, items }) {
   const ordered = [...items.filter((i) => !i.parent), ...items.filter((i) => i.parent)];
-  return { version: CURRENT_VERSION, room: { preset: room.preset, width: room.width, depth: room.depth }, wall, floor, items: ordered.map(record) };
+  return { version: CURRENT_VERSION, room: { preset: room.preset, width: room.width, depth: room.depth }, wall, floor, lighting, items: ordered.map(record) };
 }
 
 function isColor(value) {
@@ -40,7 +42,7 @@ function isColor(value) {
 export function migrateRoom(data) {
   if (!data || typeof data !== 'object') fail('Not a saved room');
   const version = data.version ?? 2;
-  if (![2, 3, 4, 5, 6].includes(version)) fail('Unsupported save version ' + version);
+  if (![2, 3, 4, 5, 6, 7].includes(version)) fail('Unsupported save version ' + version);
   const items = Array.isArray(data.items)
     ? data.items.map((it) => {
       if (!it || typeof it !== 'object') return it;
@@ -48,11 +50,13 @@ export function migrateRoom(data) {
       if (version < 3) out.id = out.id ?? null;
       if (version < 4) { out.parent = out.parent ?? null; out.slot = out.slot ?? null; }
       if (version < 5) { out.wall = out.wall ?? null; out.col = out.col ?? null; out.row = out.row ?? null; }
+      if (version < 7) out.lit = out.lit ?? null;
       return out;
     })
     : data.items;
   const room = version < 6 ? { ...LEGACY_ROOM } : data.room;
-  return { ...data, version: CURRENT_VERSION, room, items };
+  const lighting = version < 7 ? DEFAULT_LIGHTING_KEY : data.lighting;
+  return { ...data, version: CURRENT_VERSION, room, lighting, items };
 }
 
 /**
@@ -66,8 +70,9 @@ export function migrateRoom(data) {
  *   wallBlocked      blocked wall cells for the live room (used when no wallBlockedFor is given)
  *   wallBlockedFor   (room) => blocked wall cells for that room's preset; preferred
  *   presets          { [id]: { width, depth } }; when given, the room's preset must exist
+ *   lightings        { [key]: ... }; when given, the lighting mood must exist (otherwise any string)
  */
-export function parseRoom(raw, { catalog, placement, placementFor, maxItems = 200, newId, wallBlocked = new Set(), wallBlockedFor, presets, sizeRange = [4, 12] }) {
+export function parseRoom(raw, { catalog, placement, placementFor, maxItems = 200, newId, wallBlocked = new Set(), wallBlockedFor, presets, lightings, sizeRange = [4, 12] }) {
   const data = migrateRoom(raw);
   if (!Array.isArray(data.items)) fail('Missing items');
   if (data.items.length > maxItems) fail('Too many items');
@@ -78,6 +83,8 @@ export function parseRoom(raw, { catalog, placement, placementFor, maxItems = 20
   if (presets && !Object.hasOwn(presets, room.preset)) fail('Unknown room preset ' + room.preset);
   if (![room.width, room.depth].every((n) => Number.isInteger(n) && n >= sizeRange[0] && n <= sizeRange[1])) fail('Invalid room size');
   const roomOut = { preset: room.preset, width: room.width, depth: room.depth };
+  if (typeof data.lighting !== 'string') fail('Invalid lighting');
+  if (lightings && !Object.hasOwn(lightings, data.lighting)) fail('Unknown lighting ' + data.lighting);
   const rules = placementFor ? placementFor(roomOut) : placement;
   const blocked = wallBlockedFor ? wallBlockedFor(roomOut) : wallBlocked;
 
@@ -98,9 +105,11 @@ export function parseRoom(raw, { catalog, placement, placementFor, maxItems = 20
   const occupied = new Set();
   const wallOccupied = new Set();
   const slotsUsed = new Set();
-  for (const it of withIds) {
+  for (let it of withIds) {
     if (!Number.isInteger(it.rot) || it.rot < 0 || it.rot > 3) fail('Invalid position');
     if (it.color != null && !isColor(it.color)) fail('Invalid color');
+    if (it.lit != null && typeof it.lit !== 'boolean') fail('Invalid lamp state');
+    it = { ...it, lit: catalog[it.type].lamp ? (it.lit ?? true) : null };
     const surface = rules.isSurfaceItem(it.type);
     const wallItem = rules.isWallItem(it.type);
     if (it.parent != null) {
@@ -134,5 +143,5 @@ export function parseRoom(raw, { catalog, placement, placementFor, maxItems = 20
     }
     floorItems.push(record({ ...it, parent: null, slot: null, wall: null, col: null, row: null }));
   }
-  return { room: roomOut, wall: data.wall, floor: data.floor, items: [...floorItems, ...surfaceItems] };
+  return { room: roomOut, wall: data.wall, floor: data.floor, lighting: data.lighting, items: [...floorItems, ...surfaceItems] };
 }

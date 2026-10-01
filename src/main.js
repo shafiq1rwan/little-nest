@@ -9,6 +9,7 @@ import { CELL, CAMERA, RENDER, MUSIC, SAVE_KEY, ROOMS_KEY, MUSIC_KEY, MAX_SAVED_
 import { BACKDROP, SELECTION_OUTLINE, GHOST_OK, GHOST_BLOCKED, WALL_FINISHES, FLOOR_FINISHES, ITEM_COLORS } from './config/theme.js';
 import { ROOM_PRESETS, DEFAULT_PRESET, WALL_HEIGHT, MIN_ROOM_SIZE, MAX_ROOM_SIZE, presetFixtures, presetWallRows } from './data/presets.js';
 import { COLLECTIONS, DEFAULT_COLLECTION } from './data/collections.js';
+import { LIGHTING, DEFAULT_LIGHTING } from './data/lighting.js';
 import { createPlacement } from './game/placement.js';
 import { createRoomState, newItemId } from './game/state.js';
 import { createCommands } from './game/commands.js';
@@ -18,20 +19,20 @@ import { createGallery, DEFAULT_ROOM_NAME } from './persistence/gallery.js';
 import { exportRoom, parseImport } from './persistence/transfer.js';
 import { createResponsiveHUD } from './ui/responsive.js';
 import { createGalleryDialog } from './ui/gallery.js';
-import { createToast, buildCatalog, setCatalogActive, bindCatalogFilter, bindTabs, buildFinishSwatches, renderSelectionCard, setPressed } from './ui/hud.js';
+import { createToast, buildCatalog, setCatalogActive, bindCatalogFilter, bindTabs, buildFinishSwatches, buildLightingOptions, renderSelectionCard, setPressed } from './ui/hud.js';
 import { createMusic } from './ui/music.js';
 
 const $ = (id) => document.getElementById(id);
 
 // ---------- renderer / scene ----------
 const canvas = $('scene');
-const { renderer, scene, camera, controls, resetView, zoomBy, resize, setFrame } = createScene({ canvas, camera: CAMERA, render: RENDER, backdrop: BACKDROP });
+const { renderer, scene, camera, controls, hemisphere, sun, resetView, zoomBy, resize, setFrame } = createScene({ canvas, camera: CAMERA, render: RENDER, backdrop: BACKDROP });
 
 // ---------- room shell ----------
 // The shell (floor, walls, windows, grid) is rebuilt whenever the room preset changes. `placement`
 // and `wallBlocked` are reconfigured in place so everything holding them keeps working.
 const roomConfig = { preset: DEFAULT_PRESET, width: ROOM_PRESETS[DEFAULT_PRESET].width, depth: ROOM_PRESETS[DEFAULT_PRESET].depth };
-const finishes = { wall: WALL_FINISHES[0].color, floor: FLOOR_FINISHES[0].color };
+const finishes = { wall: WALL_FINISHES[0].color, floor: FLOOR_FINISHES[0].color, lighting: DEFAULT_LIGHTING };
 const WALL_ROWS = WALL_HEIGHT / 0.5;
 const placement = createPlacement({ catalog: CATALOG, width: roomConfig.width, depth: roomConfig.depth, cell: CELL, wallRows: WALL_ROWS, wallRow: 0.5 });
 const wallBlocked = new Set();
@@ -39,6 +40,7 @@ let shell = null;      // { root, floorMat, wallMat, walls, wallPanels, dispose 
 let grid = null;
 let gridVisible = false;
 let wallsVisible = true;
+let lampsReady = false;   // state is created after the first shell build; lamps are applied as they are added
 function presetFor(room) {
   return { ...ROOM_PRESETS[room.preset], width: room.width, depth: room.depth };
 }
@@ -72,12 +74,50 @@ function buildShell(room) {
   grid.visible = gridVisible;
   scene.add(grid);
   setFrame(Math.max(room.width, room.depth));
+  applyLighting(finishes.lighting);
+}
+
+// ---------- lighting moods and lamps ----------
+/** Applies a mood to the sky, sun, backdrop, exposure, window glow, and every lamp. */
+function applyLighting(key) {
+  const mood = LIGHTING[key] || LIGHTING[DEFAULT_LIGHTING];
+  hemisphere.color.setHex(mood.hemisphere.sky);
+  hemisphere.groundColor.setHex(mood.hemisphere.ground);
+  hemisphere.intensity = mood.hemisphere.intensity;
+  sun.color.setHex(mood.sun.color);
+  sun.intensity = mood.sun.intensity;
+  sun.position.set(...mood.sun.position);
+  scene.background.setHex(mood.backdrop);
+  renderer.toneMappingExposure = mood.exposure;
+  if (shell) {
+    shell.groundMat.color.setHex(mood.backdrop);
+    shell.viewMat.emissive.setHex(mood.window.emissive);
+    shell.viewMat.emissiveIntensity = mood.window.intensity;
+  }
+  if (lampsReady) for (const record of state.items) applyLamp(record);
+}
+/** Sets a lamp's point lights and glowing parts from its lit flag and the mood's lamp strength. */
+function applyLamp(record) {
+  if (record.lit === null || record.lit === undefined) return;
+  const mood = LIGHTING[finishes.lighting] || LIGHTING[DEFAULT_LIGHTING];
+  const mesh = meshOf(record);
+  if (!mesh) return;
+  mesh.traverse((o) => {
+    if (o.isPointLight) {
+      if (o.userData.baseIntensity === undefined) o.userData.baseIntensity = o.intensity;
+      o.intensity = record.lit ? o.userData.baseIntensity * mood.lamps : 0;
+    } else if (o.isMesh && o.material?.emissive && o.userData.ownedMaterial === o.material) {
+      if (o.userData.baseEmissive === undefined) o.userData.baseEmissive = o.material.emissiveIntensity;
+      o.material.emissiveIntensity = record.lit ? o.userData.baseEmissive * Math.max(1, mood.lamps) : 0.05;
+    }
+  });
 }
 buildShell(roomConfig);
 
 // ---------- placement state ----------
 // Committed state lives in `state` as serializable records; meshes are looked up by record id.
 const state = createRoomState({ placement, wallBlocked });
+lampsReady = true;
 const commands = createCommands({ state, finishes, room: roomConfig });   // every room mutation goes through here so it can be undone
 const meshes = new Map();             // record id -> THREE.Group
 let selectedType = null;              // catalog key while placing
@@ -170,6 +210,7 @@ commands.subscribe((kind, p) => {
     mesh.userData.itemId = p.id;
     meshes.set(p.id, mesh);
     applyTransform(p);   // also attaches the mesh to the scene or to its supporter
+    applyLamp(p);
     updateCount();
   } else if (kind === 'remove') {
     if (selected?.id === p.id) setSelected(null);
@@ -184,9 +225,12 @@ commands.subscribe((kind, p) => {
   } else if (kind === 'color') {
     recolor(meshOf(p), p.color);
     if (selected === p) updateSelection();
+  } else if (kind === 'lit') {
+    applyLamp(p);
+    if (selected === p) updateSelection();
   } else if (kind === 'finish') {
-    (p.key === 'wall' ? shell.wallMat : shell.floorMat).color.setHex(p.color);
-    syncFinishSwatches();
+    if (p.key === 'lighting') { applyLighting(p.color); syncLightingOptions(); }
+    else { (p.key === 'wall' ? shell.wallMat : shell.floorMat).color.setHex(p.color); syncFinishSwatches(); }
   } else if (kind === 'room') {
     buildShell(p);
   } else if (kind === 'history') {
@@ -406,6 +450,7 @@ function updateSelection() {
     colors: ITEM_COLORS,
     activeColor: selected && (selected.color ?? def.defaultColor ?? ITEM_COLORS[0].color),
     onColor: (color) => commands.recolor(selected.id, color),
+    onLight: (on) => commands.setLit(selected.id, on),
   });
 }
 
@@ -416,6 +461,11 @@ const syncFinishSwatches = buildFinishSwatches([
   { el: $('wall-swatches'), finishes: WALL_FINISHES, current: () => finishes.wall, onPick: (c) => commands.setFinish('wall', c) },
   { el: $('floor-swatches'), finishes: FLOOR_FINISHES, current: () => finishes.floor, onPick: (c) => commands.setFinish('floor', c) },
 ]);
+const syncLightingOptions = buildLightingOptions({
+  container: $('lighting-options'), moods: LIGHTING, icons: { morning: 'sun', sunset: 'sunset', evening: 'moon' },
+  current: () => finishes.lighting, onPick: (key) => commands.setFinish('lighting', key),
+});
+installIcons($('lighting-options'));
 
 $('rotate-selected').onclick = rotateSelected;
 $('rotate-tool').onclick = rotateSelected;
@@ -459,7 +509,7 @@ function presetRoomData(presetId) {
     });
   }
   return {
-    data: { room: { preset: presetId, width: preset.width, depth: preset.depth }, wall: WALL_FINISHES[0].color, floor: FLOOR_FINISHES[0].color, items },
+    data: { room: { preset: presetId, width: preset.width, depth: preset.depth }, wall: WALL_FINISHES[0].color, floor: FLOOR_FINISHES[0].color, lighting: DEFAULT_LIGHTING, items },
     selectId,
   };
 }
@@ -471,7 +521,7 @@ function startPreset(presetId) {
   return { selectId };
 }
 
-const parseOptions = { catalog: CATALOG, placementFor, wallBlockedFor, presets: ROOM_PRESETS, maxItems: MAX_SAVED_ITEMS, newId: newItemId, sizeRange: [MIN_ROOM_SIZE, MAX_ROOM_SIZE] };
+const parseOptions = { catalog: CATALOG, placementFor, wallBlockedFor, presets: ROOM_PRESETS, lightings: LIGHTING, maxItems: MAX_SAVED_ITEMS, newId: newItemId, sizeRange: [MIN_ROOM_SIZE, MAX_ROOM_SIZE] };
 const gallery = createGallery({ key: ROOMS_KEY, legacyKey: SAVE_KEY, ...parseOptions });
 let currentRoom = null;   // { id, name } of the gallery entry the open design belongs to
 function setCurrentRoom(summary) {
@@ -480,7 +530,7 @@ function setCurrentRoom(summary) {
 }
 function currentRoomData() {
   finishDrag();
-  return serializeRoom({ room: roomConfig, wall: finishes.wall, floor: finishes.floor, items: state.items });
+  return serializeRoom({ room: roomConfig, wall: finishes.wall, floor: finishes.floor, lighting: finishes.lighting, items: state.items });
 }
 /** Saves into entry `id` (or a new entry when null). Returns the summary, or null when storage refused. */
 function saveRoom(id, name) {
@@ -630,7 +680,7 @@ renderer.setAnimationLoop(() => {
 // record copies with their mesh attached, so checks can inspect both data and visuals.
 const withMesh = (r) => (r ? { ...r, mesh: meshOf(r) } : null);
 window.__sim = {
-  state, placement, commands, finishes, gallery, roomConfig, presets: ROOM_PRESETS, occupancy: state.occupancy, bgm: music.audio, scene, camera, controls,
+  state, placement, commands, finishes, gallery, roomConfig, presets: ROOM_PRESETS, lighting: LIGHTING, hemisphere, sun, renderer, occupancy: state.occupancy, bgm: music.audio, scene, camera, controls,
   get grid() { return grid; }, get walls() { return shell.walls; }, get wallMat() { return shell.wallMat; }, get floorMat() { return shell.floorMat; }, get wallPanels() { return shell.wallPanels; },
   get currentRoom() { return currentRoom; },
   get photoMode() { return photoMode; },

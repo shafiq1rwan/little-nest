@@ -116,7 +116,7 @@ Avoid creating empty folders before their responsibilities have been extracted. 
 
 ### Catalog and model contract
 
-Catalog entries are keyed by a stable saved type and define label, category, collection, w, d, and build(). Optional fields are layer, tags, defaultColor, and surface. Existing category names are seating, tables, decor, small, and wall; collection keys come from src/data/collections.js and default to cozy.
+Catalog entries are keyed by a stable saved type and define label, category, collection, w, d, and build(). Optional fields are layer, tags, defaultColor, surface, wall, and lamp (true for items with a switchable light). Existing category names are seating, tables, decor, small, and wall; collection keys come from src/data/collections.js and default to cozy.
 
 layer: 'floor' marks rugs (no floor occupancy). layer: 'surface' marks small items that live in a supporter's slot and never on the floor grid. layer: 'wall' marks decorations that hang on the back or left wall; they declare wall: { w, h } in columns (1 unit) and rows (0.5 unit), are built with their origin at the bottom-centre of the back face extending +z, never rotate, and may also declare a surface for small items (the wall shelf does). A supporter declares surface: { y, slots: [{ x, z, y? }] } in its own local space (before rotation); slots should avoid the model's baked decoration and stay visible from the default camera. Small-item meshes are added as Three.js children of the supporter's group, so they inherit its position and rotation.
 
@@ -138,11 +138,12 @@ Named rooms live under home-deco-sim:rooms as { version: 1, rooms: [{ id, name, 
 
 Export files (src/persistence/transfer.js) wrap a room as { app: "little-nest", format: 1, exportedAt, name, room } and are named <slug>.littlenest.json. Import accepts that envelope or a bare room, caps the text at 1 MB, validates and migrates through parseRoom, and adds a new gallery entry; nothing else changes. Item ids are preserved through export and import.
 
-Room shape (src/persistence/schema.js, version 6; parent and slot arrived in version 4, wall/col/row in version 5, and room in version 6; older versions migrate with nulls and the 8 × 8 living room):
+Room shape (src/persistence/schema.js, version 7; parent and slot arrived in version 4, wall/col/row in version 5, room in version 6, and lighting plus the per-lamp lit flag in version 7; older versions migrate with nulls, the 8 × 8 living room, and morning light):
 
     {
       "version": 6,
       "room": { "preset": "livingRoom", "width": 8, "depth": 8 },
+      "lighting": "evening",
       "wall": 9597532,
       "floor": 14918514,
       "items": [

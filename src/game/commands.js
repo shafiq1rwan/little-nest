@@ -7,7 +7,8 @@
 //   remove    { id }                the record is gone; drop its mesh
 //   transform record                gx/gz/rot (floor), parent/slot/rot (surface), or wall/col/row changed; move its mesh
 //   color     record                color changed; recolor its mesh
-//   finish    { key, color }        wall or floor color changed
+//   lit       record                a lamp was switched; update its light
+//   finish    { key, color }        wall or floor color, or the lighting mood (key 'lighting', value a mood key), changed
 //   room      { preset, width, depth }  the shell changed; rebuild walls, floor, and grid (items were cleared first)
 //   history   { canUndo, canRedo }  undo/redo availability changed
 
@@ -20,7 +21,7 @@ export function createCommands({ state, finishes, room = { preset: null, width: 
   const canUndo = () => undoStack.length > 0;
   const canRedo = () => redoStack.length > 0;
   const notify = () => emit('history', { canUndo: canUndo(), canRedo: canRedo() });
-  const snapshotOf = ({ id, type, gx, gz, rot, color, parent, slot, wall, col, row }) => ({ id, type, gx, gz, rot, color, parent, slot, wall, col, row });
+  const snapshotOf = ({ id, type, gx, gz, rot, color, parent, slot, wall, col, row, lit }) => ({ id, type, gx, gz, rot, color, parent, slot, wall, col, row, lit });
 
   // ----- primitive operations: mutate, emit, but never touch history -----
   function opAdd(data) {
@@ -57,6 +58,14 @@ export function createCommands({ state, finishes, room = { preset: null, width: 
     const prev = { parent: record.parent, slot: record.slot };
     if (!state.place(id, parent, slot)) return null;
     emit('transform', record);
+    return prev;
+  }
+  function opLit(id, on) {
+    const record = state.get(id);
+    if (!record || record.lit === null) return undefined;
+    const prev = record.lit;
+    state.setLit(id, on);
+    emit('lit', record);
     return prev;
   }
   function opColor(id, color) {
@@ -170,6 +179,15 @@ export function createCommands({ state, finishes, room = { preset: null, width: 
     push({ undo: () => opColor(id, prev), redo: () => opColor(id, color) });
     return true;
   }
+  /** Switches a lamp on or off as one entry. */
+  function setLit(id, on) {
+    const record = state.get(id);
+    if (!record || record.lit === null || record.lit === !!on) return false;   // no event for a no-op
+    const prev = opLit(id, on);
+    if (prev === undefined) return false;
+    push({ undo: () => opLit(id, prev), redo: () => opLit(id, on) });
+    return true;
+  }
   function setFinish(key, color) {
     if (!(key in finishes) || finishes[key] === color) return false;
     const prev = opFinish(key, color);
@@ -187,12 +205,12 @@ export function createCommands({ state, finishes, room = { preset: null, width: 
    * Replaces the shell (when `room` is given), items, and finishes as a single history entry,
    * for example from a loaded save or a fresh preset. The shell changes before items are restored.
    */
-  function replaceRoom({ room: nextRoom = null, wall, floor, items }) {
-    const before = { room: { ...room }, wall: finishes.wall, floor: finishes.floor, items: state.serialize() };
+  function replaceRoom({ room: nextRoom = null, wall, floor, lighting = finishes.lighting, items }) {
+    const before = { room: { ...room }, wall: finishes.wall, floor: finishes.floor, lighting: finishes.lighting, items: state.serialize() };
     const ordered = [...items.filter((i) => !i.parent), ...items.filter((i) => i.parent)];
-    const after = { room: nextRoom ? { ...nextRoom } : { ...room }, wall, floor, items: ordered.map(snapshotOf) };
+    const after = { room: nextRoom ? { ...nextRoom } : { ...room }, wall, floor, lighting, items: ordered.map(snapshotOf) };
     const sameRoom = (a, b) => a.preset === b.preset && a.width === b.width && a.depth === b.depth;
-    const apply = (r) => { opClear(); if (!sameRoom(r.room, room)) opRoom(r.room); opFinish('wall', r.wall); opFinish('floor', r.floor); opRestore(r.items); };
+    const apply = (r) => { opClear(); if (!sameRoom(r.room, room)) opRoom(r.room); opFinish('wall', r.wall); opFinish('floor', r.floor); if ('lighting' in finishes && r.lighting !== undefined) opFinish('lighting', r.lighting); opRestore(r.items); };
     apply(after);
     push({ undo: () => apply(before), redo: () => apply(after) });
   }
@@ -224,5 +242,5 @@ export function createCommands({ state, finishes, room = { preset: null, width: 
     return () => listeners.delete(fn);
   }
 
-  return { add, duplicate, remove, move, place, mount, rotate, recolor, setFinish, clear, replaceRoom, undo, redo, canUndo, canRedo, clearHistory, subscribe };
+  return { add, duplicate, remove, move, place, mount, rotate, recolor, setLit, setFinish, clear, replaceRoom, undo, redo, canUndo, canRedo, clearHistory, subscribe };
 }

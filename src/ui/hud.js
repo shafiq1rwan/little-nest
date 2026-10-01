@@ -25,7 +25,8 @@ export function buildCatalog({ container, catalog, thumbnails, onChoose, collect
     const name = document.createElement('strong');
     name.textContent = def.label;
     const size = document.createElement('small');
-    size.textContent = (def.layer === 'surface' ? 'Tabletop' : def.layer === 'wall' ? 'Wall' : def.w + ' × ' + def.d + ' tiles') + (collectionLabel ? ' · ' + collectionLabel(def) : '');
+    const label = collectionLabel?.(def);
+    size.textContent = (def.layer === 'surface' ? 'Tabletop' : def.layer === 'wall' ? 'Wall' : def.w + ' × ' + def.d + ' tiles') + (label ? ' · ' + label : '');
     b.append(img, name, size);
     b.setAttribute('aria-label', 'Place ' + def.label);
     b.setAttribute('aria-pressed', 'false');

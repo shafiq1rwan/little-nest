@@ -89,7 +89,7 @@ Keep the main camera actions available even with the drawer open. At landscape w
 
 ### Loading screen and main menu
 
-The loading screen is the backdrop colour with soft dappled light, the cream Fredoka wordmark (28–42px), the nook illustration at about 250px, a status line, a slim cream progress bar with a sage fill, and one random tip. Everything is sized to feel quiet rather than splashy. It fades out when the menu is ready. The main menu floats over the live room: wordmark (30–48px), then Start or Resume decorating (sage primary), My rooms, and Settings as 52px tactile buttons with 15–18px Fredoka labels in a column no wider than 340px. Desktop keeps the menu in the left third with the room to the right; portrait phones stack title, room, and buttons; short landscape keeps the side layout. The editor is inert behind the menu, and the Menu button in the HUD action capsule returns to it.
+The loading screen is the backdrop colour with soft dappled light, the cream Fredoka wordmark (28–42px), the nook illustration at about 250px, a status line, a slim cream progress bar with a sage fill, and one random tip. Everything is sized to feel quiet rather than splashy. It fades out when the menu is ready. The main menu floats over the live room: wordmark (30–48px), then Start or Resume decorating (sage primary), My rooms, Settings, and Credits as 52px tactile buttons with 15–18px Fredoka labels in a column no wider than 340px. Desktop keeps the menu in the left third with the room to the right; portrait phones stack title, room, and buttons; short landscape keeps the side layout. The editor is inert behind the menu, and the Menu button in the HUD action capsule returns to it.
 
 ### Interaction
 

@@ -45,6 +45,10 @@ Keep package-lock.json when moving computers. The runtime itself is browser-base
 - Lo-fi background music starts after the first click or tap. The music button in the top bar, or Settings on the menu, turns it off or on, and the choice is remembered in this browser.
 - The help button explains controls. Keyboard shortcuts are inactive while typing in search.
 
+## Credits
+
+Little Nest is made by Saiss. Music: "Lofi Dreams" (lofi jazz music) from Pixabay under the Pixabay Content License. Fonts: Fredoka, Gelasio, and Source Sans 3 under the SIL Open Font License 1.1 (see public/fonts). Built with Three.js and Vite (MIT). The in-game Credits screen is reachable from the main menu.
+
 ## Design and assets
 
 The style uses warm paneled walls, corner windows and blinds, parquet, cream seating, wood furniture, greenery, artwork, and warm lighting.

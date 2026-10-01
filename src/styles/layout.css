@@ -110,3 +110,14 @@ body[data-screen="loading"] #app { visibility: hidden; }
 .loading-screen.is-leaving { opacity: 0; pointer-events: none; }
 /* The canvas takes focus when play starts so shortcuts work; it has no visible focus ring of its own. */
 #scene:focus { outline: none; }
+
+/* Credits dialog shares the settings styling. */
+#credits { width: min(460px, calc(100% - 32px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 24px; border: 2px solid var(--panel-edge); border-radius: 24px; background: var(--cream); color: var(--ink); box-shadow: var(--panel-shadow); }
+#credits::backdrop { background: var(--modal-backdrop); }
+.credits-lead { margin: 0 0 18px; font: 600 17px var(--font-brand); }
+.credits-list { display: grid; grid-template-columns: auto 1fr; gap: 10px 16px; margin: 0 0 22px; font-size: 13px; line-height: 1.55; }
+.credits-list dt { font-weight: 700; color: var(--muted); font-size: 11px; letter-spacing: 1px; text-transform: uppercase; padding-top: 2px; }
+.credits-list dd { margin: 0; }
+.credits-list a { color: var(--sage-deep); font-weight: 600; }
+#credits-done { min-height: 44px; width: 100%; }
+@media (max-width: 440px) { .credits-list { grid-template-columns: 1fr; gap: 4px 0; } .credits-list dd { margin-bottom: 8px; } }

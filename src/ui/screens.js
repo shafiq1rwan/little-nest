@@ -72,6 +72,10 @@ export function createScreens() {
   $('settings-music').onclick = () => { game.music.setOn(!game.music.isOn()); syncMusic(); };
   $('settings-close').onclick = $('settings-done').onclick = () => settings.close();
   settings.addEventListener('click', ev => { if (ev.target === settings) settings.close(); });
+  const credits = $('credits');
+  $('menu-credits').onclick = () => credits.showModal();
+  $('credits-close').onclick = $('credits-done').onclick = () => credits.close();
+  credits.addEventListener('click', ev => { if (ev.target === credits) credits.close(); });
   $('loading-retry').onclick = () => location.reload();
 
   return {

@@ -33,6 +33,7 @@ const paths = {
   bulb: 'M9 18h6m-5 3h4M12 3a6 6 0 0 0-3.5 10.9c.9.7 1.5 1.6 1.5 2.6h4c0-1 .6-1.9 1.5-2.6A6 6 0 0 0 12 3Z',
   music: 'M9 18V6l11-2v12M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm11-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z',
   'music-off': 'M9 18V9M9 6l11-2v9M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM3 3l18 18',
+  heart: 'M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10Z',
 };
 
 export function installIcons(root = document) {

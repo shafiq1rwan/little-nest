@@ -17,7 +17,17 @@ for (const [width, height, label] of [[1440, 900, 'desktop'], [390, 844, 'phone'
       expect(await page.locator('#app').evaluate((el) => el.inert)).toBe(true);
       await expect(page.locator('#loading-tip')).toContainText('Tip: ');
       expect(await page.locator('.loading-art').getAttribute('src')).toMatch(/\.webp$/);
-      for (const id of ['menu-start', 'menu-rooms', 'menu-settings']) {
+      // Credits name the maker, the music source, and the font licences.
+      await page.locator('#menu-credits').click();
+      await expect(page.locator('#credits')).toBeVisible();
+      await expect(page.locator('#credits')).toContainText('Saiss');
+      await expect(page.locator('#credits')).toContainText('Pixabay');
+      await expect(page.locator('#credits')).toContainText('SIL Open Font License');
+      for (const link of await page.locator('#credits a').all()) expect(await link.getAttribute('rel')).toBe('noopener');
+      await page.locator('#credits-done').click();
+      await expect(page.locator('#credits')).toBeHidden();
+
+      for (const id of ['menu-start', 'menu-rooms', 'menu-settings', 'menu-credits']) {
         const b = await page.locator('#' + id).boundingBox();
         expect(b.width >= 44 && b.height >= 44, id + ' touch target').toBe(true);
         expect(b.x >= 0 && b.x + b.width <= width && b.y >= 0 && b.y + b.height <= height, id + ' on screen').toBe(true);

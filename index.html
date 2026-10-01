@@ -20,8 +20,20 @@
 <button id="menu-start" class="primary"><span id="menu-start-label">Start decorating</span><span data-icon="arrow-right"></span></button>
 <button id="menu-rooms"><span data-icon="folder"></span>My rooms</button>
 <button id="menu-settings"><span data-icon="settings"></span>Settings</button>
+<button id="menu-credits"><span data-icon="heart"></span>Credits</button>
 </nav></div><p id="menu-notice" role="status" aria-live="polite"></p>
 </section>
+<dialog id="credits" aria-labelledby="credits-title">
+<div class="settings-heading"><h2 id="credits-title">Credits</h2><button id="credits-close" class="icon-button" aria-label="Close credits"><span data-icon="close"></span></button></div>
+<p class="credits-lead">Little Nest is made by <strong>Saiss</strong>.</p>
+<dl class="credits-list">
+<dt>Music</dt><dd>“Lofi Dreams” (lofi jazz music) from <a href="https://pixabay.com/music/" target="_blank" rel="noopener">Pixabay</a>, used under the Pixabay Content License.</dd>
+<dt>Fonts</dt><dd>Fredoka by the Fredoka Project Authors, Gelasio by SorkinType, and Source Sans 3 by Adobe, all under the SIL Open Font License 1.1.</dd>
+<dt>Technology</dt><dd>Built with <a href="https://threejs.org" target="_blank" rel="noopener">Three.js</a> (MIT) and <a href="https://vite.dev" target="_blank" rel="noopener">Vite</a> (MIT). Every room, piece of furniture, and plant is drawn in code.</dd>
+<dt>Thank you</dt><dd>For making a little space your own.</dd>
+</dl>
+<button id="credits-done" class="primary">Back</button>
+</dialog>
 <dialog id="settings" aria-labelledby="settings-title">
 <div class="settings-heading"><h2 id="settings-title">Settings</h2><button id="settings-close" class="icon-button" aria-label="Close settings"><span data-icon="close"></span></button></div>
 <div class="settings-row"><div><h3>Background music</h3><p>A little lo-fi while you decorate.</p></div><button id="settings-music" aria-label="Background music" aria-pressed="true">On</button></div>

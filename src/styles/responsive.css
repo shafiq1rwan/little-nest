@@ -58,8 +58,8 @@
   .selection-heading h2 { font-size: 18px; }
   .selection-heading p { font-size: 12px; }
   .selection-heading > button { width: 44px; height: 44px; background: var(--drawer-button); }
-  .selection-actions { margin-top: 12px; gap: 8px; }
-  .selection-actions button { min-height: 44px; padding: 8px; font-size: 13px; }
+  .selection-actions { margin-top: 12px; gap: 8px; flex-wrap: wrap; }
+  .selection-actions button { min-height: 44px; padding: 8px; font-size: 13px; flex: 1 1 40%; }
   .selection-actions svg { width: 18px; height: 18px; }
   .selection-actions kbd { display: none; }
   #item-swatches { gap: 12px; padding: 12px 2px 2px; margin-top: 12px; }

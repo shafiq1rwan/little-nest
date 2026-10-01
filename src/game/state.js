@@ -170,6 +170,46 @@ export function createRoomState({ placement, wallBlocked = new Set() }) {
     return true;
   }
 
+  /**
+   * Placement data for a copy of `id` in the nearest free spot of the same kind:
+   * { gx, gz } for floor items, { parent, slot } for surface items, { wall, col, row } for wall items.
+   * Returns null when nothing nearby is free.
+   */
+  function findFreeNear(id) {
+    const record = byId.get(id);
+    if (!record) return null;
+    if (record.parent) {
+      const count = placement.slotCount(byId.get(record.parent).type);
+      for (let d = 1; d < count; d++) {
+        for (const slot of [record.slot + d, record.slot - d]) {
+          if (slot >= 0 && slot < count && canPlaceOn(record.type, record.parent, slot)) return { parent: record.parent, slot };
+        }
+      }
+      return null;
+    }
+    if (record.wall) {
+      // Try beside first, then rows above and below, nearest first.
+      for (let d = 1; d <= placement.room + placement.wallRows; d++) {
+        for (let dc = -d; dc <= d; dc++) {
+          const dr = d - Math.abs(dc);
+          for (const [col, row] of [[record.col + dc, record.row + dr], [record.col + dc, record.row - dr]]) {
+            if (canMount(record.type, record.wall, col, row)) return { wall: record.wall, col, row };
+          }
+        }
+      }
+      return null;
+    }
+    for (let d = 1; d <= placement.room * 2; d++) {
+      for (let dx = -d; dx <= d; dx++) {
+        const dz = d - Math.abs(dx);
+        for (const [gx, gz] of [[record.gx + dx, record.gz + dz], [record.gx + dx, record.gz - dz]]) {
+          if (canPlace(record.type, gx, gz, record.rot)) return { gx, gz };
+        }
+      }
+    }
+    return null;
+  }
+
   function setColor(id, color) {
     const record = byId.get(id);
     if (!record) return false;
@@ -191,5 +231,5 @@ export function createRoomState({ placement, wallBlocked = new Set() }) {
     return [...items.filter((r) => !r.parent), ...items.filter((r) => r.parent)].map(copy);
   }
 
-  return { items, occupancy, wallOccupancy, slotsUsed, get, childrenOf, canPlace, canPlaceOn, canMount, add, remove, move, rotate, transform, place, mount, setColor, clear, serialize, cellKey };
+  return { items, occupancy, wallOccupancy, slotsUsed, get, childrenOf, canPlace, canPlaceOn, canMount, findFreeNear, add, remove, move, rotate, transform, place, mount, setColor, clear, serialize, cellKey };
 }

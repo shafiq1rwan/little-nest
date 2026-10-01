@@ -162,6 +162,12 @@ function addItem(type, gx, gz, rot, color = null, id = null, parent = null, slot
 function removeItem(record) {
   commands.remove(record.id);
 }
+function duplicateSelected() {
+  if (!selected || dragging) { if (!selected) toast('Select something to copy it.'); return; }
+  const copy = commands.duplicate(selected.id);
+  if (!copy) { toast('There is no free spot nearby for a copy.'); return; }
+  setSelected(copy);
+}
 function undoRedo(direction) {
   if (dragging) return;
   cancelPlacing();
@@ -326,6 +332,7 @@ const input = createInput({
     if (action === 'rotate') rotateSelected();
     if (action === 'remove' && selected && !dragging) { ev.preventDefault(); removeItem(selected); }
     if (action === 'undo' || action === 'redo') { ev.preventDefault(); undoRedo(action); }
+    if (action === 'duplicate') { ev.preventDefault(); duplicateSelected(); }
   },
 });
 
@@ -377,6 +384,7 @@ $('rotate-tool').onclick = rotateSelected;
 $('undo-tool').onclick = () => undoRedo('undo');
 $('redo-tool').onclick = () => undoRedo('redo');
 $('remove-selected').onclick = () => { if (selected) removeItem(selected); };
+$('duplicate-selected').onclick = duplicateSelected;
 $('deselect').onclick = () => setSelected(null);
 $('move-tool').onclick = () => { cancelPlacing(); toast('Drag any furniture to move it.'); };
 $('move-selected').onclick = () => { if (hud.isCompact()) hud.setExpanded(false); toast('Drag the selected furniture to a free tile.'); };

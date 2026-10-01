@@ -213,6 +213,30 @@ test('undo and redo cover placement, drag, rotate, recolor, finishes, clear, and
   expect((await selectedInfo(page)).rot).toBe(0);
 });
 
+test('Copy duplicates the selected item nearby, selects the copy, and is undoable', async ({ page }) => {
+  await openGame(page);
+  const armchair = await selectedInfo(page);
+  expect(armchair.type).toBe('armchair');
+  await page.locator('#duplicate-selected').click();
+  expect(await roomState(page)).toHaveLength(STARTER_ITEM_COUNT + 1);
+  const copy = await selectedInfo(page);
+  expect(copy).toMatchObject({ type: 'armchair', rot: armchair.rot, color: armchair.color });
+  expect(copy.gx === armchair.gx && copy.gz === armchair.gz).toBe(false);
+  expect(Math.abs(copy.gx - armchair.gx) + Math.abs(copy.gz - armchair.gz)).toBe(1);
+
+  // Ctrl+D copies a table together with the mug on it.
+  await page.evaluate(() => window.__sim.setSelected(window.__sim.items.find((i) => i.type === 'coffeeTable')));
+  await page.keyboard.press('Control+d');
+  expect(await roomState(page)).toHaveLength(STARTER_ITEM_COUNT + 3);
+  const tables = await page.evaluate(() => window.__sim.items.filter((i) => i.type === 'coffeeTable').map((t) => window.__sim.items.filter((i) => i.parent === t.id).map((i) => i.type)));
+  expect(tables).toEqual([['mug'], ['mug']]);
+  await page.keyboard.press('Control+z');
+  expect(await roomState(page)).toHaveLength(STARTER_ITEM_COUNT + 1);
+  await page.keyboard.press('Control+z');
+  expect(await roomState(page)).toHaveLength(STARTER_ITEM_COUNT);
+  await expect(page.locator('#undo-tool')).toBeDisabled();
+});
+
 test('keyboard shortcuts stay inactive while typing in search', async ({ page }) => {
   await openGame(page);
   const before = await roomState(page);

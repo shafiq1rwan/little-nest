@@ -96,6 +96,24 @@ export function createCommands({ state, finishes, limit = 100 }) {
     push({ undo: () => opRemove(snapshot.id), redo: () => opAdd(snapshot) });
     return record;
   }
+  /**
+   * Copies an item, and whatever sits on it, into the nearest free spot of the same kind as one entry.
+   * Returns the new record, or null when there is no room.
+   */
+  function duplicate(id) {
+    const source = state.get(id);
+    const spot = state.findFreeNear(id);
+    if (!source || !spot) return null;
+    const copy = opAdd({ type: source.type, rot: source.rot, color: source.color, ...spot });
+    if (!copy) return null;
+    const added = [snapshotOf(copy)];
+    for (const child of state.childrenOf(id)) {
+      const c = opAdd({ type: child.type, rot: child.rot, color: child.color, parent: copy.id, slot: child.slot });
+      if (c) added.push(snapshotOf(c));
+    }
+    push({ undo: () => opRemove(copy.id), redo: () => opRestore(added) });
+    return copy;
+  }
   /** Removes an item and whatever sits on it as one entry. */
   function remove(id) {
     const snapshots = opRemove(id);
@@ -194,5 +212,5 @@ export function createCommands({ state, finishes, limit = 100 }) {
     return () => listeners.delete(fn);
   }
 
-  return { add, remove, move, place, mount, rotate, recolor, setFinish, clear, replaceRoom, undo, redo, canUndo, canRedo, clearHistory, subscribe };
+  return { add, duplicate, remove, move, place, mount, rotate, recolor, setFinish, clear, replaceRoom, undo, redo, canUndo, canRedo, clearHistory, subscribe };
 }

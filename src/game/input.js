@@ -5,7 +5,7 @@
 //   down({ hit, pick, shiftKey, ev })  primary press with one pointer; pick() lazily returns the item id under it
 //   up({ allReleased })       a pointer lifted or cancelled; allReleased when no touch pointers remain
 //   secondTouch()             a second finger landed; camera gestures take over
-//   key(action, ev)           'cancel' | 'rotate' | 'remove' | 'undo' | 'redo', never while typing in a field
+//   key(action, ev)           'cancel' | 'rotate' | 'remove' | 'undo' | 'redo' | 'duplicate', never while typing in a field
 //
 // One finger decorates; two fingers are left to OrbitControls.
 
@@ -89,6 +89,7 @@ export function createInput({ canvas, camera, pickables, idOf }, handlers) {
     let action = null;
     if (mod && key === 'z') action = ev.shiftKey ? 'redo' : 'undo';
     else if (mod && key === 'y') action = 'redo';
+    else if (mod && key === 'd') action = 'duplicate';
     else if (!mod && !ev.altKey) action = KEYS[ev.key];   // plain shortcuts must not swallow Ctrl+R and friends
     if (action) handlers.key(action, ev);
   });

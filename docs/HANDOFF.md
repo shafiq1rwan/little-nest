@@ -84,6 +84,7 @@ Run `npm run test:install` once per machine, then `npm test`. Playwright starts 
 | Photo mode: enter, save, exit | HUD hides, furniture cannot be picked, a PNG downloads, and grid/drawer/controls come back |
 | Place a small item on a table, then move, rotate, and remove the table | The item previews only over surfaces, follows the table, and disappears with it; undo restores both |
 | Hang a wall item, then drag it to the other wall | It previews only on clear wall, refuses windows and spots hidden behind furniture, and moves between walls; Rotate is refused |
+| Copy a table that has a mug on it | A second table with its own mug appears beside it and is selected; one undo removes both |
 | Invalid save data | Current room remains intact and feedback appears |
 | Search plant / use categories | Five plant choices appear; category filtering is correct |
 | Type R/Delete in search | Search edits normally; game shortcuts do not fire |
@@ -103,6 +104,7 @@ Current browser checks previously passed placement, saving, plants, HUD/touch in
 
 ## Current handoff
 
+- 1 October 2026, Phase 3 increment 3: duplicate. state.findFreeNear finds the nearest free tile, slot, or wall cell for a copy; commands.duplicate adds the copy and its children as one entry; a Copy button joins the selection card and Ctrl+D triggers it; the copy becomes the selection. On compact screens the four selection actions now wrap into two rows of 44px buttons. Suite: 62 passed (40 unit, 22 browser). Next: more distinctive models (last Phase 3 item), then Phase 4.
 - 30 September 2026, Phase 3 increment 2: wall decorations. Wall items (`layer: 'wall'`, `wall: { w, h }`) sit on a grid of ROOM columns by 8 half-unit rows on the back and left walls; room.js exports the wall panels and fixture rectangles, and placement.blockedWallCells turns fixtures into blocked cells. Records carry wall/col/row; state.mount and commands.mount move them (undoable); rotation is refused. Wall targeting requires the wall to be the first thing under the pointer, so nothing can be hung behind furniture. Save format is version 5 (2, 3, and 4 migrate). The baked prints became catalog items; the bulb string moved up to rows 6–7. Category chips scroll horizontally on compact screens. Suite: 58 passed (37 unit, 21 browser). Next: duplicate, then more models.
 - 30 September 2026, Phase 3 increment 1: surface placement. Supporters declare `surface: { y, slots: [{ x, z, y? }] }` in local space; small items have `layer: 'surface'` and a Small category. State records carry parent/slot, occupancy tracks slots per supporter, removal cascades, and commands.place moves a small item between slots as one entry. Save format is version 4 (version 3 migrates). Small-item meshes are Three.js children of their supporter's group so they follow it for free. Desk slots were moved outward because the monitor occluded the original front slot from the default camera. Starter room now includes a mug and a photo frame (18 items). Suite: 53 passed (33 unit, 20 browser). Next: wall-mounted decorations, then duplicate.
 - 30 September 2026, Phase 2 increment 4 (Phase 2 complete): photo mode. A camera button in the view controls hides the top bar, panel, tool rail, selection card, and hints; a photo bar offers Save photo and Done; Escape also exits. Editing input is ignored while active; the camera stays free. Save photo renders at up to 2x pixel ratio (capped at 4096px) and downloads <room>-photo.png; the renderer is restored in a finally block. Grid visibility and drawer state are restored on exit. Suite: 48 passed (28 unit, 20 browser). Next: Phase 3 (surface placement, wall decorations).
@@ -122,7 +124,7 @@ Current browser checks previously passed placement, saving, plants, HUD/touch in
 - Visual identity: cream, sage, peach, warm wood, cozy procedural models.
 - Work completed in this documentation task: structure review, phased plan, persistent coding instructions, style guide, transfer guide, and five current visual baseline screenshots.
 - No architecture refactor or new gameplay phase was implemented in this task.
-- Next recommended work: Phase 3 continued (duplicate item, more distinctive models).
+- Next recommended work: finish Phase 3 with more distinctive plant and decor models, then Phase 4 (room presets).
 
 ## Update after future work
 

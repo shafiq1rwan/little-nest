@@ -19,6 +19,7 @@ const paths = {
   chevron: 'm6 9 6 6 6-6',
   undo: 'M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-3',
   redo: 'm15 14 5-5-5-5M20 9H10a6 6 0 0 0 0 12h3',
+  copy: 'M9 9h10v10H9zM5 15V5h10',
   upload: 'M12 16V4m-5 5 5-5 5 5M4 20h16',
   download: 'M12 4v12m-5-5 5 5 5-5M4 20h16',
   camera: 'M4 8h3l2-3h6l2 3h3v11H4V8Zm8 9a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z',

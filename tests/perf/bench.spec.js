@@ -4,6 +4,7 @@
 //   PERF=1 npx playwright test --project perf
 
 import { test, expect } from '@playwright/test';
+import { enterFromMenu } from '../browser/helpers.js';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -45,6 +46,7 @@ test('startup and frame cost for the starter room and a stress room', async ({ p
   const t0 = Date.now();
   await page.goto('/');
   await page.waitForFunction(() => !!window.__sim);
+  await enterFromMenu(page);
   const startup = await page.evaluate(() => ({ readyMs: +window.__sim.perf.readyMs.toFixed(0), thumbnailsMs: +window.__sim.perf.thumbnailsMs.toFixed(0), thumbnailsCached: window.__sim.perf.thumbnailsCached ?? null }));
   console.log('startup', JSON.stringify({ ...startup, wallMs: Date.now() - t0 }));
 

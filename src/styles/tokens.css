@@ -34,6 +34,7 @@
   --hover: #efdfcc;          /* generic button hover */
   --backdrop: #df9b7d;       /* page background behind the scene */
   --shadow: #56342522;
+  --modal-backdrop: #56342566;
   --panel-edge: #d5b997;
   --button-bottom: #c5aa87;
   --sage-bottom: #4d653f;

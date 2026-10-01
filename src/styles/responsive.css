@@ -3,9 +3,10 @@
 
 @media (max-width: 900px), (max-height: 600px) {
   .topbar { position: relative; top: auto; left: auto; right: auto; flex-shrink: 0; height: calc(68px + env(safe-area-inset-top)); padding: env(safe-area-inset-top) max(10px, env(safe-area-inset-right)) 0 max(10px, env(safe-area-inset-left)); gap: 8px; }
-  .brand { padding: 0; border: 0; min-width: 0; background: transparent; box-shadow: none; }
+  .brand { max-width: 100%; gap: 3px; }
   .brand h1 { font-size: 23px; letter-spacing: 0; overflow: hidden; text-overflow: ellipsis; }
-  .room-name, .action-label, .desktop-label { display: none; }
+  .room-name { font-size: 10px; letter-spacing: 1px; }
+  .action-label, .desktop-label { display: none; }
   .save-actions { gap: 6px; flex-shrink: 0; padding: 0; border: 0; background: transparent; box-shadow: none; }
   .save-actions button { min-height: 44px; padding: 0 11px; font-size: 13px; gap: 6px; }
   .save-actions #load, .save-actions .icon-button { width: 44px; padding: 0; }
@@ -73,7 +74,9 @@
 }
 
 @media (max-width: 370px) {
-  .brand h1 { font-size: 20px; }
+  /* Five actions leave little room, so the wordmark wraps to two short lines and the room name hides. */
+  .brand h1 { font-size: 19px; line-height: .95; white-space: normal; max-width: 70px; }
+  .room-name { display: none; }
   .save-actions { gap: 4px; }
   .save-actions #save { min-width: 44px; width: 44px; padding: 0; }
   .save-label { display: none; }
@@ -140,4 +143,40 @@
 @media (max-width: 900px), (max-height: 600px) {
   .collection-field { margin: 0 0 8px; }
   .collection-field select { min-height: 44px; font-size: 13px; }
+}
+
+/* Main menu adapts independently of the decorating drawer. */
+@media (max-width: 900px), (max-height: 600px) {
+  .main-menu-layout { padding: 24px; }
+  .main-menu-content { width: 30vw; }
+  .menu-title { font-size: clamp(30px, 4.8vw, 44px); margin-bottom: 24px; }
+  .menu-buttons { gap: 12px; }
+  .menu-buttons button { min-height: 52px; padding: 12px 16px; font-size: 18px; gap: 12px; border-radius: 17px; }
+  .menu-buttons svg { width: 22px; height: 22px; }
+}
+@media (orientation: portrait) and (max-width: 900px) {
+  body[data-screen="menu"] .workspace { display: block; }
+  body[data-screen="menu"] #viewport { width: 100%; height: 52dvh; margin: 10dvh 0 0; }
+  .main-menu-layout { display: block; padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left)); }
+  .main-menu-content { width: 100%; max-width: none; height: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; pointer-events: none; }
+  .menu-title { font-size: clamp(38px, 7vw, 54px); margin: 0; }
+  .menu-buttons { width: min(340px, 100%); pointer-events: auto; gap: 10px; }
+  #menu-notice { top: 65px; left: 24px; right: 24px; bottom: auto; max-width: none; font-size: 12px; text-align: center; }
+  .loading-content { gap: 18px; }
+  .loading-art { width: min(320px, 66vw, 36dvh); }
+}
+@media (orientation: landscape) and (max-height: 600px) {
+  .main-menu-layout { padding: max(16px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left)); }
+  .main-menu-content { width: 30vw; }
+  .menu-title { font-size: clamp(28px, 4.5vw, 40px); margin-bottom: 20px; }
+  .menu-buttons { gap: 10px; }
+  .menu-buttons button { min-height: 44px; padding: 10px 12px; font-size: 15px; gap: 10px; }
+  .menu-buttons svg { width: 20px; height: 20px; }
+  #menu-notice { bottom: 0; left: 20px; font-size: 11px; }
+  .loading-content { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .loading-content h1 { grid-column: 1 / -1; font-size: 34px; }
+  .loading-art { grid-column: 1; grid-row: 2 / 5; width: 100%; max-height: 55dvh; }
+  #loading-status { font-size: 21px; }
+  #loading-progress { width: 100%; }
+  .loading-tip { font-size: 12px; }
 }

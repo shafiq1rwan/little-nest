@@ -41,7 +41,8 @@ Keep package-lock.json when moving computers. The runtime itself is browser-base
 - The HUD uses floating game controls and a tactile Decorating box. On phones, Browse/Hide controls the bottom drawer. Choosing furniture hides it for placement; selecting an item opens controls in the drawer. Landscape phones use a side drawer.
 - One finger moves furniture; two fingers orbit/pinch.
 - Save room keeps the open room in this browser (the first save is named "Living room"). Rooms also offers "Start fresh" presets: living room, studio, reading nook, bedroom, and an open-air balcony, each with its own size, windows, and furniture; starting one is undoable. Rooms opens your saved designs to load, rename, duplicate, export, or delete them, to import a room file, and to save the current room under a new name. Clear removes furniture.
-- Lo-fi background music starts after the first click or tap. The music button in the top bar turns it off or on, and the choice is remembered in this browser.
+- The game opens on a main menu over the live room: Start decorating, My rooms, and Settings. The Menu button in the top-right capsule returns to it.
+- Lo-fi background music starts after the first click or tap. The music button in the top bar, or Settings on the menu, turns it off or on, and the choice is remembered in this browser.
 - The help button explains controls. Keyboard shortcuts are inactive while typing in search.
 
 ## Design and assets
@@ -56,7 +57,8 @@ The header uses a text-only Little Nest wordmark in bundled Fredoka Semibold. [I
 
 | File | Responsibility |
 | --- | --- |
-| src/main.js | Composition: scene setup, mesh ownership, placing flow, save/load, render loop |
+| src/boot.js, src/ui/screens.js | Loading screen, main menu, and settings; boot.js is the entry point |
+| src/main.js | initializeGame(): scene setup, mesh ownership, placing flow, save/load, render loop |
 | src/game/input.js | Pointer, keyboard, and touch handling |
 | src/ui/hud.js, responsive.js, music.js, icons.js, gallery.js | HUD rendering, compact drawer behaviour, background music, SVG icons, rooms dialog |
 | src/scene/create-scene.js, geometry.js, thumbnails.js | Renderer and camera setup, material ownership, catalog previews |

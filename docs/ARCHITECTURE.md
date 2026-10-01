@@ -12,8 +12,10 @@ It is not yet a fully separated foundation for a larger game. src/main.js is app
 
 | File | Current responsibility |
 | --- | --- |
-| index.html | HUD markup and accessibility labels |
-| src/main.js | Composition: scene/camera/lighting setup, mesh ownership, placing/drag/rotate flow, and wiring of the modules below (about 375 lines) |
+| index.html | Loading screen, main menu, settings dialog, and HUD markup with accessibility labels |
+| src/boot.js | Entry point: shows the loading screen, imports the game, hands it to the screens |
+| src/ui/screens.js | Loading progress, main menu, settings; switches body[data-screen] between loading, menu, and game |
+| src/main.js | Exports initializeGame(): scene setup, mesh ownership, placing/drag/rotate flow, and wiring of the modules below; returns the small API the screens use (setEditing, openRooms, refresh, music) |
 | src/game/input.js | Pointer, keyboard, and touch lifecycle; raycasting; emits move/down/up/secondTouch/key |
 | src/ui/hud.js | Toast, catalog cards and filtering, tabs, finish swatches, selection card rendering |
 | src/ui/responsive.js | Compact media query, drawer expand/collapse, selection card docking |

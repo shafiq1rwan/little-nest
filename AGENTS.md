@@ -26,7 +26,7 @@ The user's latest explicit instructions take precedence over these guidelines. T
 
 ## Implementation
 
-- The app uses vanilla JavaScript ES modules, Three.js, and Vite. Do not introduce a framework or replace the build system as incidental cleanup.
+- The app uses vanilla JavaScript ES modules, Three.js, and Vite. Do not introduce a framework or replace the build system as incidental cleanup. The entry point is src/boot.js; main.js exports initializeGame() and must stay importable after the loading screen has painted.
 - Materials: get shared ones from sharedMaterial() in src/scene/geometry.js and never dispose them; give a mesh its own material only through ownMaterial() so disposeModel() can release it. Models are merged per material by compactModel() when placed: flag parts that must stay separate with userData.recolor or an owned material.
 - Rendering is on demand: anything that changes what the scene looks like outside the commands/input/camera paths must call invalidate() in main.js, or the change will not be drawn until the next interaction.
 - Before performance work, run `npm run bench` and record before/after numbers in HANDOFF.

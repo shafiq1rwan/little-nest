@@ -10,7 +10,7 @@ const VIEWPORTS = [
   [568, 320],
   [1440, 900],
 ];
-const IMPORTANT_CONTROLS = ['save', 'load', 'help-toggle', 'music-toggle', 'undo-tool', 'redo-tool', 'grid-tool', 'walls-tool', 'zoom-in', 'photo-tool'];
+const IMPORTANT_CONTROLS = ['main-menu-toggle', 'save', 'load', 'help-toggle', 'music-toggle', 'undo-tool', 'redo-tool', 'grid-tool', 'walls-tool', 'zoom-in', 'photo-tool'];
 
 for (const [width, height] of VIEWPORTS) {
   const compact = width <= 900 || height <= 600;
@@ -28,7 +28,7 @@ for (const [width, height] of VIEWPORTS) {
       expect(rail.x + rail.width <= room.x + room.width, 'tool tray stays inside room').toBe(true);
       expect(rail.x + rail.width <= camera.x || rail.y + rail.height <= camera.y, 'tool and camera trays do not overlap').toBe(true);
       if (compact) {
-        expect(await page.locator('h1').evaluate(el => el.scrollWidth <= el.clientWidth), 'full game name fits').toBe(true);
+        expect(await page.locator('.brand h1').evaluate(el => el.scrollWidth <= el.clientWidth), 'full game name fits').toBe(true);
       }
 
       for (const id of IMPORTANT_CONTROLS) {

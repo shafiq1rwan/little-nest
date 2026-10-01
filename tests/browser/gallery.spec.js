@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openGame, roomState, galleryStore, STARTER_ITEM_COUNT } from './helpers.js';
+import { openGame, enterFromMenu, roomState, galleryStore, STARTER_ITEM_COUNT } from './helpers.js';
 
 for (const [width, height, label] of [[1440, 900, 'desktop'], [390, 844, 'phone']]) {
   test.describe(label, () => {
@@ -70,6 +70,7 @@ for (const [width, height, label] of [[1440, 900, 'desktop'], [390, 844, 'phone'
       // Everything survives a reload; the open room is unsaved again until loaded.
       await page.reload();
       await page.waitForFunction(() => !!window.__sim);
+      await enterFromMenu(page);
       expect(await page.locator('#room-name').textContent()).toBe('Unsaved room');
       await page.locator('#load').click();
       expect(await names()).toEqual(['Reading nook', 'Empty']);   // the overwrite made it the newest

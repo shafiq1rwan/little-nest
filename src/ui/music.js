@@ -26,14 +26,15 @@ export function createMusic({ src, volume, storageKey, button, installIcons, onT
   window.addEventListener('pointerdown', unlock, { once: true });
   window.addEventListener('keydown', unlock, { once: true });
 
-  button.onclick = () => {
-    on = !on;
+  function setOn(next) {
+    on = !!next;
     writeString(storageKey, on ? 'on' : 'off');
     syncButton();
     apply();
     onToggle?.(on);
-  };
+  }
+  button.onclick = () => setOn(!on);
   syncButton();
 
-  return { audio, isOn: () => on };
+  return { audio, isOn: () => on, setOn };
 }

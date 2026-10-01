@@ -22,7 +22,10 @@ import { createGalleryDialog } from './ui/gallery.js';
 import { createToast, buildCatalog, setCatalogActive, bindCatalogFilter, bindTabs, buildFinishSwatches, buildLightingOptions, renderSelectionCard, setPressed } from './ui/hud.js';
 import { createMusic } from './ui/music.js';
 
+export async function initializeGame({ onProgress = async () => {}, onOpenRoom = () => {}, onNotice = () => {} } = {}) {
 const $ = (id) => document.getElementById(id);
+let editing = false;
+await onProgress(25, 'Building your little nest…');
 
 // ---------- renderer / scene ----------
 const canvas = $('scene');
@@ -327,7 +330,7 @@ const input = createInput({
 }, {
   move(hit, ev) {
     invalidate();
-    if (photoMode) return;
+    if (!editing || photoMode) return;
     if (ghost && placement.isWallItem(selectedType)) {
       ghostTarget = wallUnder(ev, selectedType);
       ghost.visible = !!ghostTarget;
@@ -376,7 +379,7 @@ const input = createInput({
   },
   down({ hit, pick, shiftKey }) {
     invalidate();
-    if (photoMode) return;
+    if (!editing || photoMode) return;
     if (ghost && placement.isWallItem(selectedType)) {
       if (!ghostTarget) { toast('Wall decorations go on the two walls. Point at one to place it.'); return; }
       if (!ghostTarget.free) { toast('That part of the wall is taken. Try a clear spot.'); return; }
@@ -409,15 +412,18 @@ const input = createInput({
     if (item) { dragging = item; dragTarget = null; }
   },
   up({ allReleased }) {
+    if (!editing) return;
     invalidate();
     finishDrag(true, allReleased);
   },
   secondTouch() {
+    if (!editing) return;
     finishDrag(false);
     setSelected(null, false);
     pendingSelection = true;
   },
   key(action, ev) {
+    if (!editing || document.querySelector('dialog[open]')) return;
     invalidate();
     if (photoMode) { if (action === 'cancel') exitPhotoMode(); return; }
     if (action === 'cancel') { cancelPlacing(); setSelected(null); }
@@ -430,12 +436,15 @@ const input = createInput({
 
 // ---------- HUD ----------
 const perf = { startedAt: performance.now(), thumbnailsMs: 0, readyMs: 0 };
+await onProgress(50, 'Unpacking your furniture…');
 installIcons();
 const thumbnailsStart = performance.now();
 const { thumbnails, cached: thumbnailsCached } = createThumbnails(CATALOG);
 perf.thumbnailsMs = performance.now() - thumbnailsStart;
 perf.thumbnailsCached = thumbnailsCached;
-const toast = createToast($('toast'));
+await onProgress(80, 'Adding the finishing touches…');
+const gameToast = createToast($('toast'));
+const toast = (message) => { gameToast(message); onNotice(message); };
 const hud = createResponsiveHUD({
   panel: $('panel'),
   panelContent: $('panel-content'),
@@ -562,6 +571,7 @@ function loadRoom(id) {
   commands.replaceRoom(entry.room);   // one history entry, so a load can be undone
   setCurrentRoom(entry);
   toast('"' + entry.name + '" loaded.');
+  return true;
 }
 /** Offers a URL as a file download. */
 function downloadUrl(filename, url, revoke = false) {
@@ -602,13 +612,14 @@ const galleryDialog = createGalleryDialog({
       setCurrentRoom(null);
       if (!hud.isCompact() && selectId) setSelected(state.get(selectId));
       toast('New ' + ROOM_PRESETS[presetId].name.toLowerCase() + ' ready. Undo brings the old room back.');
+      onOpenRoom();
     },
     onExport: exportEntry,
     onImport: importFile,
     entries: () => gallery.list(),
     currentId: () => currentRoom?.id ?? null,
     onSaveAs: (name) => saveRoom(null, name),
-    onLoad: loadRoom,
+    onLoad: (id) => { if (loadRoom(id)) onOpenRoom(); },
     onRename: (id, name) => { const s = gallery.rename(id, name); if (s && currentRoom?.id === id) setCurrentRoom(s); },
     onDuplicate: (id) => { const s = gallery.duplicate(id); toast(s ? '"' + s.name + '" created.' : 'Could not duplicate this room.'); },
     onDelete: (id) => { gallery.remove(id); if (currentRoom?.id === id) setCurrentRoom(null); toast('Room deleted.'); },
@@ -720,3 +731,24 @@ window.__sim = {
   get selectedType() { return selectedType; },
   get selected() { return withMesh(selected); },
 };
+await onProgress(100, 'Your little nest is ready.');
+return {
+  music,
+  openRooms: () => galleryDialog.open({ allowSave: false }),
+  refresh: () => { resize(true); invalidate(); },
+  setEditing(enabled) {
+    if (!enabled) {
+      if (photoMode) exitPhotoMode();
+      finishDrag();
+      cancelPlacing();
+      $('help-panel').hidden = true;
+    }
+    editing = enabled;
+    controls.enabled = enabled;
+    selectionBox.visible = enabled && !!selected;
+    grid.visible = enabled && gridVisible;
+    resize(true);
+    invalidate();
+  },
+};
+}

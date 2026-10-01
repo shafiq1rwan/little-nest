@@ -50,7 +50,7 @@ Selectable finishes can vary within the established warm/soft palette. Baseline 
 ## Typography, spacing, and controls
 
 - Brand: bundled Fredoka Semibold via --font-brand. Other prominent headings: Georgia, then bundled Gelasio, serif. Body and controls: Segoe UI, then bundled Source Sans 3, system-ui, sans-serif. Use the tokens --font-heading and --font-body.
-- Desktop brand size: 29px; the narrower desktop override is 25px. Compact brand is 23px and becomes 20px at <= 370px width. The header has no image logo at any size; Save uses an icon at <= 440px.
+- Desktop brand size: 40px; the narrower desktop override is 34px. Compact brand is 23px and becomes 20px at <= 370px width. The title is cream text directly on the backdrop with no capsule or image logo. The current room name sits underneath in smaller, spaced lettering, including on compact screens; long names truncate. Save uses an icon at <= 440px.
 - Small-screen search text is 16px to avoid input zoom in common mobile browsers.
 - Keep control labels readable, normally 12–13px on compact screens. Footprint metadata is secondary.
 - Use thin warm-brown line icons with consistent strokes. Do not mix emoji, filled clip-art, and line icons as controls.
@@ -65,7 +65,7 @@ The wordmark uses bundled Fredoka on every platform. Body text and other heading
 
 ### Desktop
 
-Floating cream capsules contain the brand, room name, and Rooms/Save/music/help actions. There is no full-width header background; the canvas extends behind the top controls. A rounded Decorating box floats at the right with space above, below, and to its right. Its width is reserved beside the canvas so it does not cover playable tiles. It has icon-led Furniture/Walls/Floor tabs, search, categories, two-column thumbnail tiles, and a small footer.
+The top-left title and room subtitle are cream text directly on the backdrop, matching the generated compact HUD concept. Rooms/Save/music/help actions share a floating cream capsule. There is no full-width header background; the canvas extends behind the top controls. A rounded Decorating box floats at the right with space above, below, and to its right. Its width is reserved beside the canvas so it does not cover playable tiles. It has icon-led Furniture/Walls/Floor tabs, search, categories, two-column thumbnail tiles, and a small footer.
 
 Editing tools sit in a tactile tray at the left of the viewport; camera buttons sit at the bottom right. The selected-item card is at the bottom left. Active furniture tiles have a sage border and a plus badge; their aria-pressed state matches the choice or selection. Keep controls aligned at the viewport edges and avoid expanding them over the center of the room.
 
@@ -84,6 +84,10 @@ On short portrait screens, the drawer starts collapsed. On compact screens, no i
 Use a 290px side drawer when landscape height <= 600px, or landscape width is 700–900px. Collapsed width is 64px. The side catalog uses two columns and vertical scrolling.
 
 Keep the main camera actions available even with the drawer open. At landscape widths <= 700px and heights <= 600px, the tool tray uses three columns and two rows so it stays inside the room and above the camera controls. Use dynamic viewport height and safe-area insets; do not use a fixed device height.
+
+### Loading screen and main menu
+
+The loading screen is the backdrop colour with soft dappled light, the cream Fredoka wordmark, the nook illustration, a status line, a cream progress bar with a sage fill, and one random tip. It fades out when the menu is ready. The main menu floats over the live room: wordmark, then Start or Resume decorating (sage primary), My rooms, and Settings, all in the tactile button style with Fredoka labels. Desktop keeps the menu in the left third with the room to the right; portrait phones stack title, room, and buttons; short landscape keeps the side layout. The editor is inert behind the menu, and the Menu button in the HUD action capsule returns to it.
 
 ### Interaction
 

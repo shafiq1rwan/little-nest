@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openGame, roomState, tilePoint, itemPoint, selectedInfo, noHorizontalOverflow, loadCurrentRoom, galleryStore, STARTER_ITEM_COUNT, TERRACOTTA } from './helpers.js';
+import { openGame, enterFromMenu, roomState, tilePoint, itemPoint, selectedInfo, noHorizontalOverflow, loadCurrentRoom, galleryStore, STARTER_ITEM_COUNT, TERRACOTTA } from './helpers.js';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -117,6 +117,7 @@ test('saves carry stable ids and a legacy version 2 save is imported into the ga
   })));
   await page.reload();
   await page.waitForFunction(() => !!window.__sim);
+  await enterFromMenu(page);
   expect((await galleryStore(page)).rooms.map((r) => r.name)).toEqual(['Living room']);
   await page.locator('#load').click();
   await page.getByRole('button', { name: 'Load Living room', exact: true }).click();
@@ -248,7 +249,7 @@ test('keyboard shortcuts stay inactive while typing in search', async ({ page })
 });
 
 test('background music waits for a gesture and remembers the mute choice', async ({ page }) => {
-  await openGame(page);
+  await openGame(page, '/', { enter: false });
   const music = () => page.evaluate(() => ({
     on: window.__sim.musicOn,
     paused: window.__sim.bgm.paused,
@@ -258,11 +259,13 @@ test('background music waits for a gesture and remembers the mute choice', async
   expect(await music()).toMatchObject({ on: true, paused: true, pressed: 'true', pref: null });
   expect(await page.evaluate(() => window.__sim.bgm.currentSrc.endsWith('/audio/lofidreams-bgm.mp3'))).toBe(true);
 
+  await enterFromMenu(page);
   await page.locator('#music-toggle').click();
   expect(await music()).toMatchObject({ on: false, paused: true, pressed: 'false', pref: 'off' });
   await page.reload();
   await page.waitForFunction(() => !!window.__sim);
   expect(await music()).toMatchObject({ on: false, pressed: 'false', pref: 'off' });
+  await enterFromMenu(page);
   await page.locator('#music-toggle').click();
   expect(await music()).toMatchObject({ on: true, pressed: 'true', pref: 'on' });
 });

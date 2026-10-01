@@ -2,12 +2,21 @@
 // the development hook exposed at the end of src/main.js.
 
 /** Open the game and wait until the scene hook exists. Returns the collected page errors array. */
-export async function openGame(page, path = '/') {
+export async function openGame(page, path = '/', { enter = true } = {}) {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(path);
   await page.waitForFunction(() => !!window.__sim);
+  await page.waitForFunction(() => document.body.dataset.screen === 'menu');
+  await page.waitForFunction(() => document.getElementById('loading-screen').hidden);   // the fade-out has finished
+  if (enter) await enterFromMenu(page);
   return errors;
+}
+
+export async function enterFromMenu(page) {
+  await page.locator('#menu-start').click();
+  await page.waitForFunction(() => document.body.dataset.screen === 'game');
+  await twoFrames(page);
 }
 
 /** Serializable snapshot of the committed furniture, floor items first, then surface items (the save order). */

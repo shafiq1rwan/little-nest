@@ -4,16 +4,38 @@
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>Little Nest</title><link rel="icon" type="image/png" sizes="32x32" href="/icons/little-nest-32.png"/><link rel="apple-touch-icon" sizes="180x180" href="/icons/little-nest-180.png"/><link rel="manifest" href="/manifest.webmanifest"/><meta name="theme-color" content="#fff8ed"/><meta name="description" content="Little Nest — a cozy room decorating game. Arrange furniture, collect plants, and make a little space your own."/><link rel="stylesheet" href="/src/styles/index.css"/>
 </head>
-<body>
-<div id="app">
+<body data-screen="loading">
+<section id="loading-screen" class="loading-screen" aria-labelledby="loading-title">
+<div class="loading-content"><h1 id="loading-title">Little Nest</h1>
+<img class="loading-art" src="/art/loading-nook.webp" alt="" width="720" height="720" fetchpriority="high"/>
+<p id="loading-status" role="status" aria-live="polite">Getting your room ready…</p>
+<progress id="loading-progress" max="100" value="5" aria-label="Preparing your room"></progress>
+<p id="loading-tip" class="loading-tip">Tip: Drag furniture to move it.</p>
+<button id="loading-retry" hidden>Try again</button>
+<noscript><p>Turn on JavaScript to play Little Nest.</p></noscript></div>
+</section>
+<section id="main-menu" class="main-menu-layout" aria-labelledby="menu-title" hidden>
+<div class="main-menu-content"><h1 id="menu-title" class="menu-title">Little Nest</h1>
+<nav class="menu-buttons" aria-label="Main menu">
+<button id="menu-start" class="primary"><span id="menu-start-label">Start decorating</span><span data-icon="arrow-right"></span></button>
+<button id="menu-rooms"><span data-icon="folder"></span>My rooms</button>
+<button id="menu-settings"><span data-icon="settings"></span>Settings</button>
+</nav></div><p id="menu-notice" role="status" aria-live="polite"></p>
+</section>
+<dialog id="settings" aria-labelledby="settings-title">
+<div class="settings-heading"><h2 id="settings-title">Settings</h2><button id="settings-close" class="icon-button" aria-label="Close settings"><span data-icon="close"></span></button></div>
+<div class="settings-row"><div><h3>Background music</h3><p>A little lo-fi while you decorate.</p></div><button id="settings-music" aria-label="Background music" aria-pressed="true">On</button></div>
+<p class="settings-note">Your music preference is saved in this browser.</p>
+<button id="settings-done" class="primary">Done</button>
+</dialog>
+<div id="app" inert aria-hidden="true">
 <header class="topbar">
-<div class="brand"><h1>Little Nest</h1></div>
-<span class="room-name" id="room-name">Unsaved room</span>
-<div class="save-actions"><button id="load" aria-label="Your rooms" title="Your rooms"><span data-icon="folder"></span><span class="action-label">Rooms</span></button><button id="save" class="primary" aria-label="Save room" title="Save room"><span data-icon="save"></span><span class="save-label">Save<span class="desktop-label"> room</span></span></button><button id="music-toggle" class="icon-button" aria-label="Turn music off" aria-pressed="true" title="Music"><span data-icon="music"></span></button><button id="help-toggle" class="icon-button" aria-label="Show controls" title="Show controls"><span data-icon="help"></span></button></div>
+<div class="brand"><h1>Little Nest</h1><span class="room-name" id="room-name">Unsaved room</span></div>
+<div class="save-actions"><button id="main-menu-toggle" class="icon-button" aria-label="Main menu" title="Main menu"><span data-icon="home"></span></button><button id="load" aria-label="Your rooms" title="Your rooms"><span data-icon="folder"></span><span class="action-label">Rooms</span></button><button id="save" class="primary" aria-label="Save room" title="Save room"><span data-icon="save"></span><span class="save-label">Save<span class="desktop-label"> room</span></span></button><button id="music-toggle" class="icon-button" aria-label="Turn music off" aria-pressed="true" title="Music"><span data-icon="music"></span></button><button id="help-toggle" class="icon-button" aria-label="Show controls" title="Show controls"><span data-icon="help"></span></button></div>
 </header>
 <main class="workspace">
 <div id="viewport">
-<canvas id="scene" aria-label="Interactive decorating room"></canvas>
+<canvas id="scene" tabindex="0" aria-label="Interactive decorating room"></canvas>
 <div class="mode-pill"><span data-icon="pencil"></span><span id="mode-label">Decorate mode</span></div>
 <nav class="tool-rail" aria-label="Room tools">
 <button id="move-tool" class="icon-button active" aria-label="Select and move" title="Select and move"><span data-icon="move"></span></button>
@@ -62,6 +84,6 @@
 </aside>
 </main>
 </div>
-<script type="module" src="/src/main.js"></script>
+<script type="module" src="/src/boot.js"></script>
 </body>
 </html>

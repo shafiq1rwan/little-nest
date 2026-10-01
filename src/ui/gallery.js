@@ -115,7 +115,8 @@ export function createGalleryDialog({ dialog, list, saveForm, nameInput, emptyEl
     emptyEl.hidden = items.length > 0;
   }
 
-  function open({ focusName = false } = {}) {
+  function open({ focusName = false, allowSave = true } = {}) {
+    saveForm.hidden = !allowSave;
     pendingDelete = null;
     renaming = null;
     render();

@@ -7,7 +7,9 @@ test('Little Nest title, icons, manifest, and music asset are served', async ({ 
   const errors = await openGame(page);
   expect(await page.title()).toBe('Little Nest');
   expect(await page.getByRole('heading', { name: 'Little Nest', exact: true }).count()).toBe(1);
-  expect(await page.locator('.brand-icon').evaluate((i) => i.complete && i.naturalWidth === 192)).toBe(true);
+  await expect(page.locator('.brand img')).toHaveCount(0);
+  await page.evaluate(() => document.fonts.ready);
+  expect(await page.evaluate(() => document.fonts.check('600 29px Fredoka'))).toBe(true);
 
   for (const size of [32, 180, 192, 512]) {
     const response = await page.request.get('/icons/little-nest-' + size + '.png');
@@ -25,10 +27,10 @@ test('Little Nest title, icons, manifest, and music asset are served', async ({ 
     await page.waitForFunction(() => document.getElementById('selection-card').parentElement.id === 'panel-content');
     if (await page.locator('#deselect').isVisible()) await page.locator('#deselect').click();
     expect(await noHorizontalOverflow(page)).toBe(true);
-    const icon = await page.locator('.brand-icon').boundingBox();
     const name = await page.locator('h1').boundingBox();
     const load = await page.locator('#load').boundingBox();
-    expect(icon.x >= 0 && name.x + name.width <= load.x, 'brand fits before the actions at ' + width).toBe(true);
+    expect(name.x + name.width <= load.x, 'brand fits before the actions at ' + width).toBe(true);
+    expect(await page.locator('h1').evaluate(el => el.scrollWidth <= el.clientWidth), 'name is not truncated').toBe(true);
   }
   expect(errors).toEqual([]);
 });

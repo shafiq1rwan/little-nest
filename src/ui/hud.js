@@ -28,13 +28,18 @@ export function buildCatalog({ container, catalog, thumbnails, onChoose }) {
     size.textContent = def.layer === 'surface' ? 'Tabletop' : def.layer === 'wall' ? 'Wall' : def.w + ' × ' + def.d + ' tiles';
     b.append(img, name, size);
     b.setAttribute('aria-label', 'Place ' + def.label);
+    b.setAttribute('aria-pressed', 'false');
     b.onclick = () => onChoose(key);
     container.append(b);
   }
 }
 
 export function setCatalogActive(container, type) {
-  container.querySelectorAll('.catalog-card').forEach((b) => b.classList.toggle('active', b.dataset.type === type));
+  container.querySelectorAll('.catalog-card').forEach((b) => {
+    const active = b.dataset.type === type;
+    b.classList.toggle('active', active);
+    b.setAttribute('aria-pressed', String(active));
+  });
 }
 
 /** Search box and category chips filter the catalog cards in place. */

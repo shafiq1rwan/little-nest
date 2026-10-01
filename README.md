@@ -38,7 +38,7 @@ Keep package-lock.json when moving computers. The runtime itself is browser-base
 - Use Walls and Floor tabs to choose finishes.
 - Toggle grid/walls with the left toolbar; use the camera buttons to zoom or reset. The camera button opens photo mode: the controls hide, you frame the view, and Save photo downloads a PNG.
 - Right-drag to orbit and scroll to zoom.
-- On phones, Browse/Hide controls the drawer. Choosing furniture hides it for placement; selecting an item opens controls in the drawer. Landscape phones use a side drawer.
+- The HUD uses floating game controls and a tactile Decorating box. On phones, Browse/Hide controls the bottom drawer. Choosing furniture hides it for placement; selecting an item opens controls in the drawer. Landscape phones use a side drawer.
 - One finger moves furniture; two fingers orbit/pinch.
 - Save room keeps the open room in this browser (the first save is named "Living room"). Rooms opens your saved designs to load, rename, duplicate, export, or delete them, to import a room file, and to save the current room under a new name. Clear removes furniture.
 - Lo-fi background music starts after the first click or tap. The music button in the top bar turns it off or on, and the choice is remembered in this browser.
@@ -50,7 +50,7 @@ The style uses warm paneled walls, corner windows and blinds, parquet, cream sea
 
 The current screenshots and original HUD concept are in [docs/design-reference](docs/design-reference). Follow the [style guide](docs/STYLE_GUIDE.md) when extending the game.
 
-Icon artwork: [little-nest-icon.png](public/icons/little-nest-icon.png). Its exported sizes are used in the header, browser tab, and web app manifest.
+The header uses a text-only Little Nest wordmark in bundled Fredoka Semibold. [Icon artwork](public/icons/little-nest-icon.png) supplies the browser tab and web app manifest icons.
 
 ## Current source
 

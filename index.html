@@ -7,7 +7,7 @@
 <body>
 <div id="app">
 <header class="topbar">
-<div class="brand"><img class="brand-icon" src="/icons/little-nest-192.png" alt="" width="36" height="36"/><h1 aria-label="Little Nest"><span class="brand-long">Little Nest</span><span class="brand-short">Little Nest</span></h1></div>
+<div class="brand"><h1>Little Nest</h1></div>
 <span class="room-name" id="room-name">Unsaved room</span>
 <div class="save-actions"><button id="load" aria-label="Your rooms" title="Your rooms"><span data-icon="folder"></span><span class="action-label">Rooms</span></button><button id="save" class="primary" aria-label="Save room" title="Save room"><span data-icon="save"></span><span class="save-label">Save<span class="desktop-label"> room</span></span></button><button id="music-toggle" class="icon-button" aria-label="Turn music off" aria-pressed="true" title="Music"><span data-icon="music"></span></button><button id="help-toggle" class="icon-button" aria-label="Show controls" title="Show controls"><span data-icon="help"></span></button></div>
 </header>
@@ -42,10 +42,9 @@
 <p class="gallery-note">Rooms are kept in this browser. Export a room to a file to keep a copy or open it on another device.</p>
 </dialog>
 <aside id="panel">
-<div class="drawer-heading"><div><span class="drawer-eyebrow">MAKE IT YOURS</span><h2>Decorate</h2></div><button id="panel-toggle" aria-expanded="true" aria-label="Hide decorating panel" aria-controls="panel-content"><span class="toggle-label">Hide</span><span data-icon="chevron"></span></button></div>
+<div class="drawer-heading"><div><span class="drawer-eyebrow">MAKE YOURSELF AT HOME</span><h2>Decorating box</h2></div><button id="panel-toggle" aria-expanded="true" aria-label="Hide decorating panel" aria-controls="panel-content"><span class="toggle-label">Hide</span><span data-icon="chevron"></span></button></div>
 <div id="panel-content">
-<h2 class="panel-title">Decorate</h2>
-<div class="tabs" role="tablist" aria-label="Decoration type"><button id="tab-furniture" role="tab" aria-selected="true" aria-controls="furniture-pane" class="active" data-tab="furniture">Furniture</button><button id="tab-walls" role="tab" aria-selected="false" aria-controls="walls-pane" data-tab="walls">Walls</button><button id="tab-floor" role="tab" aria-selected="false" aria-controls="floor-pane" data-tab="floor">Floor</button></div>
+<div class="tabs" role="tablist" aria-label="Decoration type"><button id="tab-furniture" role="tab" aria-selected="true" aria-controls="furniture-pane" class="active" data-tab="furniture"><span data-icon="sofa"></span>Furniture</button><button id="tab-walls" role="tab" aria-selected="false" aria-controls="walls-pane" data-tab="walls"><span data-icon="wall"></span>Walls</button><button id="tab-floor" role="tab" aria-selected="false" aria-controls="floor-pane" data-tab="floor"><span data-icon="grid"></span>Floor</button></div>
 <section id="furniture-pane" class="pane" role="tabpanel" aria-labelledby="tab-furniture">
 <label class="search-field"><span data-icon="search"></span><input id="search" type="search" placeholder="Search furniture" aria-label="Search furniture"/></label>
 <div id="categories" class="categories" aria-label="Furniture category"><button class="active" data-category="all" aria-pressed="true">All</button><button data-category="seating" aria-pressed="false">Seating</button><button data-category="tables" aria-pressed="false">Tables</button><button data-category="decor" aria-pressed="false">Decor</button><button data-category="small" aria-pressed="false">Small</button><button data-category="wall" aria-pressed="false">Wall</button></div>
@@ -61,4 +60,3 @@
 <script type="module" src="/src/main.js"></script>
 </body>
 </html>
-

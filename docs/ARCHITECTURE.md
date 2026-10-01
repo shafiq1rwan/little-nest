@@ -38,8 +38,8 @@ It is not yet a fully separated foundation for a larger game. src/main.js is app
 | src/scene/geometry.js | Shared material cache, owned-material rule, recolor, tint, dispose, measure |
 | src/scene/thumbnails.js | Offscreen catalog previews, disposed through geometry.js |
 | src/ui/icons.js | Inline SVG icon registry |
-| src/styles/ | index.css imports tokens.css (fonts and colors), components.css, layout.css (desktop), responsive.css (compact and landscape) |
-| public/fonts | Bundled OFL fonts (Gelasio, Source Sans 3) with licences; system Segoe UI and Georgia stay first in the stacks |
+| src/styles/ | index.css imports tokens.css (fonts, colors, tactile HUD tokens), components.css, layout.css (desktop floating controls and Decorating box), responsive.css (compact and landscape drawers) |
+| public/fonts | Bundled OFL fonts with licences: Fredoka for the wordmark, Gelasio and Source Sans 3 as heading/body fallbacks |
 | public/icons | Original Little Nest artwork and exported icon sizes |
 | public/manifest.webmanifest | Game name, display mode, theme, and application icons |
 | package-lock.json | Exact installed dependency graph |

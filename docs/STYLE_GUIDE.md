@@ -1,6 +1,6 @@
 # Little Nest style guide
 
-Status: current visual baseline, 30 September 2026. Keep this file and its reference images with the project when changing computers.
+Status: current visual baseline, 1 October 2026. Keep this file and its reference images with the project when changing computers.
 
 ## Identity
 
@@ -8,7 +8,7 @@ Little Nest is a calm room-decorating sandbox: warm, personal, tactile, and easy
 
 Use Little Nest consistently in the page title, desktop/phone headers, manifest, and player-facing text. The current storage key retains the old name solely for save compatibility.
 
-Icon source: [little-nest-icon.png](../public/icons/little-nest-icon.png). It depicts a terracotta-roofed dollhouse with a cream sofa and greenery. Use the existing artwork; do not regenerate a different icon during routine edits.
+The HUD brand is a text-only Little Nest wordmark in bundled Fredoka Semibold. It has no image logo. The existing [little-nest-icon.png](../public/icons/little-nest-icon.png) supplies browser-tab and installed-app icons.
 
 ## Reference order
 
@@ -43,37 +43,37 @@ These are baseline images, not a requirement for identical pixels across browser
 | Scene peach backdrop | #df9d80 |
 | Scene selection outline | #91ad79 |
 
-Use the tokens in src/styles/tokens.css: --cream, --sage, --sage-deep, --line, --ink, --muted, --card, --card-hover, --card-active, --drawer-button, --hover, --backdrop, --shadow. Muted text is --muted (#8c725f) everywhere; the former #8b715e was folded into it.
+Use the tokens in src/styles/tokens.css. Tactile HUD tokens include --panel-edge (#d5b997), --button-bottom (#c5aa87), --sage-bottom (#4d653f), --panel-shadow, --paper-glow (#fffdf5), and --plinth (#e6d7be). Muted text is --muted (#8c725f) everywhere.
 
 Selectable finishes can vary within the established warm/soft palette. Baseline wall color is #92725c, floor multiplier #e3a372, upholstery cream #f3e4d2, and upholstery sage #81936a. Scene material colors are affected by textures, lights, and tone mapping, so their rendered pixels differ from these source values.
 
 ## Typography, spacing, and controls
 
-- Brand and prominent headings: Georgia, then bundled Gelasio, serif. Body and controls: Segoe UI, then bundled Source Sans 3, system-ui, sans-serif. Use the tokens --font-heading and --font-body.
-- Desktop brand size: 27px; the narrower desktop override is 21px. Compact brand is 19px and becomes 16px at <= 370px width.
+- Brand: bundled Fredoka Semibold via --font-brand. Other prominent headings: Georgia, then bundled Gelasio, serif. Body and controls: Segoe UI, then bundled Source Sans 3, system-ui, sans-serif. Use the tokens --font-heading and --font-body.
+- Desktop brand size: 29px; the narrower desktop override is 25px. Compact brand is 23px and becomes 20px at <= 370px width. The header has no image logo at any size; Save uses an icon at <= 440px.
 - Small-screen search text is 16px to avoid input zoom in common mobile browsers.
 - Keep control labels readable, normally 12–13px on compact screens. Footprint metadata is secondary.
 - Use thin warm-brown line icons with consistent strokes. Do not mix emoji, filled clip-art, and line icons as controls.
-- Common corners: roughly 10–15px; compact drawer corners: 22px. Use quiet shadows and warm dividers.
+- Buttons use 12–13px corners and a shallow bottom edge; furniture tiles use 18px corners, and floating panels use 20–26px corners. Use warm outlines, soft shadows, and inset highlights to feel like tactile game pieces. Furniture thumbnails sit on subtle oval plinths.
 - Use consistent spacing from existing 4/8/12/16/24px families.
-- New primary touch actions should have a target at least 44 × 44px. Current category chips are 40px high and Clear is 40px; enlarge them if a future layout permits.
+- Primary touch actions, camera controls, selection controls, compact category chips, and Clear have targets at least 44 × 44px.
 - Keep focus indicators, accessible button names, active/pressed states, and reduced-motion support.
 
-Windows renders with Segoe UI and Georgia exactly as before. Other operating systems use the bundled OFL fonts in public/fonts, chosen for matching metrics (Gelasio is metric-compatible with Georgia).
+The wordmark uses bundled Fredoka on every platform. Body text and other headings use Segoe UI and Georgia when available, with bundled Source Sans 3 and Gelasio as fallbacks. All three fonts include OFL licences in public/fonts.
 
 ## HUD layout and behavior
 
 ### Desktop
 
-A cream top bar contains brand, room label, Load, Save room, and help. The room viewport takes the remaining width beside a right decoration panel. The panel has Furniture/Walls/Floor tabs, search, categories, two-column thumbnail cards, and a small footer.
+Floating cream capsules contain the brand, room name, and Rooms/Save/music/help actions. There is no full-width header background; the canvas extends behind the top controls. A rounded Decorating box floats at the right with space above, below, and to its right. Its width is reserved beside the canvas so it does not cover playable tiles. It has icon-led Furniture/Walls/Floor tabs, search, categories, two-column thumbnail tiles, and a small footer.
 
-Editing tools sit at the left of the viewport; camera buttons sit at the bottom right. The selected-item card is at the bottom left. Keep controls aligned at the viewport edges and avoid expanding them over the center of the room.
+Editing tools sit in a tactile tray at the left of the viewport; camera buttons sit at the bottom right. The selected-item card is at the bottom left. Active furniture tiles have a sage border and a plus badge; their aria-pressed state matches the choice or selection. Keep controls aligned at the viewport edges and avoid expanding them over the center of the room.
 
 ### Compact screens
 
 Activate the compact system when width <= 900px OR height <= 600px. JavaScript and CSS use the same condition.
 
-Portrait uses a rounded bottom drawer. Browse/Hide changes its size. Furniture cards form a horizontally swipeable row. Important top-bar actions remain available; Load and very narrow Save may show icons with accessible names.
+Portrait uses a rounded bottom drawer with the same Decorating box styling. Browse/Hide changes its size. Furniture cards form a horizontally swipeable row. Important header actions remain available; Rooms and narrow-screen Save show icons with accessible names. The compact header reserves its own height to keep controls outside the room.
 
 Choosing catalog furniture collapses the drawer for placement. Selecting an item opens its heading, actions, and optional color swatches in the drawer and hides catalog content until deselected. Move can hide the drawer again.
 
@@ -83,7 +83,7 @@ On short portrait screens, the drawer starts collapsed. On compact screens, no i
 
 Use a 290px side drawer when landscape height <= 600px, or landscape width is 700–900px. Collapsed width is 64px. The side catalog uses two columns and vertical scrolling.
 
-Keep the main camera actions available even with the drawer open. Use dynamic viewport height and safe-area insets; do not use a fixed device height.
+Keep the main camera actions available even with the drawer open. At landscape widths <= 700px and heights <= 600px, the tool tray uses three columns and two rows so it stays inside the room and above the camera controls. Use dynamic viewport height and safe-area insets; do not use a fixed device height.
 
 ### Interaction
 

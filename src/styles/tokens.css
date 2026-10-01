@@ -17,6 +17,7 @@
 }
 
 :root {
+  --font-brand: 'Fredoka', 'Source Sans 3', system-ui, sans-serif;
   --font-body: 'Segoe UI', 'Source Sans 3', system-ui, sans-serif;
   --font-heading: Georgia, 'Gelasio', serif;
 
@@ -33,8 +34,23 @@
   --hover: #efdfcc;          /* generic button hover */
   --backdrop: #df9b7d;       /* page background behind the scene */
   --shadow: #56342522;
+  --panel-edge: #d5b997;
+  --button-bottom: #c5aa87;
+  --sage-bottom: #4d653f;
+  --panel-shadow: 0 5px 0 #b1815e33, 0 12px 28px #5634251c;
+  --paper-glow: #fffdf5;
+  --button-glow: #ffffff33;
+  --plinth: #e6d7be;
 
   font-family: var(--font-body);
   color: var(--ink);
   background: var(--backdrop);
+}
+
+@font-face {
+  font-family: 'Fredoka';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/fredoka-semibold-latin.woff2') format('woff2');
 }

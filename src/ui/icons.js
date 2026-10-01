@@ -1,6 +1,8 @@
 // Inline SVG line icons. Elements with data-icon="name" receive the matching path.
 
 const paths = {
+  sofa: 'M5 12V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v5M5 11H3v8h18v-8h-2v5H5v-5ZM5 19v2M19 19v2',
+  wall: 'M3 3h18v18H3ZM3 9h18M3 15h18M9 3v6M15 9v6M9 15v6',
   home: 'M3 10 12 3l9 7M5 9v12h5v-7h4v7h5V9',
   folder: 'M3 7V5h7l2 3h9l-3 12H3V7Z',
   save: 'M5 3h12l4 4v14H3V3h2Zm2 0v6h10V3M7 21v-8h10v8',

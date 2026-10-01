@@ -22,6 +22,14 @@ for (const [width, height] of VIEWPORTS) {
     test('controls stay reachable and ' + (compact ? 'the drawer docks selection outside the room' : 'the desktop card floats in the viewport'), async ({ page }) => {
       const errors = await openGame(page);
       expect(await noHorizontalOverflow(page)).toBe(true);
+      const rail = await page.locator('.tool-rail').boundingBox();
+      const camera = await page.locator('.camera-tools').boundingBox();
+      const room = await page.locator('#viewport').boundingBox();
+      expect(rail.x + rail.width <= room.x + room.width, 'tool tray stays inside room').toBe(true);
+      expect(rail.x + rail.width <= camera.x || rail.y + rail.height <= camera.y, 'tool and camera trays do not overlap').toBe(true);
+      if (compact) {
+        expect(await page.locator('h1').evaluate(el => el.scrollWidth <= el.clientWidth), 'full game name fits').toBe(true);
+      }
 
       for (const id of IMPORTANT_CONTROLS) {
         const b = await page.locator('#' + id).boundingBox();
@@ -84,3 +92,21 @@ for (const [width, height] of VIEWPORTS) {
     });
   });
 }
+
+test('floating decorating box supports keyboard choice and exposes the active furniture', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const errors = await openGame(page);
+  const panel = await page.locator('#panel').boundingBox();
+  const header = await page.locator('.topbar').boundingBox();
+  expect(panel.y).toBeGreaterThan(header.y + header.height);
+  expect(panel.x + panel.width).toBeLessThan(1440);
+  const card = page.getByRole('button', { name: 'Place Sofa', exact: true });
+  await card.focus();
+  await page.keyboard.press('Enter');
+  await expect(card).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.catalog-card[aria-pressed="true"]')).toHaveCount(1);
+  await expect(page.locator('#mode-label')).toContainText('sofa');
+  await page.keyboard.press('Escape');
+  await expect(card).toHaveAttribute('aria-pressed', 'false');
+  expect(errors).toEqual([]);
+});

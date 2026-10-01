@@ -105,6 +105,18 @@ const SMALL_CATALOG = {
     g.add(box(.02, .2, .1, C.wood, 0, 0, -.06, .003).rotateX(.35));
     return g;
   }},
+  lantern: { label: 'Lantern', category: 'small', layer: 'surface', tags: ['light', 'candle', 'cozy'], w: 1, d: 1, defaultColor: C.black, build() {
+    const g = new THREE.Group();
+    const base = cyl(.085, .09, .02, C.black); base.userData.recolor = true; g.add(base);
+    const cage = mesh(new THREE.CylinderGeometry(.07, .07, .18, 6, 1, true), C.black, 0, .11, 0);
+    cage.material = material(C.black).clone(); cage.material.transparent = true; cage.material.opacity = .35; cage.material.side = THREE.DoubleSide; cage.userData.ownedMaterial = cage.material; g.add(cage);
+    for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; const bar = cyl(.006, .006, .18, C.black, Math.cos(a) * .07, .02, Math.sin(a) * .07); bar.userData.recolor = true; g.add(bar); }
+    const roof = mesh(new THREE.ConeGeometry(.1, .06, 6), C.black, 0, .23, 0); roof.userData.recolor = true; g.add(roof);
+    g.add(mesh(new THREE.TorusGeometry(.03, .006, 6, 12), C.brass, 0, .275, 0));
+    const glow = mesh(new THREE.SphereGeometry(.035, 8, 6), 0xffd58a, 0, .1, 0);
+    glow.material = material(0xffd58a).clone(); glow.material.emissive.setHex(0xffb347); glow.material.emissiveIntensity = 1.5; glow.userData.ownedMaterial = glow.material; g.add(glow);
+    return g;
+  }},
   vase: { label: 'Vase', category: 'small', layer: 'surface', tags: ['flowers', 'decor'], w: 1, d: 1, defaultColor: C.sage, build() {
     const g = new THREE.Group();
     const body = mesh(new THREE.LatheGeometry([new THREE.Vector2(.04, 0), new THREE.Vector2(.075, .06), new THREE.Vector2(.05, .16), new THREE.Vector2(.045, .2)], 16), C.sage, 0, 0, 0);
@@ -141,6 +153,24 @@ const WALL_CATALOG = {
     const ring = mesh(new THREE.TorusGeometry(.4, .035, 8, 32), C.brass, 0, .5, .05); ring.userData.recolor = true; g.add(ring);
     const glass = mesh(new THREE.CylinderGeometry(.38, .38, .02, 32), 0xd8e6e4, 0, .5, .04); glass.rotation.x = Math.PI / 2;
     glass.material = material(0xd8e6e4).clone(); glass.material.roughness = .15; glass.material.metalness = .3; glass.userData.ownedMaterial = glass.material; g.add(glass);
+    return g;
+  }},
+  macrame: { label: 'Hanging plant', category: 'wall', layer: 'wall', tags: ['plant', 'macrame', 'boho'], w: 1, d: 1, wall: { w: 1, h: 3 }, defaultColor: C.pot, build() {
+    // Origin at the bottom of the footprint; the hook sits near the top row and the pot hangs below it.
+    const g = new THREE.Group();
+    g.add(box(.08, .05, .06, C.dark, 0, 1.42, .03, .01));
+    const cord = 0xe6ccad;
+    for (const a of [0, 2.1, 4.2]) g.add(cyl(.006, .006, .72, cord, Math.cos(a) * .07, .7, .12 + Math.sin(a) * .07));
+    g.add(mesh(new THREE.TorusGeometry(.12, .008, 6, 16), cord, 0, .72, .12).rotateX(Math.PI / 2));
+    const pot = cyl(.13, .1, .22, C.pot, 0, .52, .12); pot.userData.recolor = true; g.add(pot);
+    g.add(cyl(.12, .12, .01, 0x5b4030, 0, .735, .12));
+    for (let i = 0; i < 7; i++) {
+      const a = i * 0.9, r = .1 + (i % 2) * .04;
+      const vine = mesh(new THREE.SphereGeometry(1, 8, 6), i % 2 ? 0x6d8f50 : 0x4d7639, Math.cos(a) * r, .62 - (i % 3) * .14, .12 + Math.sin(a) * r);
+      vine.scale.set(.05, .16, .05); vine.rotation.z = Math.cos(a) * .4; vine.rotation.x = -Math.sin(a) * .4; g.add(vine);
+      const leaf = mesh(new THREE.SphereGeometry(1, 8, 6), 0x7fa05c, Math.cos(a) * (r + .06), .78, .12 + Math.sin(a) * (r + .06));
+      leaf.scale.set(.07, .025, .11); leaf.rotation.y = -a; g.add(leaf);
+    }
     return g;
   }},
   clock: { label: 'Wall clock', category: 'wall', layer: 'wall', tags: ['time'], w: 1, d: 1, wall: { w: 1, h: 1 }, defaultColor: C.dark, build() {
@@ -215,6 +245,33 @@ export const CATALOG = {
   }},
   boxes: { label: 'Moving box', category: 'decor', w: 1, d: 1, build() {
     const g = new THREE.Group(); g.add(box(.7, .6, .7, 0xc89b68), box(.71, .012, .12, 0xe6c397, 0, .6, 0)); return g;
+  }},
+  bench: { label: 'Bench', category: 'seating', tags: ['seat', 'wood'], w: 2, d: 1, defaultColor: C.sage, build() {
+    const g = new THREE.Group(); legs(g, 1.6, .5, .4, C.dark);
+    g.add(box(1.85, .07, .6, C.wood, 0, .4, 0, .02));
+    g.add(cushion(1.7, .12, .5, C.sage, 0, .47, 0));
+    g.add(box(.06, .06, .5, C.dark, -.86, .2, 0, .01), box(.06, .06, .5, C.dark, .86, .2, 0, .01));
+    return g;
+  }},
+  sideTable: { label: 'Side table', category: 'tables', tags: ['round', 'small table'], w: 1, d: 1, surface: { y: .55, slots: [{ x: 0, z: 0 }] }, build() {
+    const g = new THREE.Group();
+    g.add(cyl(.34, .34, .06, C.wood, 0, .49, 0), cyl(.04, .05, .49, C.dark, 0, 0, 0), cyl(.2, .22, .03, C.dark, 0, 0, 0));
+    return g;
+  }},
+  pouf: { label: 'Pouf', category: 'seating', tags: ['cushion', 'floor', 'soft'], w: 1, d: 1, defaultColor: C.cream, build() {
+    const g = new THREE.Group();
+    const body = mesh(new THREE.CylinderGeometry(.36, .4, .36, 16), C.cream, 0, .18, 0); body.userData.recolor = true; g.add(body);
+    const top = mesh(new THREE.SphereGeometry(.36, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), C.cream, 0, .34, 0); top.scale.y = .25; top.userData.recolor = true; g.add(top);
+    g.add(mesh(new THREE.TorusGeometry(.36, .018, 6, 24), 0xd9b48f, 0, .36, 0).rotateX(Math.PI / 2));
+    return g;
+  }},
+  basket: { label: 'Woven basket', category: 'decor', tags: ['storage', 'blanket', 'rattan'], w: 1, d: 1, defaultColor: C.sage, build() {
+    const g = new THREE.Group();
+    g.add(cyl(.3, .25, .42, 0xc8a06c, 0, 0, 0));
+    for (let i = 1; i < 6; i++) g.add(mesh(new THREE.TorusGeometry(.26 + i * .008, .012, 5, 20), 0xb98b58, 0, i * .07, 0).rotateX(Math.PI / 2));
+    const blanket = mesh(new THREE.SphereGeometry(.26, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), C.sage, 0, .4, 0); blanket.scale.y = .45; blanket.userData.recolor = true; g.add(blanket);
+    const fold = mesh(new THREE.TorusGeometry(.17, .05, 6, 16), C.sage, .05, .47, -.04); fold.rotation.x = Math.PI / 2; fold.scale.z = .6; fold.userData.recolor = true; g.add(fold);
+    return g;
   }},
   ...PLANT_CATALOG,
   ...SMALL_CATALOG,

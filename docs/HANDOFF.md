@@ -104,6 +104,7 @@ Current browser checks previously passed placement, saving, plants, HUD/touch in
 
 ## Current handoff
 
+- 1 October 2026, Phase 3 increment 4 (Phase 3 complete): eight new models (bench, pouf, woven basket, side table with one slot, lantern, macramé hanging plant, monstera, Boston fern). tests/browser/catalog.spec.js builds every catalog entry and checks thumbnail presence and footprint fit, with slack for foliage, rug tassels, and wall items that stand off the wall. Suite: 63 passed (40 unit, 23 browser). Next: Phase 4 (room presets, configurable room dimensions, furniture collections).
 - 1 October 2026, Phase 3 increment 3: duplicate. state.findFreeNear finds the nearest free tile, slot, or wall cell for a copy; commands.duplicate adds the copy and its children as one entry; a Copy button joins the selection card and Ctrl+D triggers it; the copy becomes the selection. On compact screens the four selection actions now wrap into two rows of 44px buttons. Suite: 62 passed (40 unit, 22 browser). Next: more distinctive models (last Phase 3 item), then Phase 4.
 - 30 September 2026, Phase 3 increment 2: wall decorations. Wall items (`layer: 'wall'`, `wall: { w, h }`) sit on a grid of ROOM columns by 8 half-unit rows on the back and left walls; room.js exports the wall panels and fixture rectangles, and placement.blockedWallCells turns fixtures into blocked cells. Records carry wall/col/row; state.mount and commands.mount move them (undoable); rotation is refused. Wall targeting requires the wall to be the first thing under the pointer, so nothing can be hung behind furniture. Save format is version 5 (2, 3, and 4 migrate). The baked prints became catalog items; the bulb string moved up to rows 6–7. Category chips scroll horizontally on compact screens. Suite: 58 passed (37 unit, 21 browser). Next: duplicate, then more models.
 - 30 September 2026, Phase 3 increment 1: surface placement. Supporters declare `surface: { y, slots: [{ x, z, y? }] }` in local space; small items have `layer: 'surface'` and a Small category. State records carry parent/slot, occupancy tracks slots per supporter, removal cascades, and commands.place moves a small item between slots as one entry. Save format is version 4 (version 3 migrates). Small-item meshes are Three.js children of their supporter's group so they follow it for free. Desk slots were moved outward because the monitor occluded the original front slot from the default camera. Starter room now includes a mug and a photo frame (18 items). Suite: 53 passed (33 unit, 20 browser). Next: wall-mounted decorations, then duplicate.
@@ -119,12 +120,12 @@ Current browser checks previously passed placement, saving, plants, HUD/touch in
 - Product: Little Nest, playable decorating prototype.
 - Current structure: main.js composes config/, data/, game/ (placement, state, input), persistence/, scene/ (create-scene, geometry, thumbnails), ui/ (hud, responsive, music, icons), plus room, props, plants; one HTML HUD; src/styles split into four files.
 - Current room: 8 × 8 cells, 4-unit walls with an 8 × 8 half-unit wall grid each, orthographic camera, 20 starter items (two on surfaces, two on walls).
-- Catalog: 28 entries: 17 floor items including five plants, six small tabletop items, five wall decorations.
+- Catalog: 36 entries: 23 floor items including seven plants, seven small tabletop items, six wall decorations.
 - Storage: a named-room gallery (home-deco-sim:rooms) of version-3 rooms with item ids; the legacy single save is imported once and retained.
 - Visual identity: cream, sage, peach, warm wood, cozy procedural models.
 - Work completed in this documentation task: structure review, phased plan, persistent coding instructions, style guide, transfer guide, and five current visual baseline screenshots.
 - No architecture refactor or new gameplay phase was implemented in this task.
-- Next recommended work: finish Phase 3 with more distinctive plant and decor models, then Phase 4 (room presets).
+- Next recommended work: Phase 4 (room presets and furniture collections).
 
 ## Update after future work
 

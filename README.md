@@ -68,9 +68,9 @@ Icon artwork: [little-nest-icon.png](public/icons/little-nest-icon.png). Its exp
 | tests/unit | Node unit tests for placement, state, and schema |
 | tests/browser | Playwright browser checks (`npm test` runs unit and browser projects) |
 | src/props.js | Furniture models, catalog, footprints, recoloring |
-| src/plants.js | Snake plant, areca palm, flowering cactus, rubber tree |
-| src/props.js (SMALL_CATALOG) | Mug, candle, book stack, succulent, photo frame, vase |
-| src/props.js (WALL_CATALOG) | World map, botanical print, wall shelf, round mirror, wall clock |
+| src/plants.js | Snake plant, areca palm, flowering cactus, rubber tree, monstera, Boston fern |
+| src/props.js (SMALL_CATALOG) | Mug, candle, book stack, succulent, photo frame, vase, lantern |
+| src/props.js (WALL_CATALOG) | World map, botanical print, wall shelf, round mirror, wall clock, hanging plant |
 | src/room.js | Room shell, textures, windows, blinds, artwork, ground shadows |
 | src/styles/ | tokens, components, layout, responsive stylesheets |
 | index.html | HUD markup and accessibility labels |

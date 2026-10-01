@@ -25,7 +25,7 @@ test('small items sit in slots, follow their supporter, cascade on removal, and 
 
   // Place a vase on the free coffee-table slot; the floor refuses it.
   await page.locator('[data-category="small"]').click();
-  expect(await page.locator('.catalog-card:visible').count()).toBe(6);
+  expect(await page.locator('.catalog-card:visible').count()).toBe(7);
   await page.locator('.catalog-card[data-type="vase"]').click();
   await expect(page.locator('#mode-label')).toContainText('on a table or shelf');
   const floorPoint = await tilePoint(page, 'plant', 7, 2);   // an empty tile with no furniture in front of it

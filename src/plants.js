@@ -116,7 +116,43 @@ function rubberTree() {
   g.scale.set(.98,1,.98);
   return g;
 }
+function monstera() {
+  const g = new THREE.Group(), base = pot(g, .27, .4, 0xe9dfc8);
+  // Each leaf is three overlapping lobes so the silhouette reads as a split leaf without cut-outs.
+  for (let i = 0; i < 6; i++) {
+    const a = i * 1.05 + .3, reach = .3 + (i % 2) * .08, h = .95 + (i % 3) * .18;
+    const tip = new THREE.Vector3(Math.cos(a) * reach, h, Math.sin(a) * reach);
+    rod(g, [Math.cos(a) * .03, base - .02, Math.sin(a) * .03], tip.toArray(), .014, 0x4f7a3f);
+    const shade = i % 2 ? 0x3e6a3e : 0x4f8a4a;
+    for (const [side, len] of [[0, .3], [-1, .22], [1, .22]]) {
+      const lobe = part(g, new THREE.SphereGeometry(1, 10, 7), shade, [tip.x + Math.cos(a + side * 1.1) * .06, tip.y + .01 - Math.abs(side) * .02, tip.z + Math.sin(a + side * 1.1) * .06]);
+      lobe.scale.set(.09 - Math.abs(side) * .02, .02, len); lobe.rotation.y = -a + side * .5 - Math.PI / 2; lobe.rotation.x = .25;
+    }
+  }
+  return g;
+}
+function fern() {
+  const g = new THREE.Group(), base = pot(g, .24, .3, 0xc57955, 'ribbed');
+  for (let i = 0; i < 14; i++) {
+    const a = i * 0.449, droop = .45 + (i % 3) * .1, h = .55 + (i % 4) * .12;
+    const root = [Math.cos(a) * .03, base - .02, Math.sin(a) * .03];
+    const mid = new THREE.Vector3(Math.cos(a) * droop * .6, h, Math.sin(a) * droop * .6);
+    const tip = new THREE.Vector3(Math.cos(a) * droop, h - .25, Math.sin(a) * droop);
+    const curve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(...root), mid, tip);
+    part(g, new THREE.TubeGeometry(curve, 6, .008, 4, false), 0x5c8a45);
+    for (let j = 2; j < 8; j++) {
+      const t = j / 8, p = curve.getPoint(t), spread = .09 * Math.sin(Math.PI * t) + .03;
+      for (const side of [-1, 1]) {
+        const end = [p.x + Math.cos(a + side * Math.PI / 2) * spread, p.y - .02, p.z + Math.sin(a + side * Math.PI / 2) * spread];
+        leaf(g, p.toArray(), end, spread + .01, .035, j % 2 ? 0x7fb35a : 0x5c8a45, .02);
+      }
+    }
+  }
+  return g;
+}
 export const PLANT_CATALOG = {
+  monstera: { label: 'Monstera', category: 'decor', tags: ['plant', 'leaf', 'tropical'], w: 1, d: 1, defaultColor: 0xe9dfc8, build: monstera },
+  fern: { label: 'Boston fern', category: 'decor', tags: ['plant', 'fern'], w: 1, d: 1, defaultColor: 0xc57955, build: fern },
   snakePlant:{label:'Snake plant',category:'decor',tags:['plant','succulent'],w:1,d:1,defaultColor:0xe9dfc8,build:snakePlant},
   palm:{label:'Areca palm',category:'decor',tags:['plant','palm'],w:1,d:1,defaultColor:0xbe9165,build:palm},
   cactus:{label:'Flowering cactus',category:'decor',tags:['plant','cactus','succulent'],w:1,d:1,defaultColor:0xc57955,build:cactus},

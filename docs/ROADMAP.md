@@ -9,8 +9,8 @@ Keep the Little Nest style guide and existing saves intact through every phase. 
 | 0 | Playable visual baseline | Implemented; documented | None |
 | 1 | Structure and portable development | Complete 30 September 2026 | Phase 0 |
 | 2 | Safe creative workflow | Complete 30 September 2026 | Phase 1 |
-| 3 | Richer decorating | In progress: surface placement, wall decorations, and duplicate done 1 October 2026; more models remain | Phase 2 |
-| 4 | More rooms and furniture collections | Planned | Phase 3 |
+| 3 | Richer decorating | Complete 1 October 2026 | Phase 2 |
+| 4 | More rooms and furniture collections | Planned — recommended next | Phase 3 |
 | 5 | Lighting and atmosphere | Planned | Phase 4 |
 | 6 | Optional challenges and sharing | Optional backlog | Stable earlier phases |
 
@@ -83,7 +83,7 @@ Deliver:
 - Done (30 September 2026): six small items (mug, candle, book stack, succulent, photo frame, vase) sit in named slots on the coffee table, desk, sideboard, bookshelf, and TV stand; they follow moves and rotations, are removed with their supporter, and are saved with parent/slot (format version 4).
 - Done (30 September 2026): a wall layer with five items (world map, botanical print, wall shelf, round mirror, wall clock) that snap to a column/half-row grid on the two walls, avoid the windows and lights, and cannot be hung behind furniture; the wall shelf carries small items. The two prints that used to be baked into the room are now these items in the starter layout.
 - Done (1 October 2026): Copy on the selection card and Ctrl+D duplicate an item, with anything sitting on it, into the nearest free spot of the same kind as one undoable step. Finer snapping was not added; the grid keeps placement predictable on touch.
-- More distinctive plant and decor models using the current palette.
+- Done (1 October 2026): monstera and Boston fern plants, a bench, pouf, woven basket, round side table (with a slot), tabletop lantern, and a macramé hanging plant for walls, all in the existing palette. A catalog-wide browser check now builds every model and verifies its thumbnail and footprint.
 - Done (30 September 2026): parent and slot fields in saved items; version 3 saves migrate.
 
 Completion criteria:
@@ -92,7 +92,7 @@ Completion criteria:
 - Placement validates the correct surface or wall, not only the floor grid. (Done for surfaces and walls.)
 - Undo, save/load, and export/import preserve surface and wall relationships.
 - Decorations remain pickable and controllable on small screens.
-- New models use valid footprints and compatible thumbnails.
+- New models use valid footprints and compatible thumbnails. (Enforced by tests/browser/catalog.spec.js.)
 
 ## Phase 4 — room presets and furniture collections
 

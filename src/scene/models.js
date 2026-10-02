@@ -13,6 +13,24 @@ import { sharedMaterial } from './geometry.js';
 import { MODELS_VERSION } from '../config/game.js';
 
 const templates = new Map();   // catalog key -> prepared THREE.Group template (never added to a scene)
+const art = new Map();         // print key -> loaded THREE.Texture (public/art/prints/<key>.webp)
+
+/** Loads the framed-art images. A missing file just leaves the painted placeholder in place. */
+export async function preloadArt(keys) {
+  const loader = new THREE.TextureLoader();
+  await Promise.all(keys.map(async (key) => {
+    try {
+      const texture = await loader.loadAsync('art/prints/' + key + '.webp?v=' + MODELS_VERSION);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      art.set(key, texture);
+    } catch (error) {
+      console.warn('Little Nest: print image for ' + key + ' did not load, using the painted placeholder.', error);
+    }
+  }));
+  return [...art.keys()];
+}
+/** The loaded print image for a key, or null. Shared: never dispose it. */
+export function artImage(key) { return art.get(key) || null; }
 
 /** Loads every catalog entry that names a `model` file. Failures are logged and skipped. */
 export async function preloadModels(catalog, { onProgress = () => {} } = {}) {

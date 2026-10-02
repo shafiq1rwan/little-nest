@@ -4,7 +4,7 @@ import { PLANT_CATALOG } from './plants.js';
 import { sharedMaterial, ownMaterial, recolorModel } from './scene/geometry.js';
 import { artTexture } from './room.js';
 import { DEFAULT_COLLECTION } from './data/collections.js';
-import { modelInstance } from './scene/models.js';
+import { modelInstance, artImage } from './scene/models.js';
 
 const C = { cream: 0xf3e4d2, wood: 0xb87946, dark: 0x694b35, sage: 0x81936a, green: 0x4d7639, pot: 0xeee0ca, black: 0x393932, brass: 0xbb9451 };
 const material = (color) => sharedMaterial(color, .85);
@@ -100,7 +100,7 @@ const SMALL_CATALOG = {
     }
     return g;
   }},
-  frame: { label: 'Photo frame', category: 'small', layer: 'surface', tags: ['picture', 'photo'], w: 1, d: 1, defaultColor: C.wood, model: 'models/frame.glb', build() { return modelInstance('frame') || this.procedural(); }, procedural() {
+  frame: { label: 'Photo frame', category: 'small', layer: 'surface', tags: ['picture', 'photo'], w: 1, d: 1, defaultColor: C.wood, model: 'models/frame.glb', build() { return withCanvas(modelInstance('frame'), 'frame', true) || this.procedural(); }, procedural() {
     const g = new THREE.Group();
     const f = box(.22, .26, .02, C.wood, 0, 0, 0, .004); f.rotation.x = -.15; f.userData.recolor = true; g.add(f);
     const pic = box(.17, .2, .006, 0xc3d6a8, 0, .03, .012, .002); pic.rotation.x = -.15; g.add(pic);
@@ -150,23 +150,25 @@ function withLight(group, { color, intensity, distance, y, emissive, glow = .3 }
   const light = new THREE.PointLight(color, intensity, distance, 2); light.position.set(0, y, 0); group.add(light);
   return group;
 }
-function withCanvas(group, botanical) {
+function withCanvas(group, key, botanical) {
   if (!group) return group;
   group.traverse((o) => {
-    if (o.isMesh && (o.name.endsWith('_canvas') || o.userData.role === 'canvas')) ownMaterial(o, new THREE.MeshStandardMaterial({ map: artTexture(botanical), roughness: 1 }));
+    if (o.isMesh && (o.name.endsWith('_canvas') || o.name.endsWith('_picture') || o.userData.role === 'canvas')) {
+      ownMaterial(o, new THREE.MeshStandardMaterial({ map: artImage(key) || artTexture(botanical), roughness: 1 }));
+    }
   });
   return group;
 }
 function framedPrint(width, height, botanical) {
   const g = new THREE.Group();
   const frame = box(width + .16, height + .16, .08, C.wood, 0, 0, 0, .01); frame.position.y = height / 2 + .08; frame.position.z = .04; frame.userData.recolor = true; g.add(frame);
-  const art = new THREE.Mesh(new THREE.BoxGeometry(width, height, .02), new THREE.MeshStandardMaterial({ map: artTexture(botanical), roughness: 1 }));
+  const art = new THREE.Mesh(new THREE.BoxGeometry(width, height, .02), new THREE.MeshStandardMaterial({ map: artImage(botanical ? 'botanicalPrint' : 'worldMap') || artTexture(botanical), roughness: 1 }));
   art.position.set(0, height / 2 + .08, .085); art.castShadow = art.receiveShadow = true; art.userData.ownedMaterial = art.material; g.add(art);
   return g;
 }
 const WALL_CATALOG = {
-  worldMap: { label: 'World map', category: 'wall', layer: 'wall', tags: ['art', 'picture', 'poster'], w: 2, d: 1, wall: { w: 2, h: 3 }, defaultColor: C.wood, model: 'models/worldMap.glb', build: () => withCanvas(modelInstance('worldMap'), false) || framedPrint(1.55, 1.2, false) },
-  botanicalPrint: { label: 'Botanical print', category: 'wall', layer: 'wall', tags: ['art', 'picture', 'plant'], w: 2, d: 1, wall: { w: 2, h: 3 }, defaultColor: C.wood, model: 'models/botanicalPrint.glb', build: () => withCanvas(modelInstance('botanicalPrint'), true) || framedPrint(1.05, 1.3, true) },
+  worldMap: { label: 'World map', category: 'wall', layer: 'wall', tags: ['art', 'picture', 'poster'], w: 2, d: 1, wall: { w: 2, h: 3 }, defaultColor: C.wood, model: 'models/worldMap.glb', build: () => withCanvas(modelInstance('worldMap'), 'worldMap', false) || framedPrint(1.55, 1.2, false) },
+  botanicalPrint: { label: 'Botanical print', category: 'wall', layer: 'wall', tags: ['art', 'picture', 'plant'], w: 2, d: 1, wall: { w: 2, h: 3 }, defaultColor: C.wood, model: 'models/botanicalPrint.glb', build: () => withCanvas(modelInstance('botanicalPrint'), 'botanicalPrint', true) || framedPrint(1.05, 1.3, true) },
   wallShelf: { label: 'Wall shelf', category: 'wall', layer: 'wall', tags: ['shelf', 'storage'], w: 2, d: 1, wall: { w: 2, h: 1 }, defaultColor: C.wood,
     surface: { y: .42, slots: [{ x: -.5, z: .17 }, { x: .5, z: .17 }] }, model: 'models/wallShelf.glb', build() { return modelInstance('wallShelf') || this.procedural(); }, procedural() {
     const g = new THREE.Group();

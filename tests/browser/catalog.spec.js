@@ -77,3 +77,18 @@ test('loaded lamps carry a point light and a glowing part; loaded prints carry t
   expect(info.keys).toBeGreaterThanOrEqual(36);
   expect(errors).toEqual([]);
 });
+
+test('framed prints show the generated images, with the painted placeholder as fallback', async ({ page }) => {
+  const errors = await openGame(page);
+  const info = await page.evaluate(() => {
+    const s = window.__sim; const out = {};
+    for (const type of ['worldMap', 'botanicalPrint']) {
+      const item = s.items.find((i) => i.type === type); let image = false;
+      item.mesh.traverse((o) => { if (o.isMesh && o.material.map?.image?.src) image = true; });
+      out[type] = image;
+    }
+    return out;
+  });
+  expect(info).toEqual({ worldMap: true, botanicalPrint: true });
+  expect(errors).toEqual([]);
+});

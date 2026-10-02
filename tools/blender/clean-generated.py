@@ -382,7 +382,7 @@ for o in parts_objs:
         except Exception: pass
 
 # --- planar UVs for painted canvases (the game maps its art texture onto parts named *_canvas) ---
-for o in [o for o in bpy.context.scene.objects if o.type == 'MESH' and o.name.endswith('_canvas')]:
+for o in [o for o in bpy.context.scene.objects if o.type == 'MESH' and (o.name.endswith('_canvas') or o.name.endswith('_picture'))]:
     me2 = o.data
     xs = [v.co.x for v in me2.vertices]; zs = [v.co.z for v in me2.vertices]
     x0, x1, z0, z1 = min(xs), max(xs), min(zs), max(zs)

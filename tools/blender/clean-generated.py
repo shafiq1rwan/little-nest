@@ -352,8 +352,17 @@ for o in [o for o in bpy.context.scene.objects if o.type == 'MESH']:
     for p in o.data.polygons: p.material_index = 0
 
 # --- parts in the 'drop' role are baked dressing that would sit on the surface slots: delete them ---
-for o in [o for o in bpy.context.scene.objects if o.type == 'MESH' and o.name.endswith('_drop')]:
-    bpy.data.objects.remove(o, do_unlink=True)
+dropped = [o for o in bpy.context.scene.objects if o.type == 'MESH' and o.name.endswith('_drop')]
+for o in dropped: bpy.data.objects.remove(o, do_unlink=True)
+if dropped:
+    # the dressing was fused into the surface, so removing it leaves open rings: cap them
+    for o in [o for o in bpy.context.scene.objects if o.type == 'MESH']:
+        bm = bmesh.new(); bm.from_mesh(o.data)
+        boundary = [e for e in bm.edges if e.is_boundary]
+        if boundary:
+            bmesh.ops.holes_fill(bm, edges=boundary, sides=0)
+            bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        bm.to_mesh(o.data); bm.free(); o.data.update()
 
 # --- decimate each part on its own so colour boundaries stay crisp, then smooth by angle ---
 parts_objs = [o for o in bpy.context.scene.objects if o.type == 'MESH']

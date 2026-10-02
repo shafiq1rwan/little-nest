@@ -3,7 +3,7 @@
 export const ROOM = 8;            // grid cells per side
 export const CELL = 1;            // world units per cell
 export const WALL_H = 4;
-export const MODELS_VERSION = 7;  // bump when a file in public/models changes, to refresh browser caches and thumbnails
+export const MODELS_VERSION = 8;  // bump when a file in public/models changes, to refresh browser caches and thumbnails
 
 export const CAMERA = {
   position: [13, 12, 13],

@@ -1,0 +1,31 @@
+// Validate the staged GLB through the same Three.js loader used by the game.
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const directory = 'art-source/models-v2/cactus';
+const buffer = fs.readFileSync(directory + '/cactus-v2.glb');
+const gltf = await new GLTFLoader().parseAsync(buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength), '');
+const bounds = new THREE.Box3().setFromObject(gltf.scene);
+const parts = [];
+let triangles = 0;
+gltf.scene.traverse(o => {
+  if (!o.isMesh) return;
+  const position = o.geometry.attributes.position;
+  assert([...position.array].every(Number.isFinite), o.name + ': nonfinite positions');
+  assert(o.geometry.attributes.normal, o.name + ': missing normals');
+  triangles += (o.geometry.index?.count ?? position.count) / 3;
+  parts.push({ name: o.name, color: o.material.color.getHexString(), recolor: !!o.userData.recolor, texture: !!o.material.map });
+});
+const size = bounds.getSize(new THREE.Vector3());
+assert(triangles > 0 && triangles < 2500);
+assert(size.x <= .56 && size.z <= .56 && size.y <= .96);
+assert(Math.abs(bounds.min.y) < .001, 'Origin must be on the floor');
+assert.equal(parts.length, 9);
+assert.equal(parts.filter(p => p.recolor).length, 1);
+assert.equal(parts.find(p => p.recolor).name, 'cactus_terracotta_pot');
+assert(parts.every(p => !p.texture));
+assert.deepEqual([...new Set(parts.map(p => p.color))].sort(), ['c47743','4d702a','513725','e9927d','e5b66b'].sort());
+const result = { pass: true, triangles, size: size.toArray(), min: bounds.min.toArray(), parts };
+fs.writeFileSync(directory + '/validation.json', JSON.stringify(result, null, 2));
+console.log(JSON.stringify(result));

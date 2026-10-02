@@ -13,17 +13,23 @@ from pathlib import Path
 
 import bpy
 import bmesh
-from mathutils import Vector
+from mathutils import Vector, Matrix
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--output', default='output/blender')
 parser.add_argument('--render', action='store_true')
 parser.add_argument('--render-keys', nargs='*', help='Refresh previews only for these keys; still export the full library')
 parser.add_argument('--reference', action='store_true', help='Refine meshes against the 48-prop concept sheet')
+parser.add_argument('--v2', action='store_true', help='Separate-material v2 collection, excluding the already completed sofa')
 args = parser.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [])
+if args.v2:
+    args.reference = True
 output = Path(args.output).resolve()
 catalog = json.loads((output / 'catalog-source.json').read_text())['catalog']
-for folder in ['glb', 'previews']:
+if args.v2:
+    catalog = [p for p in catalog if p['key'] != 'sofa']
+    (output / 'catalog-source.json').write_text(json.dumps({'version': 2, 'catalog': catalog}))
+for folder in ['glb', 'previews', 'blend']:
     (output / folder).mkdir(parents=True, exist_ok=True)
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
@@ -50,6 +56,7 @@ scene.collection.objects.link(camera)
 scene.camera = camera
 camera_data.type = 'ORTHO'
 refine = runpy.run_path(str(Path(__file__).with_name('refine-reference.py')))['refine'] if args.reference else None
+refine_v2 = runpy.run_path(str(Path(__file__).with_name('refine-v2.py')))['refine'] if args.v2 else None
 if args.reference:
     scene.render.engine = 'CYCLES'
     scene.cycles.samples = 16
@@ -78,6 +85,14 @@ if args.reference:
         scene.collection.objects.link(light)
         light.location = location
         light.rotation_euler = (-light.location).to_track_quat('-Z','Y').to_euler()
+
+if args.v2:
+    scene.render.resolution_x = scene.render.resolution_y = 640
+    scene.cycles.samples = 24
+    scene.world.node_tree.nodes['Background'].inputs[0].default_value = (.8, .8, .8, 1)
+    scene.world.node_tree.nodes['Background'].inputs[1].default_value = .7
+    scene.view_settings.view_transform = 'Standard'
+    scene.view_settings.look = 'None'
 
 
 def linear(c):
@@ -154,12 +169,35 @@ for index, prop in enumerate(catalog):
         obj.data.materials.append(material_cache[material_key])
         obj['recolor'] = part['recolor']
         obj['role'] = role
+        if args.v2 and part.get('geometryType') == 'BoxGeometry':
+            # Rebuild rounded boxes as authored bevel parts, retaining original transforms.
+            lo, hi = part['localBounds']['min'], part['localBounds']['max']
+            size = [hi[i] - lo[i] for i in range(3)]
+            center = Vector([(hi[i] + lo[i]) / 2 for i in range(3)])
+            cube = bmesh.new()
+            bmesh.ops.create_cube(cube, size=1)
+            for v in cube.verts:
+                v.co = Vector((v.co.x * size[0], v.co.y * size[2], v.co.z * size[1]))
+            cube.to_mesh(mesh)
+            cube.free()
+            bpy.context.view_layer.objects.active = obj
+            bevel = obj.modifiers.new('V2 soft edge', 'BEVEL')
+            bevel.width = min(min(size) * .24, .075 if role == 'recolor' else .022)
+            bevel.segments = 2 if role == 'recolor' and min(size) > .06 else 1
+            bpy.ops.object.modifier_apply(modifier=bevel.name)
+            convert = Matrix(((1,0,0,0),(0,0,-1,0),(0,1,0,0),(0,0,0,1)))
+            world = Matrix([part['matrixWorld'][i:i+4] for i in range(0,16,4)]).transposed()
+            transform = convert @ world @ Matrix.Translation(center) @ convert.inverted()
+            mesh.transform(transform)
+            mesh.update()
         # Keep deliberately faceted leaves; rounded source parts get smooth normals.
         for polygon in mesh.polygons:
             polygon.use_smooth = role != 'canvas'
         meshes.append(obj)
 
     changes = refine(prop, root, collection, meshes) if refine else []
+    if refine_v2:
+        changes += refine_v2(prop, root, collection, meshes)
     bpy.context.view_layer.update()
     bounds_points = [obj.matrix_world @ Vector(v) for obj in meshes for v in obj.bound_box]
     minimum = [min(p[i] for p in bounds_points) for i in range(3)]
@@ -197,7 +235,7 @@ for index, prop in enumerate(catalog):
     if args.render and (not args.render_keys or key in args.render_keys):
         for other in scene.objects:
             if other.type == 'MESH':
-                other.hide_render = other not in meshes and not (args.reference and other == ground)
+                other.hide_render = other not in meshes and not (args.reference and not args.v2 and other == ground)
         minimum, maximum = refined_bounds['min'], refined_bounds['max']
         center = Vector(((minimum[0] + maximum[0]) / 2, -(minimum[2] + maximum[2]) / 2, (minimum[1] + maximum[1]) / 2))
         span = max(maximum[i] - minimum[i] for i in range(3))
@@ -214,6 +252,23 @@ for index, prop in enumerate(catalog):
                 light.rotation_euler = (center-light.location).to_track_quat('-Z','Y').to_euler()
         scene.render.filepath = str(output / 'previews' / f'{key}.png')
         bpy.ops.render.render(write_still=True)
+    if args.v2:
+        single = bpy.data.scenes.new(key + ' studio')
+        single.collection.children.link(collection)
+        single.world = scene.world
+        single.collection.objects.link(camera)
+        single.camera = camera
+        for light in [o for o in scene.objects if o.type == 'LIGHT']:
+            single.collection.objects.link(light)
+        single.render.engine = 'CYCLES'
+        single.cycles.samples = 32
+        single.view_settings.view_transform = 'Standard'
+        single.view_settings.look = 'None'
+        single.render.resolution_x = 1440
+        single.render.resolution_y = 900
+        single.render.resolution_percentage = 100
+        bpy.data.libraries.write(str(output / 'blend' / f'{key}.blend'), {single}, fake_user=True)
+        bpy.data.scenes.remove(single)
     report.append({'key': key, 'label': prop['label'], 'sourceTriangles': source_count,
         'exportTriangles': export_count, 'budget': budget, 'withinBudget': export_count <= budget,
         'parts': len(meshes), 'recolorParts': sum(bool(o.get('recolor')) for o in meshes),

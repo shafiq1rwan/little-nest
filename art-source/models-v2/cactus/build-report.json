@@ -1,0 +1,21 @@
+{
+  "key": "cactus",
+  "generator": "Blender native",
+  "triangles": 1774,
+  "parts": 9,
+  "reference": "art-source/prop-sheet-low-poly-v2.png, cell 26",
+  "integrated": false,
+  "features": [
+    "tapered terracotta pot with broad rim",
+    "ten sculpted ribs",
+    "five cupped pink petals",
+    "yellow center"
+  ],
+  "palette": {
+    "pot": "c47743",
+    "body": "4d702a",
+    "soil": "513725",
+    "petals": "e9927d",
+    "center": "e5b66b"
+  }
+}

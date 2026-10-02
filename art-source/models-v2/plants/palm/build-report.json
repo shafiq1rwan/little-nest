@@ -1,0 +1,14 @@
+{
+  "key": "palm",
+  "triangles": 2200,
+  "budget": 2499,
+  "parts": 98,
+  "recolorParts": 1,
+  "size": [
+    1.0329917669296265,
+    1.1004934310913086,
+    1.0365453958511353
+  ],
+  "generator": "Blender native",
+  "integrated": false
+}

@@ -1,0 +1,59 @@
+Use case: stylized-concept.
+Create a production reference sheet for Little Nest: exactly 48 low-poly cozy furniture and decor props, in a precise uniform 8-column by 6-row grid, on pure white. Landscape 4K-style sheet with generous empty gutters. Each cell contains ONE fully visible isolated prop, consistently viewed orthographically from front-left and slightly above. Scale individually to fill its cell, never overlap or crop. Each object has small bevels, broad clean facets, chunky readable construction, clear physical joins, and crisp hard boundaries between material colors. Flat matte solid color surfaces; subtle neutral white studio lighting only so local colors remain clear. No warm color cast, gradients painted onto materials, ambient occlusion staining, ground/contact shadows, textures, wood grain, fabric weave, outlines, gloss, reflective highlights, pedestals, room backgrounds, decorations between cells, or title.
+Exact main palette: honey wood #b87946, dark walnut #694b35, cream #f3e4d2, sage #81936a, leaf green #4d7639, pale clay #eee0ca, soft black #393932, brass #bb9451, terracotta #b96949, caramel #c38e62. Colors cannot spill across parts. Low polygon construction, modest faceting; not photorealistic. Furniture must look like editable solid 3D geometry.
+Place these props in EXACT row-major order, 8 per row. Add a small plain dark-gray catalog-key caption centered at the bottom of each cell, separated from the object by whitespace.
+Row 1:
+sofa: three-seat cream sofa, thick beveled padded arms, three seat and back cushions, four honey-wood feet, separate caramel and sage throw pillows.
+armchair: cream seat and back, slim honey-wood open rail armrests, four wood feet, sage pillow.
+coffeeTable: oval honey-wood top, four tapered legs, minimal separate cream and sage books and a tiny plant at back edge, front clear.
+bookshelf: honey-wood tall open bookcase, dark walnut back, three open shelves with a few muted solid-color books, two-door cabinet base, brass pulls.
+plant: pale-clay tapered pot, dark soil, eleven broad green oval leaves on simple stems.
+floorLamp: three clearly separated honey-wood tripod legs, solid cream tapered drum shade, no light glow.
+rug: thin rectangular cream rug, modest tan inset border and chunky short tassels, no patterns.
+desk: honey-wood desk, three-drawer right pedestal, two left legs, cream monitor with flat gray-green screen and pale keyboard.
+Row 2:
+chair: dark walnut upholstered office chair seat/back, simple black pedestal disc, no arms or wheels.
+ottoman: rounded square caramel cushion on four short honey-wood legs.
+sideboard: honey-wood cabinet, three door panels, brass knobs, short legs.
+tvStand: low honey-wood console with black-framed TV and flat dark-teal screen.
+boxes: closed tan cardboard cube with one pale tape strip.
+bed: honey-wood double bed and plain tall headboard, cream mattress and two pillows, solid sage blanket lower two thirds.
+nightstand: honey-wood small cabinet, one drawer and brass pull, four legs.
+wardrobe: honey-wood tall two-door wardrobe, dark plinth, brass knobs.
+Row 3:
+planter: honey-wood rectangular trough with soil and six chunky green bushes, sparse pink/yellow/cream flower balls.
+bench: honey-wood plank bench with dark walnut legs and solid sage seat pad.
+sideTable: round honey-wood top on a dark walnut pedestal and round base.
+pouf: round cream domed pouf with one tan piping ring.
+basket: tan round basket with a few broad geometric ridges and a folded sage blanket.
+monstera: pale-clay pot, dark soil, six large simplified split green leaves.
+fern: terracotta pot, simplified arching fronds with chunky paired green leaflets.
+snakePlant: pale ribbed pot, nine broad upright green sword leaves with defined pale green center stripes.
+Row 4:
+palm: caramel pot with seven simplified arched green palm fronds.
+cactus: terracotta pot, faceted green barrel cactus with broad ribs and small pink crown flower.
+rubberTree: cream pot, two woody stems, broad dark and mid-green oval leaves.
+mug: cream mug with solid loop handle, dark coffee inside.
+candle: cream pillar candle on brass saucer, tiny wick and solid amber teardrop flame without bloom.
+bookStack: three separate thick books, sage bottom, cream middle, muted rust top.
+succulent: small pale-clay pot with dark soil and eight chunky green rosette leaves.
+frame: honey-wood tabletop photo frame with blank pale-green insert and rear easel support.
+Row 5:
+lantern: chunky black hexagonal lantern frame and pointed roof, brass ring, solid cream interior candle, no bloom or transparency effects.
+vase: rounded sage vase, narrow neck, three simple stems with pink/yellow round flowers.
+worldMap: landscape honey-wood rectangular wall frame with blank cream canvas, no map.
+botanicalPrint: portrait honey-wood frame with blank cream canvas, no illustration.
+wallShelf: honey-wood plank supported by two distinct dark walnut L brackets.
+mirror: round brass frame with solid pale blue-gray disc, no reflected scene.
+macrame: pale-clay pot suspended by three chunky cream cords, green trailing vines, dark hook.
+clock: round walnut rim, flat cream face, two black hands pointing at 12:10, no numbers.
+Row 6:
+lowSofa: pale ash platform base, three charcoal seat/back cushions, one pale ash throw pillow, no arms.
+lowTable: pale ash low thick slab top on two solid slab legs.
+paperLamp: charcoal round base and thin rod, tall solid pale-cream cylinder shade with three charcoal hoops.
+bonsai: shallow charcoal rectangular tray, dark soil, leaning brown trunk, three chunky moss-green foliage pads.
+floralArmchair: solid dusty-rose padded armchair, cream pillow, four light-oak legs, no floral texture.
+dresser: sage cabinet with light-oak top/legs, four cream drawer fronts in two columns, brass knobs.
+rockingChair: light-oak chair with two curved rocker rails, five chunky back spindles, dusty rose seat pad.
+teapot: cream round teapot with loop handle and spout, sage lid and knob.
+This is a clean shape-and-color reference for image-to-3D. Favor obvious component separations and faithful flat material colors over decorative polish. Keep all 48 objects and their order exact.

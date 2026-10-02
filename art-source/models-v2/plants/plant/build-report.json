@@ -1,0 +1,14 @@
+{
+  "key": "plant",
+  "triangles": 1224,
+  "budget": 2499,
+  "parts": 16,
+  "recolorParts": 1,
+  "size": [
+    0.9441876411437988,
+    1.350000023841858,
+    0.4699999988079071
+  ],
+  "generator": "Blender native",
+  "integrated": false
+}

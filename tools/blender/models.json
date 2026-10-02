@@ -1,15 +1,200 @@
 {
-  "_comment": "One entry per modelled prop: size is width, depth, height in game units (from the procedural bounds), tris the budget, args any extra clean-generated.py flags. Run: python tools/blender/build-models.py [key ...]",
-  "sofa":       { "size": [2.9, 0.9, 1.0],    "tris": 1600, "args": ["--plate", "0.07"] },
-  "armchair":   { "size": [0.88, 0.9, 1.04],  "tris": 2400 },
-  "plant":      { "size": [1.2, 1.1, 1.5],    "tris": 2000 },
-  "ottoman":    { "size": [0.87, 0.87, 0.46], "tris": 900 },
-  "bed":        { "size": [1.92, 2.92, 1.08], "tris": 1800 },
-  "wardrobe":   { "size": [1.9, 0.68, 2.25],  "tris": 1200 },
-  "dresser":    { "size": [1.9, 0.67, 0.94],  "tris": 1400 },
-  "nightstand": { "size": [0.6, 0.52, 0.58],  "tris": 800 },
-  "bench":      { "size": [1.85, 0.6, 0.59],  "tris": 1000 },
-  "pouf":       { "size": [0.8, 0.8, 0.43],   "tris": 600 },
-  "sideTable":  { "size": [0.68, 0.68, 0.55], "tris": 600 },
-  "lowTable":   { "size": [1.8, 0.8, 0.4],    "tris": 600 }
+  "_comment": "One entry per modelled prop: size is width, depth, height in game units (from the procedural bounds), tris the budget, args any extra clean-generated.py flags. Run: python tools/blender/build-models.py [key ...] Entries with `source` are authored Blender exports (art-source/models-v2) installed as-is; size is then informational.",
+  "sofa": {
+    "source": "art-source/models-v2/sofa/sofa-low-poly-v2.glb",
+    "size": [
+      2.9,
+      0.9,
+      1.0
+    ],
+    "tris": 1364
+  },
+  "armchair": {
+    "size": [
+      0.88,
+      0.9,
+      1.04
+    ],
+    "tris": 2400
+  },
+  "plant": {
+    "source": "art-source/models-v2/plants/plant/plant.glb",
+    "size": [
+      0.94,
+      0.47,
+      1.35
+    ],
+    "tris": 2500
+  },
+  "ottoman": {
+    "size": [
+      0.87,
+      0.87,
+      0.46
+    ],
+    "tris": 900
+  },
+  "bed": {
+    "size": [
+      1.92,
+      2.92,
+      1.08
+    ],
+    "tris": 1800
+  },
+  "wardrobe": {
+    "size": [
+      1.9,
+      0.68,
+      2.25
+    ],
+    "tris": 1200
+  },
+  "dresser": {
+    "size": [
+      1.9,
+      0.67,
+      0.94
+    ],
+    "tris": 1400
+  },
+  "nightstand": {
+    "size": [
+      0.6,
+      0.52,
+      0.58
+    ],
+    "tris": 800
+  },
+  "bench": {
+    "size": [
+      1.85,
+      0.6,
+      0.59
+    ],
+    "tris": 1000
+  },
+  "pouf": {
+    "size": [
+      0.8,
+      0.8,
+      0.43
+    ],
+    "tris": 600
+  },
+  "sideTable": {
+    "size": [
+      0.68,
+      0.68,
+      0.55
+    ],
+    "tris": 600
+  },
+  "lowTable": {
+    "size": [
+      1.8,
+      0.8,
+      0.4
+    ],
+    "tris": 600
+  },
+  "monstera": {
+    "source": "art-source/models-v2/plants/monstera/monstera.glb",
+    "size": [
+      1.16,
+      0.53,
+      1.37
+    ],
+    "tris": 2500
+  },
+  "fern": {
+    "source": "art-source/models-v2/plants/fern/fern.glb",
+    "size": [
+      0.83,
+      0.83,
+      0.75
+    ],
+    "tris": 2500
+  },
+  "snakePlant": {
+    "source": "art-source/models-v2/plants/snakePlant/snakePlant.glb",
+    "size": [
+      0.45,
+      0.45,
+      1.21
+    ],
+    "tris": 2500
+  },
+  "palm": {
+    "source": "art-source/models-v2/plants/palm/palm.glb",
+    "size": [
+      1.03,
+      1.04,
+      1.1
+    ],
+    "tris": 2500
+  },
+  "rubberTree": {
+    "source": "art-source/models-v2/plants/rubberTree/rubberTree.glb",
+    "size": [
+      0.96,
+      0.45,
+      1.32
+    ],
+    "tris": 2500
+  },
+  "planter": {
+    "source": "art-source/models-v2/plants/planter/planter.glb",
+    "size": [
+      1.8,
+      0.6,
+      0.78
+    ],
+    "tris": 2500
+  },
+  "succulent": {
+    "source": "art-source/models-v2/plants/succulent/succulent.glb",
+    "size": [
+      0.15,
+      0.15,
+      0.2
+    ],
+    "tris": 400
+  },
+  "bonsai": {
+    "source": "art-source/models-v2/plants/bonsai/bonsai.glb",
+    "size": [
+      0.28,
+      0.18,
+      0.25
+    ],
+    "tris": 400
+  },
+  "macrame": {
+    "source": "art-source/models-v2/plants/macrame/macrame.glb",
+    "size": [
+      0.58,
+      0.57,
+      1.05
+    ],
+    "tris": 2500
+  },
+  "vase": {
+    "source": "art-source/models-v2/plants/vase/vase.glb",
+    "size": [
+      0.17,
+      0.15,
+      0.36
+    ],
+    "tris": 400
+  },
+  "cactus": {
+    "source": "art-source/models-v2/cactus/cactus-v2.glb",
+    "size": [
+      0.56,
+      0.56,
+      0.85
+    ],
+    "tris": 2500
+  }
 }

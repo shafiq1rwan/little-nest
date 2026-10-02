@@ -12,7 +12,9 @@ try {
   await server.listen();
   browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
-  await page.goto(server.resolvedUrls.local[0]);
+  // Capture without booting the game, so GLB preloading cannot race procedural builders.
+  await page.route('**/__catalog_capture', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Catalog capture</title>' }));
+  await page.goto(server.resolvedUrls.local[0] + '__catalog_capture');
   const catalog = await page.evaluate(async () => {
     const { CATALOG } = await import('/src/props.js');
     const THREE = await import('/node_modules/three/build/three.module.js');
@@ -25,7 +27,11 @@ try {
         const geometry = part.geometry.clone().applyMatrix4(part.matrixWorld);
         const m = part.material;
         const color = m.color.clone().convertLinearToSRGB();
+        part.geometry.computeBoundingBox();
         parts.push({
+          geometryType: part.geometry.type,
+          localBounds: { min: part.geometry.boundingBox.min.toArray(), max: part.geometry.boundingBox.max.toArray() },
+          matrixWorld: part.matrixWorld.toArray(),
           positions: Array.from(geometry.attributes.position.array),
           indices: geometry.index ? Array.from(geometry.index.array) : null,
           color: color.toArray(), roughness: m.roughness, metalness: m.metalness,

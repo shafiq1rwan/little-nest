@@ -89,7 +89,7 @@ const SMALL_CATALOG = {
     g.add(box(.24, .04, .3, 0x8a9a79, 0, 0, 0, .006), box(.22, .035, .28, 0xdfc8a0, .01, .04, -.01, .006), top);
     return g;
   }},
-  succulent: { label: 'Succulent', category: 'small', layer: 'surface', tags: ['plant', 'pot'], w: 1, d: 1, defaultColor: C.pot, build() {
+  succulent: { label: 'Succulent', category: 'small', layer: 'surface', tags: ['plant', 'pot'], w: 1, d: 1, defaultColor: C.pot, model: 'models/succulent.glb', build() { return modelInstance('succulent') || this.procedural(); }, procedural() {
     const g = new THREE.Group();
     const pot = cyl(.075, .06, .1, C.pot); pot.userData.recolor = true; g.add(pot);
     g.add(cyl(.068, .068, .01, 0x5b4030, 0, .095, 0));
@@ -119,7 +119,7 @@ const SMALL_CATALOG = {
     glow.material = material(0xffd58a).clone(); glow.material.emissive.setHex(0xffb347); glow.material.emissiveIntensity = 1.5; glow.userData.ownedMaterial = glow.material; g.add(glow);
     return g;
   }},
-  vase: { label: 'Vase', category: 'small', layer: 'surface', tags: ['flowers', 'decor'], w: 1, d: 1, defaultColor: C.sage, build() {
+  vase: { label: 'Vase', category: 'small', layer: 'surface', tags: ['flowers', 'decor'], w: 1, d: 1, defaultColor: C.sage, model: 'models/vase.glb', build() { return modelInstance('vase') || this.procedural(); }, procedural() {
     const g = new THREE.Group();
     const body = mesh(new THREE.LatheGeometry([new THREE.Vector2(.04, 0), new THREE.Vector2(.075, .06), new THREE.Vector2(.05, .16), new THREE.Vector2(.045, .2)], 16), C.sage, 0, 0, 0);
     body.userData.recolor = true; g.add(body);
@@ -157,7 +157,7 @@ const WALL_CATALOG = {
     glass.material = material(0xd8e6e4).clone(); glass.material.roughness = .15; glass.material.metalness = .3; glass.userData.ownedMaterial = glass.material; g.add(glass);
     return g;
   }},
-  macrame: { label: 'Hanging plant', category: 'wall', layer: 'wall', tags: ['plant', 'macrame', 'boho'], w: 1, d: 1, wall: { w: 1, h: 3 }, defaultColor: C.pot, build() {
+  macrame: { label: 'Hanging plant', category: 'wall', layer: 'wall', tags: ['plant', 'macrame', 'boho'], w: 1, d: 1, wall: { w: 1, h: 3 }, defaultColor: C.pot, model: 'models/macrame.glb', build() { return modelInstance('macrame') || this.procedural(); }, procedural() {
     // Origin at the bottom of the footprint; the hook sits near the top row and the pot hangs below it.
     const g = new THREE.Group();
     g.add(box(.08, .05, .06, C.dark, 0, 1.42, .03, .01));
@@ -213,7 +213,7 @@ const JAPANDI_CATALOG = {
     const light = new THREE.PointLight(0xffd3a0, 2.2, 3.5, 2); light.position.set(0, .85, 0); g.add(light);
     return g;
   }},
-  bonsai: { label: 'Bonsai', category: 'small', collection: 'japandi', layer: 'surface', tags: ['japandi', 'plant', 'tree'], w: 1, d: 1, defaultColor: J.charcoal, build() {
+  bonsai: { label: 'Bonsai', category: 'small', collection: 'japandi', layer: 'surface', tags: ['japandi', 'plant', 'tree'], w: 1, d: 1, defaultColor: J.charcoal, model: 'models/bonsai.glb', build() { return modelInstance('bonsai') || this.procedural(); }, procedural() {
     const g = new THREE.Group();
     const pot = box(.28, .07, .18, J.charcoal, 0, 0, 0, .01); pot.userData.recolor = true; g.add(pot);
     g.add(box(.25, .01, .15, 0x5b4030, 0, .07, 0, .003));
@@ -358,7 +358,7 @@ export const CATALOG = {
     }
     return g;
   }},
-  planter: { label: 'Planter box', category: 'decor', tags: ['plant', 'flowers', 'balcony', 'garden'], w: 2, d: 1, defaultColor: C.wood, build() {
+  planter: { label: 'Planter box', category: 'decor', tags: ['plant', 'flowers', 'balcony', 'garden'], w: 2, d: 1, defaultColor: C.wood, model: 'models/planter.glb', build() { return modelInstance('planter') || this.procedural(); }, procedural() {
     const g = new THREE.Group();
     const boxMesh = box(1.8, .5, .6, C.wood, 0, 0, 0, .02); boxMesh.userData.recolor = true; g.add(boxMesh);
     g.add(box(1.66, .04, .46, 0x5b4030, 0, .48, 0, .01));

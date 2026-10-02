@@ -1,0 +1,472 @@
+[
+  {
+    "key": "armchair",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      268,
+      0,
+      452,
+      157
+    ]
+  },
+  {
+    "key": "coffeeTable",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      452,
+      0,
+      670,
+      157
+    ]
+  },
+  {
+    "key": "bookshelf",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      670,
+      0,
+      840,
+      157
+    ]
+  },
+  {
+    "key": "plant",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      840,
+      0,
+      1050,
+      157
+    ]
+  },
+  {
+    "key": "floorLamp",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      1050,
+      0,
+      1238,
+      157
+    ]
+  },
+  {
+    "key": "rug",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      1238,
+      0,
+      1467,
+      157
+    ]
+  },
+  {
+    "key": "desk",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      1467,
+      0,
+      1672,
+      157
+    ]
+  },
+  {
+    "key": "chair",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      0,
+      174,
+      236,
+      324
+    ]
+  },
+  {
+    "key": "ottoman",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      236,
+      174,
+      444,
+      324
+    ]
+  },
+  {
+    "key": "sideboard",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      444,
+      174,
+      651,
+      324
+    ]
+  },
+  {
+    "key": "tvStand",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      651,
+      174,
+      857,
+      324
+    ]
+  },
+  {
+    "key": "boxes",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      857,
+      174,
+      1045,
+      324
+    ]
+  },
+  {
+    "key": "bed",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      1045,
+      174,
+      1250,
+      324
+    ]
+  },
+  {
+    "key": "nightstand",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      1250,
+      174,
+      1468,
+      324
+    ]
+  },
+  {
+    "key": "wardrobe",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      1468,
+      174,
+      1672,
+      324
+    ]
+  },
+  {
+    "key": "planter",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      0,
+      343,
+      232,
+      482
+    ]
+  },
+  {
+    "key": "bench",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      232,
+      343,
+      450,
+      482
+    ]
+  },
+  {
+    "key": "sideTable",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      450,
+      343,
+      652,
+      482
+    ]
+  },
+  {
+    "key": "pouf",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      652,
+      343,
+      855,
+      482
+    ]
+  },
+  {
+    "key": "basket",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      855,
+      343,
+      1048,
+      482
+    ]
+  },
+  {
+    "key": "monstera",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      1048,
+      343,
+      1252,
+      482
+    ]
+  },
+  {
+    "key": "fern",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      1252,
+      343,
+      1460,
+      482
+    ]
+  },
+  {
+    "key": "snakePlant",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      1460,
+      343,
+      1672,
+      482
+    ]
+  },
+  {
+    "key": "palm",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      0,
+      502,
+      238,
+      645
+    ]
+  },
+  {
+    "key": "cactus",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      238,
+      502,
+      441,
+      645
+    ]
+  },
+  {
+    "key": "rubberTree",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      441,
+      502,
+      653,
+      645
+    ]
+  },
+  {
+    "key": "mug",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      653,
+      502,
+      851,
+      645
+    ]
+  },
+  {
+    "key": "candle",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      851,
+      502,
+      1042,
+      645
+    ]
+  },
+  {
+    "key": "bookStack",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      1042,
+      502,
+      1250,
+      645
+    ]
+  },
+  {
+    "key": "succulent",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      1250,
+      502,
+      1468,
+      645
+    ]
+  },
+  {
+    "key": "frame",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      1468,
+      502,
+      1672,
+      645
+    ]
+  },
+  {
+    "key": "lantern",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      0,
+      663,
+      231,
+      790
+    ]
+  },
+  {
+    "key": "vase",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      231,
+      663,
+      440,
+      790
+    ]
+  },
+  {
+    "key": "worldMap",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      440,
+      663,
+      648,
+      790
+    ]
+  },
+  {
+    "key": "botanicalPrint",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      648,
+      663,
+      857,
+      790
+    ]
+  },
+  {
+    "key": "wallShelf",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      857,
+      663,
+      1050,
+      790
+    ]
+  },
+  {
+    "key": "mirror",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      1050,
+      663,
+      1243,
+      790
+    ]
+  },
+  {
+    "key": "macrame",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      1243,
+      663,
+      1468,
+      790
+    ]
+  },
+  {
+    "key": "clock",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      1468,
+      663,
+      1672,
+      790
+    ]
+  },
+  {
+    "key": "lowSofa",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      0,
+      806,
+      238,
+      917
+    ]
+  },
+  {
+    "key": "lowTable",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      238,
+      806,
+      451,
+      917
+    ]
+  },
+  {
+    "key": "paperLamp",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      451,
+      806,
+      647,
+      917
+    ]
+  },
+  {
+    "key": "bonsai",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      647,
+      806,
+      852,
+      917
+    ]
+  },
+  {
+    "key": "floralArmchair",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      852,
+      806,
+      1047,
+      917
+    ]
+  },
+  {
+    "key": "dresser",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      1047,
+      806,
+      1250,
+      917
+    ]
+  },
+  {
+    "key": "rockingChair",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      1250,
+      806,
+      1467,
+      917
+    ]
+  },
+  {
+    "key": "teapot",
+    "source": "art-source/prop-sheet-low-poly-v2.png",
+    "crop": [
+      1467,
+      806,
+      1672,
+      917
+    ]
+  }
+]

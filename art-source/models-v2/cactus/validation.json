@@ -1,0 +1,70 @@
+{
+  "pass": true,
+  "triangles": 1774,
+  "size": [
+    0.550000011920929,
+    0.847000002861023,
+    0.550000011920929
+  ],
+  "min": [
+    -0.2750000059604645,
+    0,
+    -0.2750000059604645
+  ],
+  "parts": [
+    {
+      "name": "cactus_flower_center",
+      "color": "e5b66b",
+      "recolor": false,
+      "texture": false
+    },
+    {
+      "name": "cactus_flower_petal_1",
+      "color": "e9927d",
+      "recolor": false,
+      "texture": false
+    },
+    {
+      "name": "cactus_flower_petal_2",
+      "color": "e9927d",
+      "recolor": false,
+      "texture": false
+    },
+    {
+      "name": "cactus_flower_petal_3",
+      "color": "e9927d",
+      "recolor": false,
+      "texture": false
+    },
+    {
+      "name": "cactus_flower_petal_4",
+      "color": "e9927d",
+      "recolor": false,
+      "texture": false
+    },
+    {
+      "name": "cactus_flower_petal_5",
+      "color": "e9927d",
+      "recolor": false,
+      "texture": false
+    },
+    {
+      "name": "cactus_ribbed_barrel",
+      "color": "4d702a",
+      "recolor": false,
+      "texture": false
+    },
+    {
+      "name": "cactus_soil",
+      "color": "513725",
+      "recolor": false,
+      "texture": false
+    },
+    {
+      "name": "cactus_terracotta_pot",
+      "color": "c47743",
+      "recolor": true,
+      "texture": false
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "key": "monstera",
+  "triangles": 1144,
+  "budget": 2499,
+  "parts": 14,
+  "recolorParts": 1,
+  "size": [
+    1.1629908680915833,
+    1.371009111404419,
+    0.5348370969295502
+  ],
+  "generator": "Blender native",
+  "integrated": false
+}

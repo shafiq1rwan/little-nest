@@ -1,0 +1,14 @@
+{
+  "key": "succulent",
+  "triangles": 382,
+  "budget": 399,
+  "parts": 12,
+  "recolorParts": 1,
+  "size": [
+    0.15299999713897705,
+    0.19499999284744263,
+    0.1540711522102356
+  ],
+  "generator": "Blender native",
+  "integrated": false
+}

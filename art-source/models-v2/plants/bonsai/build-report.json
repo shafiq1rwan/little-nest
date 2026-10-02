@@ -1,0 +1,14 @@
+{
+  "key": "bonsai",
+  "triangles": 376,
+  "budget": 399,
+  "parts": 20,
+  "recolorParts": 1,
+  "size": [
+    0.28119929134845734,
+    0.25,
+    0.18000000715255737
+  ],
+  "generator": "Blender native",
+  "integrated": false
+}

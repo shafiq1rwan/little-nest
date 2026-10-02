@@ -1,0 +1,14 @@
+{
+  "key": "snakePlant",
+  "triangles": 1556,
+  "budget": 2499,
+  "parts": 31,
+  "recolorParts": 21,
+  "size": [
+    0.4523872137069702,
+    1.2120574712753296,
+    0.4523872137069702
+  ],
+  "generator": "Blender native",
+  "integrated": false
+}

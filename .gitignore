@@ -15,3 +15,9 @@ output/prop-references/
 art-source/generated/*.glb
 art-source/generated/*.obj
 output/models-preview/
+
+# Staged Blender sources: keep glb, blend, previews, reports; drop backups, raw generator dumps and archives
+*.blend1
+art-source/models-v2/collection/raw/
+art-source/models-v2/*.zip
+art-source/models-v2/collection/catalog-source.json

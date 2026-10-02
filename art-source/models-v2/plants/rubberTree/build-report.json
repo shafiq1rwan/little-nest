@@ -1,0 +1,14 @@
+{
+  "key": "rubberTree",
+  "triangles": 1398,
+  "budget": 2499,
+  "parts": 25,
+  "recolorParts": 1,
+  "size": [
+    0.9599999785423279,
+    1.3200000524520874,
+    0.44999998807907104
+  ],
+  "generator": "Blender native",
+  "integrated": false
+}

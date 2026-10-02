@@ -1,0 +1,14 @@
+{
+  "key": "fern",
+  "triangles": 2472,
+  "budget": 2499,
+  "parts": 162,
+  "recolorParts": 1,
+  "size": [
+    0.8340134620666504,
+    0.7450000047683716,
+    0.8262131810188293
+  ],
+  "generator": "Blender native",
+  "integrated": false
+}

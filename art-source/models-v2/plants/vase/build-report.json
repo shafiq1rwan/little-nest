@@ -1,0 +1,14 @@
+{
+  "key": "vase",
+  "triangles": 390,
+  "budget": 399,
+  "parts": 7,
+  "recolorParts": 1,
+  "size": [
+    0.17449567466974258,
+    0.35499998927116394,
+    0.14800000190734863
+  ],
+  "generator": "Blender native",
+  "integrated": false
+}

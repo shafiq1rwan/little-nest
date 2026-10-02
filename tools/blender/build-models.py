@@ -1,4 +1,4 @@
-"""Run clean-generated.py for every prop in models.json (or the keys given) and write a contact sheet.
+"""Install authored sources or run clean-generated.py for models.json entries and write a contact sheet.
 
     python tools/blender/build-models.py            # all entries with a raw file present
     python tools/blender/build-models.py sofa bed   # just these
@@ -6,7 +6,7 @@
 Set BLENDER to the executable path if it is not the default install. Previews land in
 output/models-preview (ignored), with _contact.png for a quick look at every exported prop.
 """
-import json, os, subprocess, sys
+import json, os, shutil, subprocess, sys
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 BLENDER = os.environ.get('BLENDER', r'C:\Program Files\Blender Foundation\Blender 5.2\blender.exe')
@@ -20,6 +20,15 @@ keys = sys.argv[1:] or list(manifest)
 done = []
 for key in keys:
     spec = manifest[key]
+    if spec.get('source'):
+        source = os.path.join(ROOT, spec['source'])
+        shutil.copyfile(source, os.path.join(ROOT, 'public', 'models', key + '.glb'))
+        for name in (key + '-iso.png', 'preview.png', key + '-preview.png'):
+            preview = os.path.join(os.path.dirname(source), name)
+            if os.path.exists(preview): shutil.copyfile(preview, os.path.join(PREVIEW, key + '-iso.png')); break
+        print(key + ': installed authored model from ' + spec['source'])
+        done.append(key)
+        continue
     raw = os.path.join(ROOT, 'art-source', 'generated', key + '.glb')
     if not os.path.exists(raw):
         print(key + ': no raw file in art-source/generated, skipped'); continue

@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { sharedMaterial } from './scene/geometry.js';
+import { modelInstance } from './scene/models.js';
 
 const palette = { soil: 0x49392c, dark: 0x34593d, green: 0x5c814b, light: 0x8ca363, cream: 0xf3e4d2 };
 const mat = (color) => sharedMaterial(color, .88);
@@ -151,10 +152,10 @@ function fern() {
   return g;
 }
 export const PLANT_CATALOG = {
-  monstera: { label: 'Monstera', category: 'decor', tags: ['plant', 'leaf', 'tropical'], w: 1, d: 1, defaultColor: 0xe9dfc8, build: monstera },
-  fern: { label: 'Boston fern', category: 'decor', tags: ['plant', 'fern'], w: 1, d: 1, defaultColor: 0xc57955, build: fern },
-  snakePlant:{label:'Snake plant',category:'decor',tags:['plant','succulent'],w:1,d:1,defaultColor:0xe9dfc8,build:snakePlant},
-  palm:{label:'Areca palm',category:'decor',tags:['plant','palm'],w:1,d:1,defaultColor:0xbe9165,build:palm},
-  cactus:{label:'Flowering cactus',category:'decor',tags:['plant','cactus','succulent'],w:1,d:1,defaultColor:0xc57955,build:cactus},
-  rubberTree:{label:'Rubber tree',category:'decor',tags:['plant','tree'],w:1,d:1,defaultColor:palette.cream,build:rubberTree},
+  monstera: { label: 'Monstera', category: 'decor', tags: ['plant', 'leaf', 'tropical'], w: 1, d: 1, defaultColor: 0xe9dfc8, model: 'models/monstera.glb', build: () => modelInstance('monstera') || monstera() },
+  fern: { label: 'Boston fern', category: 'decor', tags: ['plant', 'fern'], w: 1, d: 1, defaultColor: 0xc57955, model: 'models/fern.glb', build: () => modelInstance('fern') || fern() },
+  snakePlant:{label:'Snake plant',category:'decor',tags:['plant','succulent'],w:1,d:1,defaultColor:0xe9dfc8,model: 'models/snakePlant.glb', build: () => modelInstance('snakePlant') || snakePlant() },
+  palm:{label:'Areca palm',category:'decor',tags:['plant','palm'],w:1,d:1,defaultColor:0xbe9165,model: 'models/palm.glb', build: () => modelInstance('palm') || palm() },
+  cactus:{label:'Flowering cactus',category:'decor',tags:['plant','cactus','succulent'],w:1,d:1,defaultColor:0xc57955,model: 'models/cactus.glb', build: () => modelInstance('cactus') || cactus() },
+  rubberTree:{label:'Rubber tree',category:'decor',tags:['plant','tree'],w:1,d:1,defaultColor:palette.cream,model: 'models/rubberTree.glb', build: () => modelInstance('rubberTree') || rubberTree() },
 };

@@ -8,7 +8,6 @@ Regenerate from the project root using Blender:
 
 ```text
 blender --background --python-exit-code 1 --python tools/blender/build-plants-v2.py -- --output art-source/models-v2/plants
-python tools/blender/plant-contact-sheet.py
 node tools/blender/check-plants-v2.mjs
 ```
 

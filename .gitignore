@@ -8,10 +8,6 @@ playwright-report
 art-source/prop-crops/
 
 # Generated Blender libraries and image-generation scratch (see docs/PROP_BRIEFS.md)
-output/blender/
-output/blender-reference/
-output/imagegen/
-output/prop-references/
 art-source/generated/*.glb
 art-source/generated/*.obj
 output/models-preview/

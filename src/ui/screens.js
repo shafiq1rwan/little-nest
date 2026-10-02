@@ -59,6 +59,13 @@ export function createScreens() {
     $('menu-notice').textContent = '';
     $('menu-start').focus({ preventScroll: true });
   }
+  function syncSfx() {
+    const on = game.sfx.isOn();
+    $('settings-sfx').setAttribute('aria-pressed', String(on));
+    $('settings-sfx').textContent = on ? 'On' : 'Off';
+    $('settings-sfx-volume').value = String(Math.round(game.sfx.volume() * 100));
+    $('settings-sfx-volume').disabled = !on;
+  }
   function syncMusic() {
     const on = game.music.isOn();
     $('settings-music').setAttribute('aria-pressed', String(on));
@@ -68,7 +75,10 @@ export function createScreens() {
   $('menu-start').onclick = enterGame;
   $('main-menu-toggle').onclick = showMenu;
   $('menu-rooms').onclick = () => game.openRooms();
-  $('menu-settings').onclick = () => { syncMusic(); settings.showModal(); };
+  $('menu-settings').onclick = () => { syncMusic(); syncSfx(); settings.showModal(); };
+  $('settings-sfx').onclick = () => { game.sfx.setOn(!game.sfx.isOn()); syncSfx(); game.sfx.play('tap'); };
+  $('settings-sfx-volume').oninput = (ev) => { game.sfx.setVolume(Number(ev.target.value) / 100); };
+  $('settings-sfx-volume').onchange = () => game.sfx.play('place');   // a sample at the new level
   $('settings-music').onclick = () => { game.music.setOn(!game.music.isOn()); syncMusic(); };
   $('settings-close').onclick = $('settings-done').onclick = () => settings.close();
   settings.addEventListener('click', ev => { if (ev.target === settings) settings.close(); });

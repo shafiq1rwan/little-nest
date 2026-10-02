@@ -38,4 +38,6 @@ export const MUSIC = {
 export const SAVE_KEY = 'home-deco-sim:room';        // pre-gallery single save; imported once, never deleted
 export const ROOMS_KEY = 'home-deco-sim:rooms';      // named room gallery
 export const MUSIC_KEY = 'home-deco-sim:music';
+export const SFX_KEY = 'home-deco-sim:sfx';             // sound effects on/off
+export const SFX_VOLUME_KEY = 'home-deco-sim:sfx-volume';   // 0..1
 export const MAX_SAVED_ITEMS = 200;

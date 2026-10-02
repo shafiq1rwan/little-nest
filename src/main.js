@@ -6,7 +6,7 @@ import { createThumbnails } from './scene/thumbnails.js';
 import { preloadModels, preloadArt, loadedModelKeys } from './scene/models.js';
 import { tintModel as tint, disposeModel, measureModel, compactModel } from './scene/geometry.js';
 import { installIcons } from './ui/icons.js';
-import { CELL, CAMERA, RENDER, MOTION, MUSIC, SAVE_KEY, ROOMS_KEY, MUSIC_KEY, MAX_SAVED_ITEMS } from './config/game.js';
+import { CELL, CAMERA, RENDER, MOTION, MUSIC, SAVE_KEY, ROOMS_KEY, MUSIC_KEY, SFX_KEY, SFX_VOLUME_KEY, MAX_SAVED_ITEMS } from './config/game.js';
 import { BACKDROP, SELECTION_OUTLINE, HOVER_OUTLINE, GHOST_OK, GHOST_BLOCKED, WALL_FINISHES, FLOOR_FINISHES, FLOOR_STYLES, DEFAULT_FLOOR_STYLE, ITEM_COLORS } from './config/theme.js';
 import { ROOM_PRESETS, DEFAULT_PRESET, WALL_HEIGHT, MIN_ROOM_SIZE, MAX_ROOM_SIZE, presetFixtures, presetWallRows } from './data/presets.js';
 import { COLLECTIONS, DEFAULT_COLLECTION } from './data/collections.js';
@@ -22,6 +22,7 @@ import { createResponsiveHUD } from './ui/responsive.js';
 import { createGalleryDialog } from './ui/gallery.js';
 import { createToast, buildCatalog, setCatalogActive, bindCatalogFilter, bindTabs, buildFinishSwatches, buildLightingOptions, renderSelectionCard, setPressed } from './ui/hud.js';
 import { createMusic } from './ui/music.js';
+import { createSfx } from './ui/sfx.js';
 
 export async function initializeGame({ onProgress = async () => {}, onOpenRoom = () => {}, onNotice = () => {} } = {}) {
 const $ = (id) => document.getElementById(id);
@@ -215,6 +216,7 @@ function placeGhostShadow(type, gx, gz, rot) {
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const bounces = new Map();   // record id -> { mesh, base: Vector3, start }
 function bounce(record) {
+  if (record) sfx.play('place');
   if (!record || reducedMotion.matches) return;
   const mesh = meshOf(record);
   if (!mesh) return;
@@ -352,7 +354,7 @@ function addItem(type, gx, gz, rot, color = null, id = null, parent = null, slot
   return commands.add({ type, gx, gz, rot, color, id, parent, slot, wall, col, row });
 }
 function removeItem(record) {
-  commands.remove(record.id);
+  if (commands.remove(record.id) !== false) sfx.play('remove');
 }
 function duplicateSelected() {
   if (!selected || dragging) { if (!selected) toast('Select something to copy it.'); return; }
@@ -404,10 +406,11 @@ function cancelPlacing() {
 }
 function rotateSelected() {
   if (dragging) return;
-  if (ghost) { ghost.userData.rot = (ghost.userData.rot + 1) % 4; ghost.rotation.y = ghost.userData.rot * Math.PI / 2; return; }
+  if (ghost) { ghost.userData.rot = (ghost.userData.rot + 1) % 4; ghost.rotation.y = ghost.userData.rot * Math.PI / 2; sfx.play('rotate'); return; }
   if (!selected) { toast('Select furniture to rotate it.'); return; }
   if (selected.wall) { toast('Wall decorations already face the room.'); return; }
-  if (!commands.rotate(selected.id)) toast('There needs to be more space to rotate this item.');
+  if (commands.rotate(selected.id)) sfx.play('rotate');
+  else { sfx.play('blocked'); toast('There needs to be more space to rotate this item.'); }
 }
 
 // ---------- input ----------
@@ -491,7 +494,7 @@ const input = createInput({
     if (!editing || photoMode) return;
     if (ghost && placement.isWallItem(selectedType)) {
       if (!ghostTarget) { toast('Wall decorations go on the two walls. Point at one to place it.'); return; }
-      if (!ghostTarget.free) { toast('That part of the wall is taken. Try a clear spot.'); return; }
+      if (!ghostTarget.free) { sfx.play('blocked'); toast('That part of the wall is taken. Try a clear spot.'); return; }
       const placed = addItem(selectedType, null, null, 0, null, null, null, null, ghostTarget.wall, ghostTarget.col, ghostTarget.row);
       bounce(placed);
       if (placed && !shiftKey && !keepPlacing) { cancelPlacing(); setSelected(placed); }
@@ -499,7 +502,7 @@ const input = createInput({
     }
     if (ghost && placement.isSurfaceItem(selectedType)) {
       if (!ghostTarget) { toast((placement.surfaceKindOf(selectedType) === 'seat' ? 'Soft things go on ' : 'Small items go on ') + surfaceWhere(selectedType) + '. Point at one to place it.'); return; }
-      if (!ghostTarget.free) { toast('That spot is taken. Try another part of the surface.'); return; }
+      if (!ghostTarget.free) { sfx.play('blocked'); toast('That spot is taken. Try another part of the surface.'); return; }
       const placed = addItem(selectedType, null, null, ghost.userData.rot, null, null, ghostTarget.parent, ghostTarget.slot);
       bounce(placed);
       if (placed && !shiftKey && !keepPlacing) { cancelPlacing(); setSelected(placed); }
@@ -513,7 +516,7 @@ const input = createInput({
         const placed = addItem(selectedType, gx, gz, rot);
         bounce(placed);
         if (!shiftKey && !keepPlacing) { cancelPlacing(); setSelected(placed); }
-      } else toast('That tile is occupied. Choose a free spot.');
+      } else { sfx.play('blocked'); toast('That tile is occupied. Choose a free spot.'); }
       return;
     }
     const id = pick();
@@ -521,7 +524,7 @@ const input = createInput({
     // Keep the canvas size stable until the gesture finishes: the selection card can resize the drawer.
     setSelected(item, false);
     pendingSelection = true;
-    if (item) { dragging = item; dragTarget = null; }
+    if (item) { dragging = item; dragTarget = null; sfx.play('pickup'); }
   },
   up({ allReleased }) {
     if (!editing) return;
@@ -584,8 +587,8 @@ function updateSelection() {
     canRecolor,
     colors: ITEM_COLORS,
     activeColor: selected && (selected.color ?? def.defaultColor ?? ITEM_COLORS[0].color),
-    onColor: (color) => commands.recolor(selected.id, color),
-    onLight: (on) => commands.setLit(selected.id, on),
+    onColor: (color) => { if (commands.recolor(selected.id, color)) sfx.play('recolor'); },
+    onLight: (on) => { if (commands.setLit(selected.id, on)) sfx.play(CATALOG[selected.type].toggle ? 'curtain' : 'lamp'); },
   });
 }
 
@@ -636,6 +639,12 @@ $('grid-tool').onclick = () => showGrid(!gridVisible);
 $('walls-tool').onclick = () => { wallsVisible = !wallsVisible; shell.walls.visible = wallsVisible; invalidate(); $('walls-tool').setAttribute('aria-pressed', String(wallsVisible)); };
 $('help-toggle').onclick = () => { $('help-panel').hidden = !$('help-panel').hidden; };
 
+const sfx = createSfx({ storageKey: SFX_KEY, volumeKey: SFX_VOLUME_KEY });
+// A quiet tap for HUD buttons; buttons whose action has its own sound opt out with data-sfx="none".
+document.addEventListener('click', (ev) => {
+  const b = ev.target.closest?.('button');
+  if (b && !b.disabled && b.dataset.sfx !== 'none' && !b.closest('#catalog') && !b.closest('.swatches')) sfx.play('tap');
+}, true);
 const music = createMusic({ src: MUSIC.src, volume: MUSIC.volume, storageKey: MUSIC_KEY, button: $('music-toggle'), installIcons, onToggle: (on) => toast(on ? 'Music on.' : 'Music off.') });
 
 canvas.addEventListener('pointerleave', () => setHover(null));
@@ -869,6 +878,7 @@ window.__sim = {
   catalogCollection: (type) => CATALOG[type].collection,
   collections: COLLECTIONS,
   get musicOn() { return music.isOn(); },
+  sfx,
   get items() { return state.items.map(withMesh); },
   get ghost() { return ghost; },
   get selectedType() { return selectedType; },
@@ -883,6 +893,7 @@ window.__sim = {
 await onProgress(100, 'Your little nest is ready.');
 return {
   music,
+  sfx,
   openRooms: () => galleryDialog.open({ allowSave: false }),
   refresh: () => { resize(true); invalidate(); },
   setEditing(enabled) {

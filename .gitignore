@@ -18,3 +18,6 @@ art-source/models-v2/collection/raw/
 art-source/models-v2/*.zip
 art-source/models-v2/collection/catalog-source.json
 art-source/prints/
+
+# Downloaded Kenney CC0 audio packs; the sounds in use are copied to public/audio/sfx
+art-source/sfx-packs/

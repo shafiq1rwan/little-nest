@@ -101,6 +101,9 @@ body[data-screen="loading"] #app { visibility: hidden; }
 .settings-heading button { width: 44px; height: 44px; }
 .settings-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 .settings-row h3 { margin: 0 0 6px; font-size: 16px; }
+.settings-row + .settings-row { margin-top: 14px; }
+.settings-volume { display: flex; align-items: center; gap: 12px; margin: 12px 0 4px; font-size: 13px; color: var(--muted); }
+.settings-volume input { flex: 1; accent-color: var(--sage); min-height: 44px; }
 .settings-row p, .settings-note { font-size: 13px; line-height: 1.5; color: var(--muted); }
 .settings-row p { margin: 0; }
 #settings-music { min-width: 64px; min-height: 44px; }

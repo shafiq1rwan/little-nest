@@ -7,7 +7,7 @@ The rules from the first roadmap still apply: keep the style guide and saved roo
 | Phase | Focus | Status | Dependency |
 | --- | --- | --- | --- |
 | 7 | Finish the core loop | Complete 2 October 2026 | Phases 0–5 |
-| 8 | A living room: animation and sound | Planned | Phase 7 |
+| 8 | A living room: animation and sound | In progress (increment 1 done 2 October 2026) | Phase 7 |
 | 9 | More room: structure, ceiling, night | Planned | Phase 7 |
 | 10 | Expression and progression | Planned | Phases 8, 9 |
 | 11 | Desktop release | Planned | Phase 7 (can run alongside 8–10) |
@@ -37,7 +37,7 @@ Goal: the room feels inhabited.
 
 Increments:
 
-1. **Sound effects.** Placement thud, pick-up, rotate tick, lamp click, curtain swish, recolour pop, soft UI taps. Short OGG/MP3 files under `public/audio/sfx`, one `src/ui/sfx.js` with a volume setting beside the music switch. Respect the music toggle rules and never autoplay before the first gesture.
+1. Done 2 October 2026: **Sound effects.** Thirteen CC0 files from Kenney's Interface Sounds, Impact Sounds and UI Audio packs in `public/audio/sfx` (sources and originals in SOURCES.md, 124 KB): place (five variants), pick-up, rotate, lamp, curtain, recolour, remove, blocked, and a quiet UI tap. `src/ui/sfx.js` plays them through Web Audio with per-sound gains and slight pitch variation, loads nothing before the first gesture, and remembers on/off and volume (`home-deco-sim:sfx`, `home-deco-sim:sfx-volume`). Settings has a Sound effects switch and an effects volume slider, independent of the music. Credits name the packs.
 2. **Idle motion.** Lamp glow breathes very slightly, string lights twinkle in Evening, plants sway a few degrees when the camera settles. All driven by one clock in `src/scene/motion.js` that only runs while something animated is visible, so the on-demand renderer stays idle otherwise.
 3. **A cat.** One animated character with four states: walk, sit, curl on a rug or sofa seat, look at the pointer. Pathing on the free floor cells from `state.occupancy`; targets are rugs, sunny tiles near windows and seat slots. Built as a low-poly model through the same tools/blender pipeline, animated with three glTF clips. A `pet` entry in the room record (version 10) stores presence and colour; position is not saved.
 4. **Weather at the window.** Rain and clouds variants of the window view, picked in the Light tab next to the moods, with a faint rain-on-glass overlay.

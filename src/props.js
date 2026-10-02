@@ -330,7 +330,7 @@ export const CATALOG = {
     for (let i = 0; i < 38; i++) for (const z of [-1.48, 1.48]) g.add(box(.028, .015, .14, 0xe6ceaa, -1.8 + i * .097, .012, z, .005));
     for (const z of [-1.28, 1.28]) g.add(box(3.62, .006, .018, 0xd5ba96, 0, .043, z, .003)); return g;
   }},
-  desk: { label: 'Desk', category: 'tables', w: 2, d: 1, surface: { y: .73, slots: [{ x: .7, z: -.25 }, { x: .7, z: .25 }, { x: -.65, z: .25 }] }, model: 'models/desk.glb', build() { return modelInstance('desk') || this.procedural(); }, procedural() {
+  desk: { label: 'Desk', category: 'tables', w: 2, d: 1, surface: { y: .79, slots: [{ x: .7, z: -.25 }, { x: .7, z: .25 }, { x: -.65, z: .25 }] }, model: 'models/desk.glb', build() { return modelInstance('desk') || this.procedural(); }, procedural() {
     const g = new THREE.Group(); g.add(box(1.9, .095, .86, C.wood, 0, .78, 0));
     g.add(box(.47, .76, .75, C.wood, .65, .02, 0));
     for (const y of [.08, .33, .58]) { g.add(box(.43, .21, .025, 0xc38a56, .65, y, .39), box(.13, .02, .025, C.brass, .65, y + .16, .415)); }
@@ -350,7 +350,7 @@ export const CATALOG = {
     for (const x of [-.6, 0, .6]) { g.add(box(.56, .53, .03, 0xc58a5c, x, .26, .34), cyl(.025, .025, .03, C.brass, x, .65, .37).rotateX(Math.PI / 2)); }
     const plant = smallPlant(.45); plant.position.set(-.58, .85, 0); g.add(plant); books(g, .85, .15, 5); return g;
   }},
-  tvStand: { label: 'TV stand', category: 'tables', w: 2, d: 1, surface: { y: .48, slots: [{ x: -.65, z: .15 }, { x: .65, z: .15 }] }, model: 'models/tvStand.glb', build() { return modelInstance('tvStand') || this.procedural(); }, procedural() {
+  tvStand: { label: 'TV stand', category: 'tables', w: 2, d: 1, surface: { y: .51, slots: [{ x: -.65, z: .15 }, { x: .65, z: .15 }] }, model: 'models/tvStand.glb', build() { return modelInstance('tvStand') || this.procedural(); }, procedural() {
     const g = new THREE.Group(); legs(g, 1.6, .5, .15); g.add(box(1.85, .42, .65, C.wood, 0, .15, 0));
     g.add(box(.08, .12, .08, C.black, 0, .57, 0), box(1.35, .78, .055, C.black, 0, .66, -.12), box(1.26, .69, .01, 0x4b5d58, 0, .705, -.085)); return g;
   }},

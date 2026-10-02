@@ -198,13 +198,13 @@
     "tris": 2500
   },
   "coffeeTable": {
+    "source": "art-source/models-v2/furniture/coffeeTable/coffeeTable.glb",
     "size": [
       1.7,
-      1.0,
-      0.94
+      0.84,
+      1.0
     ],
-    "tris": 1600,
-    "note": "height chosen so the table top lands on the catalog slot height after the baked dressing is dropped"
+    "tris": 1600
   },
   "bookshelf": {
     "source": "art-source/models-v2/furniture/bookshelf/bookshelf.glb",
@@ -224,13 +224,13 @@
     "tris": 900
   },
   "desk": {
+    "source": "art-source/models-v2/furniture/desk/desk.glb",
     "size": [
       1.9,
       0.86,
       1.3
     ],
-    "tris": 1800,
-    "note": "height chosen so the table top lands on the catalog slot height after the baked dressing is dropped"
+    "tris": 1800
   },
   "chair": {
     "size": [
@@ -241,19 +241,20 @@
     "tris": 800
   },
   "sideboard": {
+    "source": "art-source/models-v2/furniture/sideboard/sideboard.glb",
     "size": [
       1.85,
-      0.65,
+      0.71,
       0.85
     ],
-    "tris": 1400,
-    "note": "height chosen so the table top lands on the catalog slot height after the baked dressing is dropped"
+    "tris": 1400
   },
   "tvStand": {
+    "source": "art-source/models-v2/furniture/tvStand/tvStand.glb",
     "size": [
       1.85,
-      0.65,
-      1.25
+      0.67,
+      1.34
     ],
     "tris": 1000
   },

@@ -69,10 +69,11 @@ export function migrateRoom(data) {
  *   placementFor     (room) => placement configured for that room's size; preferred
  *   wallBlocked      blocked wall cells for the live room (used when no wallBlockedFor is given)
  *   wallBlockedFor   (room) => blocked wall cells for that room's preset; preferred
+ *   wallWindowsFor   (room) => window wall cells for that room's preset (curtains hang only there)
  *   presets          { [id]: { width, depth } }; when given, the room's preset must exist
  *   lightings        { [key]: ... }; when given, the lighting mood must exist (otherwise any string)
  */
-export function parseRoom(raw, { catalog, placement, placementFor, maxItems = 200, newId, wallBlocked = new Set(), wallBlockedFor, presets, lightings, sizeRange = [4, 12] }) {
+export function parseRoom(raw, { catalog, placement, placementFor, maxItems = 200, newId, wallBlocked = new Set(), wallBlockedFor, wallWindowsFor = null, presets, lightings, sizeRange = [4, 12] }) {
   const data = migrateRoom(raw);
   if (!Array.isArray(data.items)) fail('Missing items');
   if (data.items.length > maxItems) fail('Too many items');
@@ -87,6 +88,7 @@ export function parseRoom(raw, { catalog, placement, placementFor, maxItems = 20
   if (lightings && !Object.hasOwn(lightings, data.lighting)) fail('Unknown lighting ' + data.lighting);
   const rules = placementFor ? placementFor(roomOut) : placement;
   const blocked = wallBlockedFor ? wallBlockedFor(roomOut) : wallBlocked;
+  const windows = wallWindowsFor ? wallWindowsFor(roomOut) : new Set();
 
   const ids = new Set();
   const withIds = data.items.map((it) => {
@@ -109,7 +111,7 @@ export function parseRoom(raw, { catalog, placement, placementFor, maxItems = 20
     if (!Number.isInteger(it.rot) || it.rot < 0 || it.rot > 3) fail('Invalid position');
     if (it.color != null && !isColor(it.color)) fail('Invalid color');
     if (it.lit != null && typeof it.lit !== 'boolean') fail('Invalid lamp state');
-    it = { ...it, lit: catalog[it.type].lamp ? (it.lit ?? true) : null };
+    it = { ...it, lit: (catalog[it.type].lamp || catalog[it.type].toggle) ? (it.lit ?? true) : null };
     const surface = rules.isSurfaceItem(it.type);
     const wallItem = rules.isWallItem(it.type);
     if (it.parent != null) {
@@ -128,7 +130,7 @@ export function parseRoom(raw, { catalog, placement, placementFor, maxItems = 20
       if (!wallItem) fail('Only wall decorations go on walls');
       if (!WALLS.includes(it.wall)) fail('Unknown wall');
       if (![it.col, it.row].every(Number.isInteger)) fail('Invalid position');
-      if (!rules.wallFree(wallOccupied, blocked, it.type, it.wall, it.col, it.row)) fail('Wall spot not free');
+      if (!rules.wallFree(wallOccupied, blocked, it.type, it.wall, it.col, it.row, null, windows)) fail('Wall spot not free');
       const { w, h } = rules.wallSize(it.type);
       rules.wallCellsOf(it.wall, it.col, it.row, w, h).forEach((c) => wallOccupied.add(c));
       floorItems.push(record({ ...it, gx: null, gz: null, rot: 0, parent: null, slot: null }));

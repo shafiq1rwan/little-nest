@@ -135,10 +135,11 @@ export function renderSelectionCard({ card, item, def, thumbnail, sizeText, canR
     const isLamp = item.lit !== null && item.lit !== undefined;
     light.hidden = !isLamp;
     if (isLamp) {
+      const t = def.toggle || { on: 'On', off: 'Off', labelOn: 'Light on. Switch off', labelOff: 'Light off. Switch on', titleOn: 'Switch the light off', titleOff: 'Switch the light on', icon: 'bulb' };
       light.setAttribute('aria-pressed', String(item.lit));
-      light.setAttribute('aria-label', item.lit ? 'Light on. Switch off' : 'Light off. Switch on');
-      light.title = item.lit ? 'Switch the light off' : 'Switch the light on';
-      light.lastChild.textContent = item.lit ? 'On' : 'Off';
+      light.setAttribute('aria-label', item.lit ? t.labelOn : t.labelOff);
+      light.title = item.lit ? t.titleOn : t.titleOff;
+      light.lastChild.textContent = item.lit ? t.on : t.off;
       light.onclick = () => onLight?.(!item.lit);
     }
   }

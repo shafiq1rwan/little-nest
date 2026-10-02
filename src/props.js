@@ -183,7 +183,31 @@ function framedPrint(width, height, botanical) {
   art.position.set(0, height / 2 + .08, .085); art.castShadow = art.receiveShadow = true; art.userData.ownedMaterial = art.material; g.add(art);
   return g;
 }
+/** Curtain pose: `open` from 0 (closed, panels meet) to 1 (open, bunched at the edges). */
+export function poseCurtain(group, open, sway = 0) {
+  group.traverse((o) => {
+    if (!o.userData.panel) return;
+    const side = o.userData.panel === 'L' ? -1 : 1;
+    const scale = 1 - .68 * open;
+    o.scale.x = scale;
+    o.position.x = side * (1 - scale / 2);   // each panel spans from the centre (closed) to its end of the rod
+    o.rotation.z = sway * side;
+  });
+}
 const WALL_CATALOG = {
+  curtain: { label: 'Curtains', category: 'wall', layer: 'wall', overWindow: true, tags: ['window', 'fabric', 'cozy', 'drapes'], w: 2, d: 1, wall: { w: 2, h: 5 }, defaultColor: C.cream,
+    toggle: { on: 'Open', off: 'Closed', labelOn: 'Curtains open. Close them', labelOff: 'Curtains closed. Open them', titleOn: 'Close the curtains', titleOff: 'Open the curtains' },
+    build() {
+      // Origin at the bottom-centre of the wall footprint (2 columns by 5 rows = 2 by 2.5 units); hangs in front of the blinds, which stand 0.27 off the wall.
+      const g = new THREE.Group();
+      const rod = mesh(new THREE.CylinderGeometry(.022, .022, 1.94, 12), C.brass, 0, 2.42, .38); rod.rotation.z = Math.PI / 2; g.add(rod);
+      for (const x of [-.97, .97]) g.add(mesh(new THREE.SphereGeometry(.035, 8, 6), C.brass, x, 2.42, .38));
+      for (const side of ['L', 'R']) {
+        const panel = box(1, 2.34, .07, C.cream, 0, .04, .34, .03); panel.userData.recolor = true; panel.userData.panel = side; g.add(panel);
+      }
+      poseCurtain(g, 1);
+      return g;
+    } },
   worldMap: { label: 'World map', category: 'wall', layer: 'wall', tags: ['art', 'picture', 'poster'], w: 2, d: 1, wall: { w: 2, h: 3 }, defaultColor: C.wood, model: 'models/worldMap.glb', build: () => withCanvas(modelInstance('worldMap'), 'worldMap', false) || framedPrint(1.55, 1.2, false) },
   botanicalPrint: { label: 'Botanical print', category: 'wall', layer: 'wall', tags: ['art', 'picture', 'plant'], w: 2, d: 1, wall: { w: 2, h: 3 }, defaultColor: C.wood, model: 'models/botanicalPrint.glb', build: () => withCanvas(modelInstance('botanicalPrint'), 'botanicalPrint', true) || framedPrint(1.05, 1.3, true) },
   wallShelf: { label: 'Wall shelf', category: 'wall', layer: 'wall', tags: ['shelf', 'storage'], w: 2, d: 1, wall: { w: 2, h: 1 }, defaultColor: C.wood,

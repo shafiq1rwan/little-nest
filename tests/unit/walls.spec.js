@@ -10,6 +10,7 @@ const catalog = {
   clock: { w: 1, d: 1, layer: 'wall', wall: { w: 1, h: 1 } },
   print: { w: 2, d: 1, layer: 'wall', wall: { w: 2, h: 3 } },
   shelf: { w: 2, d: 1, layer: 'wall', wall: { w: 2, h: 1 }, surface: { y: 0.4, slots: [{ x: -0.5, z: 0.15 }] } },
+  curtain: { w: 2, d: 1, layer: 'wall', overWindow: true, toggle: {}, wall: { w: 2, h: 5 } },
 };
 const placement = createPlacement({ catalog, room: 8, wallRows: 8, wallRow: 0.5 });
 // A window across the left half of the back wall between 1.0 and 3.4 units up.
@@ -124,4 +125,24 @@ test('schema version 5 validates wall items and migrates every older version', (
     expect(() => parseRoom({ version: 5, wall: 1, floor: 2, items }, opts), message).toThrow(SaveError);
     expect(() => parseRoom({ version: 5, wall: 1, floor: 2, items }, opts)).toThrow(message);
   }
+});
+
+test('curtains hang only on window cells, start open, and save their state', () => {
+  const fixtures = [{ kind: 'window', wall: 'back', from: -4, to: 0, bottom: 1.05, top: 3.4 }, { kind: 'light', wall: 'back', from: 2.9, to: 3.8, bottom: 3.2, top: 3.65 }];
+  const windows = placement.windowWallCells(fixtures);
+  const all = placement.blockedWallCells(fixtures);
+  expect(windows.size).toBeLessThan(all.size);   // the light string blocks cells but is not a window
+  const state = createRoomState({ placement, wallBlocked: all, wallWindows: windows });
+  expect(state.canMount('curtain', 'back', 0, 2)).toBe(true);
+  expect(state.canMount('curtain', 'back', 3, 2)).toBe(false);   // half over the wall
+  expect(state.canMount('curtain', 'back', 0, 1)).toBe(false);   // below the sill
+  expect(state.canMount('clock', 'back', 0, 3)).toBe(false);     // decorations still avoid windows
+  const c = state.add({ type: 'curtain', wall: 'back', col: 0, row: 2 });
+  expect(c.lit).toBe(true);
+  expect(state.canMount('curtain', 'back', 1, 2)).toBe(false);   // overlaps the first pair
+  state.setLit(c.id, false);
+  const saved = serializeRoom({ items: state.serialize(), wall: 0, floor: 0, room: { preset: 'livingRoom', width: 8, depth: 8 }, lighting: 'morning' });
+  const parsed = parseRoom(saved, { catalog, placement, newId: () => 'x', wallBlocked: all, wallWindowsFor: () => windows });
+  expect(parsed.items.find((i) => i.type === 'curtain')).toMatchObject({ lit: false, col: 0, row: 2 });
+  expect(() => parseRoom(saved, { catalog, placement, newId: () => 'x', wallBlocked: all })).toThrow(SaveError);   // without window cells the spot is invalid
 });

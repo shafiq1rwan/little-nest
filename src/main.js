@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { CATALOG, recolor } from './props.js';
+import { CATALOG, recolor, poseCurtain } from './props.js';
 import { createRoom } from './room.js';
 import { createScene } from './scene/create-scene.js';
 import { createThumbnails } from './scene/thumbnails.js';
@@ -41,6 +41,7 @@ const finishes = { wall: WALL_FINISHES[0].color, floor: FLOOR_FINISHES[0].color,
 const WALL_ROWS = WALL_HEIGHT / 0.5;
 const placement = createPlacement({ catalog: CATALOG, width: roomConfig.width, depth: roomConfig.depth, cell: CELL, wallRows: WALL_ROWS, wallRow: 0.5 });
 const wallBlocked = new Set();
+const wallWindows = new Set();   // the subset of blocked cells that are windows, where curtains hang
 let shell = null;      // { root, floorMat, wallMat, walls, wallPanels, dispose }
 let grid = null;
 let gridVisible = false;
@@ -58,6 +59,9 @@ function placementFor(room) {
 }
 function wallBlockedFor(room) {
   return placementFor(room).blockedWallCells(presetFixtures(presetFor(room)));
+}
+function wallWindowsFor(room) {
+  return placementFor(room).windowWallCells(presetFixtures(presetFor(room)));
 }
 function makeGrid(width, depth) {
   const pts = [];
@@ -78,6 +82,8 @@ function buildShell(room) {
   placement.configure({ width: room.width, depth: room.depth, wallRows: presetWallRows(preset) });
   wallBlocked.clear();
   for (const c of placement.blockedWallCells(presetFixtures(preset))) wallBlocked.add(c);
+  wallWindows.clear();
+  for (const c of placement.windowWallCells(presetFixtures(preset))) wallWindows.add(c);
   grid = makeGrid(room.width, room.depth);
   grid.visible = gridVisible;
   scene.add(grid);
@@ -94,7 +100,7 @@ function applyLighting(key) {
   hemisphere.groundColor.setHex(mood.hemisphere.ground);
   hemisphere.intensity = mood.hemisphere.intensity;
   sun.color.setHex(mood.sun.color);
-  sun.intensity = mood.sun.intensity;
+  sun.intensity = mood.sun.intensity * curtainFactor();
   sun.position.set(...mood.sun.position);
   scene.background.setHex(mood.backdrop);
   renderer.toneMappingExposure = mood.exposure;
@@ -106,6 +112,39 @@ function applyLighting(key) {
   if (lampsReady) for (const record of state.items) applyLamp(record);
 }
 /** Sets a lamp's point lights and glowing parts from its lit flag and the mood's lamp strength. */
+/** Closed curtains dim the sun: 12% each, never below half. */
+function curtainFactor() {
+  if (!lampsReady) return 1;
+  const closed = state.items.filter((r) => CATALOG[r.type].toggle && r.lit === false).length;
+  return Math.max(.5, 1 - .12 * closed);
+}
+// Curtain panels tween between poses; the loop keeps rendering while any tween is live.
+const tweens = new Map();   // record id -> { group, from, to, start, duration }
+const CURTAIN_TWEEN_MS = 450;
+function applyCurtain(record, animate) {
+  if (!CATALOG[record.type].toggle) return;
+  const group = meshOf(record);
+  if (!group) return;
+  const to = record.lit ? 1 : 0;
+  if (!animate) { group.userData.open = to; poseCurtain(group, to); tweens.delete(record.id); return; }
+  tweens.set(record.id, { group, from: group.userData.open ?? 1 - to, to, start: performance.now(), duration: CURTAIN_TWEEN_MS });
+}
+function stepTweens(now) {
+  for (const [id, t] of tweens) {
+    const k = Math.min(1, (now - t.start) / t.duration);
+    const eased = 1 - (1 - k) ** 3;
+    const open = t.from + (t.to - t.from) * eased;
+    t.group.userData.open = open;
+    poseCurtain(t.group, open, Math.sin(k * Math.PI) * .05 * (t.to - t.from));
+    if (k >= 1) tweens.delete(id);
+  }
+}
+let relightQueued = false;
+function relightSoon() {
+  if (relightQueued) return;
+  relightQueued = true;
+  queueMicrotask(() => { relightQueued = false; applyLighting(finishes.lighting); });
+}
 function applyLamp(record) {
   if (record.lit === null || record.lit === undefined) return;
   const mood = LIGHTING[finishes.lighting] || LIGHTING[DEFAULT_LIGHTING];
@@ -125,7 +164,7 @@ buildShell(roomConfig);
 
 // ---------- placement state ----------
 // Committed state lives in `state` as serializable records; meshes are looked up by record id.
-const state = createRoomState({ placement, wallBlocked });
+const state = createRoomState({ placement, wallBlocked, wallWindows });
 lampsReady = true;
 const commands = createCommands({ state, finishes, room: roomConfig });   // every room mutation goes through here so it can be undone
 const meshes = new Map();             // record id -> THREE.Group
@@ -223,8 +262,12 @@ commands.subscribe((kind, p) => {
     meshes.set(p.id, mesh);
     applyTransform(p);   // also attaches the mesh to the scene or to its supporter
     applyLamp(p);
+    applyCurtain(p, false);
+    if (CATALOG[p.type].toggle) applyLighting(finishes.lighting);
     updateCount();
   } else if (kind === 'remove') {
+    tweens.delete(p.id);
+    if (meshes.get(p.id)?.userData.open !== undefined) relightSoon();   // a curtain left: the sun may brighten
     if (selected?.id === p.id) setSelected(null);
     const mesh = meshes.get(p.id);
     meshes.delete(p.id);
@@ -239,6 +282,7 @@ commands.subscribe((kind, p) => {
     if (selected === p) updateSelection();
   } else if (kind === 'lit') {
     applyLamp(p);
+    if (CATALOG[p.type].toggle) { applyCurtain(p, true); applyLighting(finishes.lighting); }
     if (selected === p) updateSelection();
   } else if (kind === 'finish') {
     if (p.key === 'lighting') { applyLighting(p.color); syncLightingOptions(); }
@@ -554,7 +598,7 @@ function startPreset(presetId) {
   return { selectId };
 }
 
-const parseOptions = { catalog: CATALOG, placementFor, wallBlockedFor, presets: ROOM_PRESETS, lightings: LIGHTING, maxItems: MAX_SAVED_ITEMS, newId: newItemId, sizeRange: [MIN_ROOM_SIZE, MAX_ROOM_SIZE] };
+const parseOptions = { catalog: CATALOG, placementFor, wallBlockedFor, wallWindowsFor, presets: ROOM_PRESETS, lightings: LIGHTING, maxItems: MAX_SAVED_ITEMS, newId: newItemId, sizeRange: [MIN_ROOM_SIZE, MAX_ROOM_SIZE] };
 const gallery = createGallery({ key: ROOMS_KEY, legacyKey: SAVE_KEY, ...parseOptions });
 let currentRoom = null;   // { id, name } of the gallery entry the open design belongs to
 function setCurrentRoom(summary) {
@@ -713,6 +757,7 @@ perf.renders = 0;
 renderer.setAnimationLoop(() => {
   if (resize()) dirty = true;
   if (controls.update()) dirty = true;
+  if (tweens.size) { stepTweens(performance.now()); dirty = true; }
   if (!dirty) return;
   dirty = false;
   if (selected) { selectionBox.box.setFromObject(meshOf(selected)); selectionBox.updateMatrixWorld(true); }
@@ -741,6 +786,8 @@ window.__sim = {
   get ghost() { return ghost; },
   get selectedType() { return selectedType; },
   get keepPlacing() { return keepPlacing; },
+  get tweening() { return tweens.size > 0; },
+  wallWindows,
   startPlacing, orbitBy,
   get selected() { return withMesh(selected); },
 };

@@ -51,6 +51,14 @@ export function createPlacement({ catalog, room = 8, width = room, depth = room,
   function isLamp(type) {
     return !!catalog[type].lamp;
   }
+  /** Lamps and items with a `toggle` (curtains) carry an on/off state in `lit`. */
+  function hasSwitch(type) {
+    return !!catalog[type].lamp || !!catalog[type].toggle;
+  }
+  /** Wall items that hang over a window (curtains) may only cover window cells. */
+  function hangsOverWindow(type) {
+    return !!catalog[type].overWindow;
+  }
   function isSurfaceItem(type) {
     return catalog[type].layer === 'surface';
   }
@@ -134,10 +142,13 @@ export function createPlacement({ catalog, room = 8, width = room, depth = room,
     return col >= 0 && row >= 0 && col + w <= wallColumns(wall) && row + h <= dims.wallRows;
   }
   /** Whether a wall item fits at col/row without overlapping `occupancy` or `blocked` cell keys. */
-  function wallFree(occupancy, blocked, type, wall, col, row, ignore = null) {
+  function wallFree(occupancy, blocked, type, wall, col, row, ignore = null, windows = null) {
     const size = wallSize(type);
     if (!size || !WALLS.includes(wall) || !wallInBounds(col, row, size.w, size.h, wall)) return false;
-    return wallCellsOf(wall, col, row, size.w, size.h).every((c) => !blocked.has(c) && (!occupancy.has(c) || (ignore && ignore.has(c))));
+    const cells = wallCellsOf(wall, col, row, size.w, size.h);
+    const open = (c) => !occupancy.has(c) || (ignore && ignore.has(c));
+    if (hangsOverWindow(type)) return !!windows && cells.every((c) => windows.has(c) && open(c));
+    return cells.every((c) => !blocked.has(c) && open(c));
   }
   /** World placement of a wall item: position of its bottom-centre on the wall face and its yaw. */
   function wallWorld(type, wall, col, row) {
@@ -160,6 +171,10 @@ export function createPlacement({ catalog, room = 8, width = room, depth = room,
    * Wall cells covered by fixtures such as windows. Each fixture is { wall, from, to, bottom, top } in
    * world units along the wall (from/to) and height (bottom/top).
    */
+  /** Wall cells covered by windows only, where curtains may hang. */
+  function windowWallCells(fixtures) {
+    return blockedWallCells(fixtures.filter((f) => f.kind === 'window'));
+  }
   function blockedWallCells(fixtures) {
     const blocked = new Set();
     for (const f of fixtures) {
@@ -187,7 +202,7 @@ export function createPlacement({ catalog, room = 8, width = room, depth = room,
     get wallRows() { return dims.wallRows; },
     cell, wallRow, configure,
     footprint, cellsOf, inBounds, occupies, isFree, worldPos, snap,
-    isLamp, isSurfaceItem, surfaceKindOf, acceptsOn, surfaceOf, slotCount, slotLocal, nearestSlot,
-    isWallItem, wallSize, wallColumns, wallCellsOf, wallInBounds, wallFree, wallWorld, wallSnap, blockedWallCells,
+    isLamp, hasSwitch, hangsOverWindow, isSurfaceItem, surfaceKindOf, acceptsOn, surfaceOf, slotCount, slotLocal, nearestSlot,
+    isWallItem, wallSize, wallColumns, wallCellsOf, wallInBounds, wallFree, wallWorld, wallSnap, blockedWallCells, windowWallCells,
   };
 }

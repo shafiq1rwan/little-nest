@@ -1,6 +1,6 @@
 // Committed room state: serializable item records and the occupancy derived from them.
 // Records are { id, type, gx, gz, rot, color, parent, slot, wall, col, row, lit }.
-//   lit is true/false for lamps (catalog `lamp: true`) and null for everything else.
+//   lit is true/false for lamps (catalog `lamp: true`) and toggles such as curtains (`toggle`), null for everything else.
 //   floor items:   gx/gz on the grid; parent/slot/wall/col/row null
 //   surface items: parent = supporting item id, slot = index on its surface; gx/gz/wall null
 //   wall items:    wall = 'back' | 'left', col/row on that wall's grid; gx/gz/parent null; rot is 0
@@ -15,10 +15,10 @@ export function newItemId() {
 const EMPTY = { gx: null, gz: null, parent: null, slot: null, wall: null, col: null, row: null };
 /** Lamps start lit; everything else has no light state. */
 function defaultLit(placement, type) {
-  return placement.isLamp(type) ? true : null;
+  return placement.hasSwitch(type) ? true : null;
 }
 
-export function createRoomState({ placement, wallBlocked = new Set() }) {
+export function createRoomState({ placement, wallBlocked = new Set(), wallWindows = new Set() }) {
   const items = [];
   const occupancy = new Set();          // floor cells in use
   const wallOccupancy = new Set();      // wall cells in use
@@ -81,13 +81,13 @@ export function createRoomState({ placement, wallBlocked = new Set() }) {
   /** True when a wall item fits at wall/col/row, ignoring `ignoreId`'s own cells. */
   function canMount(type, wall, col, row, ignoreId = null) {
     const own = ignoreId ? ownCells(byId.get(ignoreId)) : null;
-    return placement.wallFree(wallOccupancy, wallBlocked, type, wall, col, row, own);
+    return placement.wallFree(wallOccupancy, wallBlocked, type, wall, col, row, own, wallWindows);
   }
 
   /** Adds a record. Returns it, or null when the position is not free. */
   function add({ type, gx = null, gz = null, rot = 0, color = null, id = null, parent = null, slot = null, wall = null, col = null, row = null, lit = undefined }) {
     let record;
-    const litValue = placement.isLamp(type) ? (lit == null ? true : !!lit) : null;
+    const litValue = placement.hasSwitch(type) ? (lit == null ? true : !!lit) : null;
     if (parent) {
       if (!canPlaceOn(type, parent, slot)) return null;
       record = { type, rot, color, lit: litValue, ...EMPTY, parent, slot };

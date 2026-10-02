@@ -15,8 +15,8 @@ export function cleanName(name, fallback = DEFAULT_ROOM_NAME) {
   return trimmed || fallback;
 }
 
-export function createGallery({ key, legacyKey = null, catalog, placement, placementFor, presets, maxItems, newId, wallBlocked = new Set(), wallBlockedFor, now = () => new Date().toISOString(), maxRooms = 50 }) {
-  const parseOptions = { catalog, placement, placementFor, presets, maxItems, newId, wallBlocked, wallBlockedFor };
+export function createGallery({ key, legacyKey = null, catalog, placement, placementFor, presets, maxItems, newId, wallBlocked = new Set(), wallWindowsFor = null, wallBlockedFor, now = () => new Date().toISOString(), maxRooms = 50 }) {
+  const parseOptions = { catalog, placement, placementFor, presets, maxItems, newId, wallBlocked, wallBlockedFor, wallWindowsFor };
   function readAll() {
     const data = readJSON(key);
     if (!data || data.version !== GALLERY_VERSION || !Array.isArray(data.rooms)) return [];

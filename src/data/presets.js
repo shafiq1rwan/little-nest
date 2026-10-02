@@ -136,7 +136,7 @@ export function presetWallRows(preset) {
 
 /** Wall fixtures (blocked wall areas) for a preset: windows plus the optional bulb string. */
 export function presetFixtures(preset) {
-  const fixtures = preset.windows.map((w) => ({ wall: w.wall, from: w.at - w.width / 2 - 0.1, to: w.at + w.width / 2 + 0.1, bottom: 1.05, top: 3.4 }));
-  if (preset.lights) fixtures.push({ wall: 'back', from: preset.width / 2 - 1.1, to: preset.width / 2 - 0.2, bottom: 3.2, top: 3.65 });
+  const fixtures = preset.windows.map((w) => ({ kind: 'window', wall: w.wall, from: w.at - w.width / 2 - 0.1, to: w.at + w.width / 2 + 0.1, bottom: 1.05, top: 3.4 }));
+  if (preset.lights) fixtures.push({ kind: 'light', wall: 'back', from: preset.width / 2 - 1.1, to: preset.width / 2 - 0.2, bottom: 3.2, top: 3.65 });
   return fixtures;
 }

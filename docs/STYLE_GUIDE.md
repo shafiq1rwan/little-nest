@@ -97,7 +97,7 @@ Do not change canvas dimensions while a drag or pinch is active. One finger deco
 
 ## Motion
 
-Motion is small and optional. Hover shows a soft cream outline (desktop mouse only). A floor ghost casts a soft footprint shadow. Items settle with a 260 ms squash when they land; curtains slide over 450 ms. Decorative motion is skipped when the system asks for reduced motion.
+Motion is small and optional. Hover shows a soft cream outline (desktop mouse only). A floor ghost casts a soft footprint shadow. Items settle with a 260 ms squash when they land; curtains slide over 450 ms. Ambient motion is subtle: lamps breathe by a few percent, candles flicker, string lights twinkle only in the Evening mood, and plants sway about a degree and a half, with pots still. It can be switched off in Settings. Decorative motion is skipped when the system asks for reduced motion.
 
 ## Finish options
 

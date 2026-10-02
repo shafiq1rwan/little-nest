@@ -6,7 +6,7 @@ import { createThumbnails } from './scene/thumbnails.js';
 import { preloadModels, preloadArt, loadedModelKeys } from './scene/models.js';
 import { tintModel as tint, disposeModel, measureModel, compactModel } from './scene/geometry.js';
 import { installIcons } from './ui/icons.js';
-import { CELL, CAMERA, RENDER, MOTION, MUSIC, SAVE_KEY, ROOMS_KEY, MUSIC_KEY, SFX_KEY, SFX_VOLUME_KEY, MAX_SAVED_ITEMS } from './config/game.js';
+import { CELL, CAMERA, RENDER, MOTION, MUSIC, SAVE_KEY, ROOMS_KEY, MUSIC_KEY, SFX_KEY, SFX_VOLUME_KEY, AMBIENT_KEY, MAX_SAVED_ITEMS } from './config/game.js';
 import { BACKDROP, SELECTION_OUTLINE, HOVER_OUTLINE, GHOST_OK, GHOST_BLOCKED, WALL_FINISHES, FLOOR_FINISHES, FLOOR_STYLES, DEFAULT_FLOOR_STYLE, ITEM_COLORS } from './config/theme.js';
 import { ROOM_PRESETS, DEFAULT_PRESET, WALL_HEIGHT, MIN_ROOM_SIZE, MAX_ROOM_SIZE, presetFixtures, presetWallRows } from './data/presets.js';
 import { COLLECTIONS, DEFAULT_COLLECTION } from './data/collections.js';
@@ -23,6 +23,8 @@ import { createGalleryDialog } from './ui/gallery.js';
 import { createToast, buildCatalog, setCatalogActive, bindCatalogFilter, bindTabs, buildFinishSwatches, buildLightingOptions, renderSelectionCard, setPressed } from './ui/hud.js';
 import { createMusic } from './ui/music.js';
 import { createSfx } from './ui/sfx.js';
+import { createMotion } from './scene/motion.js';
+import { readString, writeString } from './persistence/storage.js';
 
 export async function initializeGame({ onProgress = async () => {}, onOpenRoom = () => {}, onNotice = () => {} } = {}) {
 const $ = (id) => document.getElementById(id);
@@ -48,6 +50,7 @@ let shell = null;      // { root, floorMat, wallMat, walls, wallPanels, dispose 
 let grid = null;
 let gridVisible = false;
 let wallsVisible = true;
+const motion = createMotion();
 let lampsReady = false;   // state is created after the first shell build; lamps are applied as they are added
 let dirty = true;         // true when the next animation frame must render
 function invalidate() { dirty = true; }
@@ -81,6 +84,7 @@ function buildShell(room) {
   if (grid) { scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); }
   shell = createRoom(scene, preset, WALL_HEIGHT, { wallColor: finishes.wall, wallLeftColor: finishes.wallLeft, floorColor: finishes.floor, floorStyle: finishes.floorStyle });
   shell.walls.visible = wallsVisible;
+  motion.setBulbs(shell.bulbs);
   placement.configure({ width: room.width, depth: room.depth, wallRows: presetWallRows(preset) });
   wallBlocked.clear();
   for (const c of placement.blockedWallCells(presetFixtures(preset))) wallBlocked.add(c);
@@ -105,6 +109,7 @@ function applyLighting(key) {
   sun.intensity = mood.sun.intensity * curtainFactor();
   sun.position.set(...mood.sun.position);
   scene.background.setHex(mood.backdrop);
+  motion.setTwinkle(key === 'evening');
   renderer.toneMappingExposure = mood.exposure;
   if (shell) {
     shell.groundMat.color.setHex(mood.backdrop);
@@ -141,6 +146,18 @@ function stepTweens(now) {
     if (k >= 1) tweens.delete(id);
   }
 }
+/** Which idle motion an item gets: floor plants sway, candles and lanterns flicker, other lamps breathe. */
+function motionKind(type) {
+  const def = CATALOG[type];
+  if (def.lamp) return def.layer === 'surface' ? 'flame' : 'lamp';
+  if ((type === 'plant' || def.tags?.includes('plant')) && placement.occupies(type)) return 'plant';
+  return null;
+}
+// Ambient motion: on by default, remembered, and off whenever the system asks for reduced motion.
+let ambientOn = readString(AMBIENT_KEY) !== 'off';
+function syncAmbient() { motion.setEnabled(ambientOn && !window.matchMedia('(prefers-reduced-motion: reduce)').matches); invalidate(); }
+window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener?.('change', syncAmbient);
+const ambient = { isOn: () => ambientOn, setOn(on) { ambientOn = !!on; writeString(AMBIENT_KEY, ambientOn ? 'on' : 'off'); syncAmbient(); } };
 let relightQueued = false;
 function relightSoon() {
   if (relightQueued) return;
@@ -156,9 +173,11 @@ function applyLamp(record) {
     if (o.isPointLight) {
       if (o.userData.baseIntensity === undefined) o.userData.baseIntensity = o.intensity;
       o.intensity = record.lit ? o.userData.baseIntensity * mood.lamps : 0;
+      o.userData.lampValue = { intensity: o.intensity };
     } else if (o.isMesh && o.material?.emissive && o.userData.ownedMaterial === o.material) {
       if (o.userData.baseEmissive === undefined) o.userData.baseEmissive = o.material.emissiveIntensity;
       o.material.emissiveIntensity = record.lit ? o.userData.baseEmissive * Math.max(1, mood.lamps) : 0.05;
+      o.userData.lampValue = { emissiveIntensity: o.material.emissiveIntensity };
     }
   });
 }
@@ -168,6 +187,7 @@ buildShell(roomConfig);
 // Committed state lives in `state` as serializable records; meshes are looked up by record id.
 const state = createRoomState({ placement, wallBlocked, wallWindows });
 lampsReady = true;
+syncAmbient();
 const commands = createCommands({ state, finishes, room: roomConfig });   // every room mutation goes through here so it can be undone
 const meshes = new Map();             // record id -> THREE.Group
 let selectedType = null;              // catalog key while placing
@@ -317,8 +337,10 @@ commands.subscribe((kind, p) => {
     applyLamp(p);
     applyCurtain(p, false);
     if (CATALOG[p.type].toggle) applyLighting(finishes.lighting);
+    motion.track(p.id, mesh, motionKind(p.type), { isLit: () => state.get(p.id)?.lit === true });
     updateCount();
   } else if (kind === 'remove') {
+    motion.forget(p.id);
     tweens.delete(p.id);
     bounces.delete(p.id);
     if (hoverId === p.id) hoverId = null;
@@ -851,6 +873,7 @@ renderer.setAnimationLoop(() => {
   if (controls.update()) dirty = true;
   if (tweens.size) { stepTweens(performance.now()); dirty = true; }
   if (bounces.size) { stepBounces(performance.now()); dirty = true; }
+  if (motion.step(performance.now())) dirty = true;
   if (!dirty) return;
   dirty = false;
   if (selected) { selectionBox.box.setFromObject(meshOf(selected)); selectionBox.updateMatrixWorld(true); }
@@ -878,7 +901,7 @@ window.__sim = {
   catalogCollection: (type) => CATALOG[type].collection,
   collections: COLLECTIONS,
   get musicOn() { return music.isOn(); },
-  sfx,
+  sfx, motion, ambient,
   get items() { return state.items.map(withMesh); },
   get ghost() { return ghost; },
   get selectedType() { return selectedType; },
@@ -894,6 +917,7 @@ await onProgress(100, 'Your little nest is ready.');
 return {
   music,
   sfx,
+  ambient,
   openRooms: () => galleryDialog.open({ allowSave: false }),
   refresh: () => { resize(true); invalidate(); },
   setEditing(enabled) {

@@ -122,6 +122,7 @@ export function createRoom(scene, preset, wallHeight = 4, { wallColor = 0x92725c
   const wood = new THREE.MeshStandardMaterial({ color: 0x9b623d, roughness: .8 });
   const trim = new THREE.MeshStandardMaterial({ color: 0xe7ca9f, roughness: .9 });
   const owned = [floorMat, wallMat, wallLeftMat, wood, trim];
+  const bulbs = [];   // string-light bulb materials, one each (they twinkle in the evening)
   function block(w, h, d, mat, x, y, z, parent = walls) {
     const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); m.receiveShadow = m.castShadow = true; parent.add(m); return m;
   }
@@ -175,11 +176,12 @@ export function createRoom(scene, preset, wallHeight = 4, { wallColor = 0x92725c
   if (preset.lights) {
     // A short string of warm bulbs high on the back wall, near its right end.
     const wireMat = new THREE.MeshStandardMaterial({ color: 0x5d4938 });
-    const bulbMat = new THREE.MeshStandardMaterial({ color: 0xffe2a4, emissive: 0xffc76b, emissiveIntensity: 2 });
-    owned.push(wireMat, bulbMat);
+    owned.push(wireMat);
     const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(halfW - 1.1, 3.6, -halfD + .18), new THREE.Vector3(halfW - .65, 3.25, -halfD + .18), new THREE.Vector3(halfW - .2, 3.6, -halfD + .18)]);
     walls.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 24, .008, 5, false), wireMat));
     for (const t of [.12, .4, .7, .92]) {
+      const bulbMat = new THREE.MeshStandardMaterial({ color: 0xffe2a4, emissive: 0xffc76b, emissiveIntensity: 2 });
+      owned.push(bulbMat); bulbs.push(bulbMat);
       const p = curve.getPoint(t), bulb = new THREE.Mesh(new THREE.SphereGeometry(.055, 10, 8), bulbMat); bulb.position.copy(p); walls.add(bulb);
     }
   }
@@ -196,5 +198,5 @@ export function createRoom(scene, preset, wallHeight = 4, { wallColor = 0x92725c
     root.traverse((o) => { if (o.isMesh) o.geometry.dispose(); });
     for (const m of owned) m.dispose();
   }
-  return { root, floorMat, wallMat, wallLeftMat, setFloorStyle, viewMat, groundMat, walls, wallPanels: { back: backPanel, left: leftPanel }, dispose };
+  return { root, bulbs, floorMat, wallMat, wallLeftMat, setFloorStyle, viewMat, groundMat, walls, wallPanels: { back: backPanel, left: leftPanel }, dispose };
 }

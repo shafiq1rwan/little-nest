@@ -42,6 +42,18 @@ async function measure(page, label, frames = 90) {
   return r;
 }
 
+
+/** Average cost of one ambient-motion tick, forcing the clock forward past its frame cap. */
+function motionTick(page, label) {
+  return page.evaluate((label) => {
+    const m = window.__sim.motion; const wasOn = m.isEnabled(); m.setEnabled(true);
+    let t = performance.now() + 1e6; const n = 300; const t0 = performance.now();
+    for (let i = 0; i < n; i++) { t += 50; m.step(t); }
+    const ms = (performance.now() - t0) / n; m.setEnabled(wasOn);
+    return { label, tickMs: +ms.toFixed(3), ...m.counts() };
+  }, label).then((r) => { console.log(r.label + ', motion tick', JSON.stringify(r)); return r; });
+}
+
 test('startup and frame cost for the starter room and a stress room', async ({ page }) => {
   const t0 = Date.now();
   await page.goto('/');
@@ -50,7 +62,13 @@ test('startup and frame cost for the starter room and a stress room', async ({ p
   const startup = await page.evaluate(() => ({ readyMs: +window.__sim.perf.readyMs.toFixed(0), thumbnailsMs: +window.__sim.perf.thumbnailsMs.toFixed(0), thumbnailsCached: window.__sim.perf.thumbnailsCached ?? null }));
   console.log('startup', JSON.stringify({ ...startup, wallMs: Date.now() - t0 }));
 
+  // Idle with ambient motion off stays comparable with earlier runs (0 renders per frame).
+  await page.evaluate(() => window.__sim.motion.setEnabled(false));
   const idle = await measure(page, 'starter room, idle');
+  await page.evaluate(() => window.__sim.motion.setEnabled(true));
+  await measure(page, 'starter room, ambient motion');
+  const tick = await motionTick(page, 'starter room');
+  expect(tick.tickMs).toBeLessThan(1);
   // Orbit a little so the camera is moving during the sample.
   const moving = await page.evaluate(async () => {
     const s = window.__sim;
@@ -87,7 +105,12 @@ test('startup and frame cost for the starter room and a stress room', async ({ p
     for (const t of tables) s.commands.add({ type: 'lantern', parent: t.id, slot: 0, rot: 0 });
     s.setSelected(null);
   });
+  await page.evaluate(() => window.__sim.motion.setEnabled(false));
   const stress = await measure(page, 'stress room, idle');
+  await page.evaluate(() => window.__sim.motion.setEnabled(true));
+  await measure(page, 'stress room, ambient motion');
+  const stressTick = await motionTick(page, 'stress room');
+  expect(stressTick.tickMs).toBeLessThan(1);
   expect(stress.items).toBeGreaterThan(60);
   expect(idle.calls).toBeGreaterThan(0);
 

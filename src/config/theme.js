@@ -23,6 +23,14 @@ export const FLOOR_FINISHES = [
   { name: 'Ash', color: 0xb7be9f },
 ];
 
+// Floor patterns. Keys are stored in saved rooms (finishes.floorStyle): add new ones, never rename.
+export const FLOOR_STYLES = [
+  { key: 'parquet', name: 'Parquet' },
+  { key: 'planks', name: 'Planks' },
+  { key: 'tile', name: 'Tile' },
+];
+export const DEFAULT_FLOOR_STYLE = 'parquet';
+
 // Colors offered for upholstery, rugs, and plant pots.
 export const ITEM_COLORS = [
   { name: 'Linen', color: 0xf3e4d2 },

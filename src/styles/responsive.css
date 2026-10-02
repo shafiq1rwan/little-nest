@@ -71,6 +71,8 @@
   .finishes h3 { margin: 4px 0 8px; font-size: 17px; }
   .finishes p { margin: 0 0 16px; font-size: 12px; }
   .finishes .swatch { width: 48px; height: 48px; }
+  .finish-options { margin: -6px 0 12px; }
+  .finish-options button { min-height: 44px; font-size: 12px; }
   #help-panel { top: 12px; right: 12px; width: min(300px, calc(100% - 24px)); max-height: calc(100% - 24px); overflow: auto; padding: 16px; }
   .touch-help { display: block; }
   .desktop-help { display: none; }

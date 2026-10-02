@@ -7,12 +7,14 @@
 //   5           items gain wall ('back' | 'left' | null), col, row for wall-mounted decorations
 //   6           { room: { preset, width, depth } } describes the shell; older saves are the 8 x 8 living room
 //   7           { lighting } names the mood (default morning); items gain lit (true/false for lamps, null otherwise)
+//   8           { wallLeft } colors the left wall separately (default: wall); { floorStyle } names the floor pattern (default parquet)
 //
 // Older versions are migrated on read; the writer always emits the current version.
 
 import { WALLS } from '../game/placement.js';
 
-export const CURRENT_VERSION = 7;
+export const CURRENT_VERSION = 8;
+export const FLOOR_STYLE_KEYS = ['parquet', 'planks', 'tile'];   // stored in saves; keep in step with FLOOR_STYLES in src/config/theme.js
 export const DEFAULT_LIGHTING_KEY = 'morning';
 export const LEGACY_ROOM = { preset: 'livingRoom', width: 8, depth: 8 };
 
@@ -29,9 +31,9 @@ function record(it) {
   return out;
 }
 
-export function serializeRoom({ room = LEGACY_ROOM, wall, floor, lighting = DEFAULT_LIGHTING_KEY, items }) {
+export function serializeRoom({ room = LEGACY_ROOM, wall, wallLeft = wall, floor, floorStyle = 'parquet', lighting = DEFAULT_LIGHTING_KEY, items }) {
   const ordered = [...items.filter((i) => !i.parent), ...items.filter((i) => i.parent)];
-  return { version: CURRENT_VERSION, room: { preset: room.preset, width: room.width, depth: room.depth }, wall, floor, lighting, items: ordered.map(record) };
+  return { version: CURRENT_VERSION, room: { preset: room.preset, width: room.width, depth: room.depth }, wall, wallLeft, floor, floorStyle, lighting, items: ordered.map(record) };
 }
 
 function isColor(value) {
@@ -42,7 +44,7 @@ function isColor(value) {
 export function migrateRoom(data) {
   if (!data || typeof data !== 'object') fail('Not a saved room');
   const version = data.version ?? 2;
-  if (![2, 3, 4, 5, 6, 7].includes(version)) fail('Unsupported save version ' + version);
+  if (![2, 3, 4, 5, 6, 7, 8].includes(version)) fail('Unsupported save version ' + version);
   const items = Array.isArray(data.items)
     ? data.items.map((it) => {
       if (!it || typeof it !== 'object') return it;
@@ -56,7 +58,10 @@ export function migrateRoom(data) {
     : data.items;
   const room = version < 6 ? { ...LEGACY_ROOM } : data.room;
   const lighting = version < 7 ? DEFAULT_LIGHTING_KEY : data.lighting;
-  return { ...data, version: CURRENT_VERSION, room, lighting, items };
+  // Missing fields default for any version (older saves never had them); present ones are validated in parseRoom.
+  const wallLeft = data.wallLeft ?? data.wall;
+  const floorStyle = data.floorStyle ?? 'parquet';
+  return { ...data, version: CURRENT_VERSION, room, lighting, wallLeft, floorStyle, items };
 }
 
 /**
@@ -77,7 +82,8 @@ export function parseRoom(raw, { catalog, placement, placementFor, maxItems = 20
   const data = migrateRoom(raw);
   if (!Array.isArray(data.items)) fail('Missing items');
   if (data.items.length > maxItems) fail('Too many items');
-  if (!isColor(data.wall) || !isColor(data.floor)) fail('Invalid finishes');
+  if (!isColor(data.wall) || !isColor(data.floor) || !isColor(data.wallLeft)) fail('Invalid finishes');
+  if (!FLOOR_STYLE_KEYS.includes(data.floorStyle)) fail('Unknown floor style ' + data.floorStyle);
 
   const room = data.room;
   if (!room || typeof room !== 'object' || typeof room.preset !== 'string') fail('Invalid room');
@@ -145,5 +151,5 @@ export function parseRoom(raw, { catalog, placement, placementFor, maxItems = 20
     }
     floorItems.push(record({ ...it, parent: null, slot: null, wall: null, col: null, row: null }));
   }
-  return { room: roomOut, wall: data.wall, floor: data.floor, lighting: data.lighting, items: [...floorItems, ...surfaceItems] };
+  return { room: roomOut, wall: data.wall, wallLeft: data.wallLeft, floor: data.floor, floorStyle: data.floorStyle, lighting: data.lighting, items: [...floorItems, ...surfaceItems] };
 }

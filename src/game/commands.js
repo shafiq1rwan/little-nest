@@ -8,7 +8,7 @@
 //   transform record                gx/gz/rot (floor), parent/slot/rot (surface), or wall/col/row changed; move its mesh
 //   color     record                color changed; recolor its mesh
 //   lit       record                a lamp was switched; update its light
-//   finish    { key, color }        wall or floor color, or the lighting mood (key 'lighting', value a mood key), changed
+//   finish    { key, color }        a finish changed: wall (back), wallLeft, floor colors; floorStyle and lighting carry keys
 //   room      { preset, width, depth }  the shell changed; rebuild walls, floor, and grid (items were cleared first)
 //   history   { canUndo, canRedo }  undo/redo availability changed
 
@@ -194,6 +194,14 @@ export function createCommands({ state, finishes, room = { preset: null, width: 
     push({ undo: () => opFinish(key, prev), redo: () => opFinish(key, color) });
     return true;
   }
+  /** Changes several finishes as one history entry, e.g. both walls at once. Unknown or unchanged keys are skipped. */
+  function setFinishes(changes) {
+    const keys = Object.keys(changes).filter((k) => k in finishes && finishes[k] !== changes[k]);
+    if (!keys.length) return false;
+    const prev = Object.fromEntries(keys.map((k) => [k, opFinish(k, changes[k])]));
+    push({ undo: () => keys.forEach((k) => opFinish(k, prev[k])), redo: () => keys.forEach((k) => opFinish(k, changes[k])) });
+    return true;
+  }
   /** Removes every item as a single history entry. */
   function clear() {
     if (!state.items.length) return false;
@@ -205,12 +213,12 @@ export function createCommands({ state, finishes, room = { preset: null, width: 
    * Replaces the shell (when `room` is given), items, and finishes as a single history entry,
    * for example from a loaded save or a fresh preset. The shell changes before items are restored.
    */
-  function replaceRoom({ room: nextRoom = null, wall, floor, lighting = finishes.lighting, items }) {
-    const before = { room: { ...room }, wall: finishes.wall, floor: finishes.floor, lighting: finishes.lighting, items: state.serialize() };
+  function replaceRoom({ room: nextRoom = null, wall, wallLeft = wall, floor, floorStyle = 'parquet', lighting = finishes.lighting, items }) {
+    const before = { room: { ...room }, wall: finishes.wall, wallLeft: finishes.wallLeft, floor: finishes.floor, floorStyle: finishes.floorStyle, lighting: finishes.lighting, items: state.serialize() };
     const ordered = [...items.filter((i) => !i.parent), ...items.filter((i) => i.parent)];
-    const after = { room: nextRoom ? { ...nextRoom } : { ...room }, wall, floor, lighting, items: ordered.map(snapshotOf) };
+    const after = { room: nextRoom ? { ...nextRoom } : { ...room }, wall, wallLeft, floor, floorStyle, lighting, items: ordered.map(snapshotOf) };
     const sameRoom = (a, b) => a.preset === b.preset && a.width === b.width && a.depth === b.depth;
-    const apply = (r) => { opClear(); if (!sameRoom(r.room, room)) opRoom(r.room); opFinish('wall', r.wall); opFinish('floor', r.floor); if ('lighting' in finishes && r.lighting !== undefined) opFinish('lighting', r.lighting); opRestore(r.items); };
+    const apply = (r) => { opClear(); if (!sameRoom(r.room, room)) opRoom(r.room); opFinish('wall', r.wall); opFinish('floor', r.floor); for (const k of ['wallLeft', 'floorStyle']) if (k in finishes && r[k] !== undefined) opFinish(k, r[k]); if ('lighting' in finishes && r.lighting !== undefined) opFinish('lighting', r.lighting); opRestore(r.items); };
     apply(after);
     push({ undo: () => apply(before), redo: () => apply(after) });
   }
@@ -242,5 +250,5 @@ export function createCommands({ state, finishes, room = { preset: null, width: 
     return () => listeners.delete(fn);
   }
 
-  return { add, duplicate, remove, move, place, mount, rotate, recolor, setLit, setFinish, clear, replaceRoom, undo, redo, canUndo, canRedo, clearHistory, subscribe };
+  return { add, duplicate, remove, move, place, mount, rotate, recolor, setLit, setFinish, setFinishes, clear, replaceRoom, undo, redo, canUndo, canRedo, clearHistory, subscribe };
 }

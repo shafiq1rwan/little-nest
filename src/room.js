@@ -65,10 +65,41 @@ export function artTexture(botanical) {
 
 // Textures are shared across rebuilds; only the shell geometry is recreated per preset.
 let sharedTextures = null;
+function plankTexture() {
+  return texture((c, s) => {
+    c.fillStyle = '#c39872'; c.fillRect(0, 0, s, s);
+    const rowH = 128;   // two planks per cell, staggered joints
+    for (let y = 0, row = 0; y < s; y += rowH, row++) {
+      const offset = (row * 389) % 512;
+      for (let x = -offset; x < s; x += 512) {
+        const tone = 160 + ((row * 23 + x * 3) % 30);
+        c.fillStyle = 'rgb(' + (tone + 30) + ',' + (tone - 6) + ',' + (tone - 40) + ')';
+        c.fillRect(x, y, 512, rowH);
+        c.strokeStyle = '#7952366e'; c.lineWidth = 2; c.strokeRect(x, y, 512, rowH);
+        c.strokeStyle = '#f2d0a520'; c.lineWidth = 1;
+        for (let j = 0; j < 7; j++) { c.beginPath(); c.moveTo(x + 4, y + 10 + j * 16); c.bezierCurveTo(x + 170, y + 4 + j * 16, x + 340, y + 20 + j * 16, x + 508, y + 10 + j * 16); c.stroke(); }
+      }
+    }
+  });
+}
+function tileTexture() {
+  return texture((c, s) => {
+    c.fillStyle = '#d8cfc4'; c.fillRect(0, 0, s, s);   // grout
+    const t = 256, gap = 6;   // one tile per room cell
+    for (let x = 0; x < s; x += t) for (let y = 0; y < s; y += t) {
+      const tone = 236 + ((x * 7 + y * 13) % 12);
+      c.fillStyle = 'rgb(' + tone + ',' + (tone - 4) + ',' + (tone - 10) + ')';
+      c.fillRect(x + gap / 2, y + gap / 2, t - gap, t - gap);
+      c.fillStyle = '#ffffff22'; c.fillRect(x + gap / 2, y + gap / 2, t - gap, 10);
+    }
+  });
+}
 function textures() {
-  if (!sharedTextures) sharedTextures = { floor: woodTexture(true), wall: woodTexture(false), view: viewTexture() };
+  if (!sharedTextures) sharedTextures = { floor: woodTexture(true), planks: plankTexture(), tile: tileTexture(), wall: woodTexture(false), view: viewTexture() };
   return sharedTextures;
 }
+/** Texture key for a floor style; unknown styles fall back to parquet. */
+const FLOOR_TEXTURE = { parquet: 'floor', planks: 'planks', tile: 'tile' };
 
 /**
  * Builds the room shell for a preset: floor, two walls, trim, windows, optional bulb string, and the
@@ -76,17 +107,21 @@ function textures() {
  * Returns the materials the finishes recolor, the wall panels used for raycasting, the fixture
  * rectangles that block wall cells, and dispose() for rebuilding with another preset.
  */
-export function createRoom(scene, preset, wallHeight = 4, { wallColor = 0x92725c, floorColor = 0xe3a372 } = {}) {
+export function createRoom(scene, preset, wallHeight = 4, { wallColor = 0x92725c, wallLeftColor = wallColor, floorColor = 0xe3a372, floorStyle = 'parquet' } = {}) {
   const { width, depth } = preset;
   const halfW = width / 2, halfD = depth / 2;
   const tex = textures();
   const root = new THREE.Group(); scene.add(root);
-  const floorMat = new THREE.MeshStandardMaterial({ color: floorColor, map: tex.floor, roughness: .85 });
+  const floorMat = new THREE.MeshStandardMaterial({ color: floorColor, map: tex[FLOOR_TEXTURE[floorStyle] || 'floor'], roughness: .85 });
   const wallMat = new THREE.MeshStandardMaterial({ color: wallColor, map: tex.wall, roughness: .93 });
+  const wallLeftMat = new THREE.MeshStandardMaterial({ color: wallLeftColor, map: tex.wall, roughness: .93 });
+  /** Swaps the floor pattern in place; textures are shared, so nothing is disposed. */
+  function setFloorStyle(style) { floorMat.map = tex[FLOOR_TEXTURE[style] || 'floor']; floorMat.roughness = style === 'tile' ? .6 : .85; floorMat.needsUpdate = true; }
+  setFloorStyle(floorStyle);
   const walls = new THREE.Group(); root.add(walls);
   const wood = new THREE.MeshStandardMaterial({ color: 0x9b623d, roughness: .8 });
   const trim = new THREE.MeshStandardMaterial({ color: 0xe7ca9f, roughness: .9 });
-  const owned = [floorMat, wallMat, wood, trim];
+  const owned = [floorMat, wallMat, wallLeftMat, wood, trim];
   function block(w, h, d, mat, x, y, z, parent = walls) {
     const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat); m.position.set(x, y, z); m.receiveShadow = m.castShadow = true; parent.add(m); return m;
   }
@@ -113,7 +148,7 @@ export function createRoom(scene, preset, wallHeight = 4, { wallColor = 0x92725c
   } else {
     // The two wall panels double as raycast targets for wall-mounted decorations.
     backPanel = block(width, wallHeight, .2, wallMat, 0, wallHeight / 2, -halfD - .1); backPanel.userData.wall = 'back';
-    leftPanel = block(.2, wallHeight, depth + .2, wallMat, -halfW - .1, wallHeight / 2, -.1); leftPanel.userData.wall = 'left';
+    leftPanel = block(.2, wallHeight, depth + .2, wallLeftMat, -halfW - .1, wallHeight / 2, -.1); leftPanel.userData.wall = 'left';
     block(width + .25, .1, .3, trim, 0, wallHeight, -halfD - .1);
     block(.3, .1, depth + .25, trim, -halfW - .1, wallHeight, -.1);
     block(width, .16, .09, wood, 0, .09, -halfD + .06);
@@ -161,5 +196,5 @@ export function createRoom(scene, preset, wallHeight = 4, { wallColor = 0x92725c
     root.traverse((o) => { if (o.isMesh) o.geometry.dispose(); });
     for (const m of owned) m.dispose();
   }
-  return { root, floorMat, wallMat, viewMat, groundMat, walls, wallPanels: { back: backPanel, left: leftPanel }, dispose };
+  return { root, floorMat, wallMat, wallLeftMat, setFloorStyle, viewMat, groundMat, walls, wallPanels: { back: backPanel, left: leftPanel }, dispose };
 }

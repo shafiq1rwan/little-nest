@@ -7,7 +7,7 @@ import { preloadModels, preloadArt, loadedModelKeys } from './scene/models.js';
 import { tintModel as tint, disposeModel, measureModel, compactModel } from './scene/geometry.js';
 import { installIcons } from './ui/icons.js';
 import { CELL, CAMERA, RENDER, MUSIC, SAVE_KEY, ROOMS_KEY, MUSIC_KEY, MAX_SAVED_ITEMS } from './config/game.js';
-import { BACKDROP, SELECTION_OUTLINE, GHOST_OK, GHOST_BLOCKED, WALL_FINISHES, FLOOR_FINISHES, ITEM_COLORS } from './config/theme.js';
+import { BACKDROP, SELECTION_OUTLINE, GHOST_OK, GHOST_BLOCKED, WALL_FINISHES, FLOOR_FINISHES, FLOOR_STYLES, DEFAULT_FLOOR_STYLE, ITEM_COLORS } from './config/theme.js';
 import { ROOM_PRESETS, DEFAULT_PRESET, WALL_HEIGHT, MIN_ROOM_SIZE, MAX_ROOM_SIZE, presetFixtures, presetWallRows } from './data/presets.js';
 import { COLLECTIONS, DEFAULT_COLLECTION } from './data/collections.js';
 import { LIGHTING, DEFAULT_LIGHTING } from './data/lighting.js';
@@ -37,7 +37,8 @@ const { renderer, scene, camera, controls, hemisphere, sun, resetView, zoomBy, o
 // The shell (floor, walls, windows, grid) is rebuilt whenever the room preset changes. `placement`
 // and `wallBlocked` are reconfigured in place so everything holding them keeps working.
 const roomConfig = { preset: DEFAULT_PRESET, width: ROOM_PRESETS[DEFAULT_PRESET].width, depth: ROOM_PRESETS[DEFAULT_PRESET].depth };
-const finishes = { wall: WALL_FINISHES[0].color, floor: FLOOR_FINISHES[0].color, lighting: DEFAULT_LIGHTING };
+const finishes = { wall: WALL_FINISHES[0].color, wallLeft: WALL_FINISHES[0].color, floor: FLOOR_FINISHES[0].color, floorStyle: DEFAULT_FLOOR_STYLE, lighting: DEFAULT_LIGHTING };
+let wallTarget = 'both';   // which wall the Walls tab swatches paint
 const WALL_ROWS = WALL_HEIGHT / 0.5;
 const placement = createPlacement({ catalog: CATALOG, width: roomConfig.width, depth: roomConfig.depth, cell: CELL, wallRows: WALL_ROWS, wallRow: 0.5 });
 const wallBlocked = new Set();
@@ -77,7 +78,7 @@ function buildShell(room) {
   const preset = presetFor(room);
   if (shell) shell.dispose();
   if (grid) { scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); }
-  shell = createRoom(scene, preset, WALL_HEIGHT, { wallColor: finishes.wall, floorColor: finishes.floor });
+  shell = createRoom(scene, preset, WALL_HEIGHT, { wallColor: finishes.wall, wallLeftColor: finishes.wallLeft, floorColor: finishes.floor, floorStyle: finishes.floorStyle });
   shell.walls.visible = wallsVisible;
   placement.configure({ width: room.width, depth: room.depth, wallRows: presetWallRows(preset) });
   wallBlocked.clear();
@@ -286,7 +287,8 @@ commands.subscribe((kind, p) => {
     if (selected === p) updateSelection();
   } else if (kind === 'finish') {
     if (p.key === 'lighting') { applyLighting(p.color); syncLightingOptions(); }
-    else { (p.key === 'wall' ? shell.wallMat : shell.floorMat).color.setHex(p.color); syncFinishSwatches(); }
+    else if (p.key === 'floorStyle') { shell.setFloorStyle(p.color); syncFloorStyles(); }
+    else { ({ wall: shell.wallMat, wallLeft: shell.wallLeftMat, floor: shell.floorMat })[p.key].color.setHex(p.color); syncFinishSwatches(); }
   } else if (kind === 'room') {
     buildShell(p);
   } else if (kind === 'history') {
@@ -531,9 +533,29 @@ buildCatalog({ container: $('catalog'), catalog: CATALOG, thumbnails, onChoose: 
 bindCatalogFilter({ container: $('catalog'), catalog: CATALOG, search: $('search'), categoryButtons: [...document.querySelectorAll('[data-category]')], emptyEl: $('empty-catalog'), collectionSelect: $('collection'), collections: COLLECTIONS });
 bindTabs({ buttons: [...document.querySelectorAll('[data-tab]')], onChange: () => cancelPlacing() });
 const syncFinishSwatches = buildFinishSwatches([
-  { el: $('wall-swatches'), finishes: WALL_FINISHES, current: () => finishes.wall, onPick: (c) => commands.setFinish('wall', c) },
+  { el: $('wall-swatches'), finishes: WALL_FINISHES,
+    current: () => (wallTarget === 'left' ? finishes.wallLeft : wallTarget === 'back' || finishes.wall === finishes.wallLeft ? finishes.wall : -1),
+    onPick: (c) => commands.setFinishes(wallTarget === 'both' ? { wall: c, wallLeft: c } : { [wallTarget === 'left' ? 'wallLeft' : 'wall']: c }) },
   { el: $('floor-swatches'), finishes: FLOOR_FINISHES, current: () => finishes.floor, onPick: (c) => commands.setFinish('floor', c) },
 ]);
+// Walls tab: which wall the swatches paint. Floor tab: the pattern buttons.
+$('wall-target').querySelectorAll('button').forEach((b) => {
+  b.onclick = () => {
+    wallTarget = b.dataset.target;
+    $('wall-target').querySelectorAll('button').forEach((o) => { const on = o === b; o.classList.toggle('active', on); o.setAttribute('aria-pressed', String(on)); });
+    syncFinishSwatches();
+  };
+});
+for (const { key, name } of FLOOR_STYLES) {
+  const b = document.createElement('button');
+  b.dataset.style = key; b.textContent = name;
+  b.onclick = () => commands.setFinish('floorStyle', key);
+  $('floor-styles').append(b);
+}
+function syncFloorStyles() {
+  $('floor-styles').querySelectorAll('button').forEach((b) => { const on = b.dataset.style === finishes.floorStyle; b.classList.toggle('active', on); b.setAttribute('aria-pressed', String(on)); });
+}
+syncFloorStyles();
 const syncLightingOptions = buildLightingOptions({
   container: $('lighting-options'), moods: LIGHTING, icons: { morning: 'sun', sunset: 'sunset', evening: 'moon' },
   current: () => finishes.lighting, onPick: (key) => commands.setFinish('lighting', key),
@@ -586,7 +608,7 @@ function presetRoomData(presetId) {
     });
   }
   return {
-    data: { room: { preset: presetId, width: preset.width, depth: preset.depth }, wall: WALL_FINISHES[0].color, floor: FLOOR_FINISHES[0].color, lighting: DEFAULT_LIGHTING, items },
+    data: { room: { preset: presetId, width: preset.width, depth: preset.depth }, wall: WALL_FINISHES[0].color, wallLeft: WALL_FINISHES[0].color, floor: FLOOR_FINISHES[0].color, floorStyle: DEFAULT_FLOOR_STYLE, lighting: DEFAULT_LIGHTING, items },
     selectId,
   };
 }
@@ -607,7 +629,7 @@ function setCurrentRoom(summary) {
 }
 function currentRoomData() {
   finishDrag();
-  return serializeRoom({ room: roomConfig, wall: finishes.wall, floor: finishes.floor, lighting: finishes.lighting, items: state.items });
+  return serializeRoom({ room: roomConfig, wall: finishes.wall, wallLeft: finishes.wallLeft, floor: finishes.floor, floorStyle: finishes.floorStyle, lighting: finishes.lighting, items: state.items });
 }
 /** Saves into entry `id` (or a new entry when null). Returns the summary, or null when storage refused. */
 function saveRoom(id, name) {
@@ -770,7 +792,7 @@ renderer.setAnimationLoop(() => {
 const withMesh = (r) => (r ? { ...r, mesh: meshOf(r) } : null);
 window.__sim = {
   state, placement, commands, finishes, gallery, roomConfig, presets: ROOM_PRESETS, lighting: LIGHTING, hemisphere, sun, renderer, perf, occupancy: state.occupancy, bgm: music.audio, scene, camera, controls,
-  get grid() { return grid; }, get walls() { return shell.walls; }, get wallMat() { return shell.wallMat; }, get floorMat() { return shell.floorMat; }, get wallPanels() { return shell.wallPanels; },
+  get grid() { return grid; }, get walls() { return shell.walls; }, get wallMat() { return shell.wallMat; }, get wallLeftMat() { return shell.wallLeftMat; }, get floorMat() { return shell.floorMat; }, get wallPanels() { return shell.wallPanels; },
   get currentRoom() { return currentRoom; },
   get photoMode() { return photoMode; },
   pointerToFloor: input.floorHit, snap, isFree, worldPos, meshOf, addItem, setSelected, rotateSelected, slotWorld, surfaceUnder, supporterMeshes, hitAmong: input.hitAmong, wallBlocked, startPreset,

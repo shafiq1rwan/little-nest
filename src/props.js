@@ -139,7 +139,7 @@ const SMALL_CATALOG = {
 function withGlow(group, { emissive, intensity = 1 }) {
   if (!group) return group;
   group.traverse((o) => {
-    if (!o.isMesh || !o.name.endsWith('_glow')) return;
+    if (!o.isMesh || !(o.name.endsWith('_glow') || o.userData.role === 'glow')) return;
     const m = ownMaterial(o, o.material.clone()); m.emissive.setHex(emissive); m.emissiveIntensity = intensity;
   });
   return group;
@@ -153,7 +153,7 @@ function withLight(group, { color, intensity, distance, y, emissive, glow = .3 }
 function withCanvas(group, botanical) {
   if (!group) return group;
   group.traverse((o) => {
-    if (o.isMesh && o.name.endsWith('_canvas')) ownMaterial(o, new THREE.MeshStandardMaterial({ map: artTexture(botanical), roughness: 1 }));
+    if (o.isMesh && (o.name.endsWith('_canvas') || o.userData.role === 'canvas')) ownMaterial(o, new THREE.MeshStandardMaterial({ map: artTexture(botanical), roughness: 1 }));
   });
   return group;
 }
@@ -211,7 +211,7 @@ const WALL_CATALOG = {
 // Japandi: low platforms, pale ash, charcoal upholstery, paper light.
 const J = { ash: 0xd9c7a7, charcoal: 0x3f3d3a, paper: 0xfff1dc, moss: 0x5f7a4a };
 const JAPANDI_CATALOG = {
-  lowSofa: { label: 'Low sofa', category: 'seating', collection: 'japandi', tags: ['japandi', 'platform', 'couch'], w: 3, d: 1, defaultColor: J.charcoal, build() {
+  lowSofa: { label: 'Low sofa', category: 'seating', collection: 'japandi', tags: ['japandi', 'platform', 'couch'], w: 3, d: 1, defaultColor: J.charcoal, model: 'models/lowSofa.glb', build() { return modelInstance('lowSofa') || this.procedural(); }, procedural() {
     const g = new THREE.Group();
     g.add(box(2.9, .16, .96, J.ash, 0, .06, 0, .02), box(2.9, .06, .06, J.ash, 0, 0, .45, .01));
     for (let i = 0; i < 3; i++) {
@@ -303,7 +303,7 @@ export const CATALOG = {
     const plant = smallPlant(.25); plant.position.set(-.3, .56, -.04); g.add(plant);
     g.add(cyl(.08, .065, .1, C.cream, .44, .635, .03)); return g;
   }},
-  bookshelf: { label: 'Bookshelf', category: 'decor', w: 2, d: 1, surface: { y: .815, slots: [{ x: .45, z: .02 }, { x: -.26, z: .02, y: 1.335 }, { x: .1, z: .02, y: 1.865 }] }, build() {
+  bookshelf: { label: 'Bookshelf', category: 'decor', w: 2, d: 1, surface: { y: .78, slots: [{ x: .3, z: .02 }, { x: -.26, z: .02, y: 1.31 }, { x: .1, z: .02, y: 1.86 }] }, /* clear spots on the loaded shelves */ model: 'models/bookshelf.glb', build() { return modelInstance('bookshelf') || this.procedural(); }, procedural() {
     const g = new THREE.Group(); legs(g, 1.7, .45, .12);
     g.add(box(1.86, .65, .65, C.wood, 0, .1, 0), box(1.7, 1.55, .04, C.dark, 0, .76, -.29));
     for (const x of [-.9, .9]) g.add(box(.075, 1.66, .6, C.wood, x, .74, 0));
@@ -325,7 +325,7 @@ export const CATALOG = {
     const glow = ownMaterial(shade, material(0xffebc4).clone()); glow.emissive.setHex(0xffcc85); glow.emissiveIntensity = .22; g.add(shade);
     const light = new THREE.PointLight(0xffbd73, 3, 4, 2); light.position.set(0, 1.45, 0); g.add(light); return g;
   }},
-  rug: { label: 'Rug', category: 'decor', w: 4, d: 3, layer: 'floor', build() {
+  rug: { label: 'Rug', category: 'decor', w: 4, d: 3, layer: 'floor', model: 'models/rug.glb', build() { return modelInstance('rug') || this.procedural(); }, procedural() {
     const g = new THREE.Group(), rug = box(3.85, .028, 2.85, 0xf1ddbd, 0, .012, 0, .025); rug.castShadow = false; rug.userData.recolor = true; g.add(rug);
     for (let i = 0; i < 38; i++) for (const z of [-1.48, 1.48]) g.add(box(.028, .015, .14, 0xe6ceaa, -1.8 + i * .097, .012, z, .005));
     for (const z of [-1.28, 1.28]) g.add(box(3.62, .006, .018, 0xd5ba96, 0, .043, z, .003)); return g;

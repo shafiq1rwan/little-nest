@@ -1,6 +1,6 @@
 # Remaining v2 props — staged Blender models
 
-All 35 remaining catalog props are modeled in native Blender using the v2 concept sheet. This completes the modeled catalog alongside the sofa, cactus, and eleven other plants in sibling folders. This batch is **not integrated** into the game.
+All 35 remaining catalog props are modeled in native Blender using the v2 concept sheet. This completes the modeled catalog alongside the sofa, cactus, and eleven other plants in sibling folders. Eight of them (clock, paperLamp, floralArmchair, rockingChair, teapot, rug, bookshelf, lowSofa) were integrated on 2 October 2026 through `tools/blender/models.json`; the rest can replace the generated versions the same way.
 
 Every prop folder contains an editable `.blend`, a Y-up `.glb`, a 384px preview, and a build report. The three contact sheets group seating/bedroom, tables/storage, and decor/lighting. Materials are separate flat colors without painted textures; lighting still changes their visible appearance. Upholstery and other recolorable parts carry `recolor` extras. Lamp shades and flames carry `glow` roles and emissive materials. The lantern glass is transparent, the mirror uses a reflective material, and both wall prints have blank canvases as required by the catalog.
 

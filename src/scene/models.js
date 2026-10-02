@@ -42,6 +42,7 @@ function prepare(scene) {
     mesh.applyMatrix4(o.matrixWorld);
     mesh.castShadow = mesh.receiveShadow = true;
     if (o.userData.recolor) mesh.userData.recolor = true;
+    if (o.userData.role) mesh.userData.role = o.userData.role;
     mesh.name = o.name;
     group.add(mesh);
   });
@@ -61,6 +62,7 @@ export function modelInstance(key) {
     mesh.position.copy(part.position); mesh.quaternion.copy(part.quaternion); mesh.scale.copy(part.scale);
     mesh.castShadow = mesh.receiveShadow = true;
     mesh.userData.recolor = !!part.userData.recolor;
+    if (part.userData.role) mesh.userData.role = part.userData.role;
     mesh.name = part.name;
     group.add(mesh);
   }

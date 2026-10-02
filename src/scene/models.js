@@ -22,6 +22,7 @@ export async function preloadArt(keys) {
     try {
       const texture = await loader.loadAsync('art/prints/' + key + '.webp?v=' + MODELS_VERSION);
       texture.colorSpace = THREE.SRGBColorSpace;
+      texture.flipY = false;   // mapped onto glTF UVs; the procedural fallback flips its own copy
       art.set(key, texture);
     } catch (error) {
       console.warn('Little Nest: print image for ' + key + ' did not load, using the painted placeholder.', error);

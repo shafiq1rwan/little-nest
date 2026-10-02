@@ -387,10 +387,12 @@ for o in [o for o in bpy.context.scene.objects if o.type == 'MESH' and (o.name.e
     xs = [v.co.x for v in me2.vertices]; zs = [v.co.z for v in me2.vertices]
     x0, x1, z0, z1 = min(xs), max(xs), min(zs), max(zs)
     uv = me2.uv_layers.new(name='canvas')
+    facing_in = sum(p.normal.y * p.area for p in me2.polygons) > 0   # front of a wall item is -Y; +Y points into the wall
     for poly in me2.polygons:
         for li in poly.loop_indices:
             v = me2.vertices[me2.loops[li].vertex_index].co
-            uv.data[li].uv = ((v.x - x0) / max(1e-6, x1 - x0), (v.z - z0) / max(1e-6, z1 - z0))
+            u = (v.x - x0) / max(1e-6, x1 - x0)
+            uv.data[li].uv = (1 - u if facing_in else u, (v.z - z0) / max(1e-6, z1 - z0))
 
 # --- export ---
 os.makedirs(os.path.dirname(out), exist_ok=True)

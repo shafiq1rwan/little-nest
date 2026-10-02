@@ -162,7 +162,9 @@ function withCanvas(group, key, botanical) {
 function framedPrint(width, height, botanical) {
   const g = new THREE.Group();
   const frame = box(width + .16, height + .16, .08, C.wood, 0, 0, 0, .01); frame.position.y = height / 2 + .08; frame.position.z = .04; frame.userData.recolor = true; g.add(frame);
-  const art = new THREE.Mesh(new THREE.BoxGeometry(width, height, .02), new THREE.MeshStandardMaterial({ map: artImage(botanical ? 'botanicalPrint' : 'worldMap') || artTexture(botanical), roughness: 1 }));
+  const image = artImage(botanical ? 'botanicalPrint' : 'worldMap');
+  const map = image ? Object.assign(image.clone(), { flipY: true, needsUpdate: true }) : artTexture(botanical);
+  const art = new THREE.Mesh(new THREE.BoxGeometry(width, height, .02), new THREE.MeshStandardMaterial({ map, roughness: 1 }));
   art.position.set(0, height / 2 + .08, .085); art.castShadow = art.receiveShadow = true; art.userData.ownedMaterial = art.material; g.add(art);
   return g;
 }

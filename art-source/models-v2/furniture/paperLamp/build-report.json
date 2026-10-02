@@ -1,0 +1,16 @@
+{
+  "key": "paperLamp",
+  "triangles": 1204,
+  "budget": 1499,
+  "parts": 7,
+  "recolorParts": 0,
+  "size": [
+    0.5099999904632568,
+    1.149999976158142,
+    0.5099999904632568
+  ],
+  "layer": "floor",
+  "glowParts": 2,
+  "generator": "Blender native",
+  "integrated": false
+}

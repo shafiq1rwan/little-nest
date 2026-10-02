@@ -1,0 +1,16 @@
+{
+  "key": "bookshelf",
+  "triangles": 1044,
+  "budget": 1499,
+  "parts": 44,
+  "recolorParts": 0,
+  "size": [
+    1.8600000143051147,
+    2.406062364578247,
+    0.679099828004837
+  ],
+  "layer": "floor",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

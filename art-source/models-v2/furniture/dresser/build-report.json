@@ -1,0 +1,16 @@
+{
+  "key": "dresser",
+  "triangles": 424,
+  "budget": 1499,
+  "parts": 14,
+  "recolorParts": 1,
+  "size": [
+    1.899999976158142,
+    0.9450376629829407,
+    0.693099856376648
+  ],
+  "layer": "floor",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

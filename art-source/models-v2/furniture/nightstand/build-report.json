@@ -1,0 +1,16 @@
+{
+  "key": "nightstand",
+  "triangles": 232,
+  "budget": 1499,
+  "parts": 8,
+  "recolorParts": 0,
+  "size": [
+    0.6000000238418579,
+    0.5814023613929749,
+    0.5550998449325562
+  ],
+  "layer": "floor",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

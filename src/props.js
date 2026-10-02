@@ -69,13 +69,13 @@ function seating(sofa) {
 // Small objects that sit in a surface slot on tables and shelves. Origin at the base centre; keep
 // each within roughly a 0.3-unit footprint so they fit between the baked decoration.
 const SMALL_CATALOG = {
-  mug: { label: 'Mug', category: 'small', layer: 'surface', tags: ['cup', 'coffee', 'tea'], w: 1, d: 1, defaultColor: C.cream, build() {
+  mug: { label: 'Mug', category: 'small', layer: 'surface', tags: ['cup', 'coffee', 'tea'], w: 1, d: 1, defaultColor: C.cream, model: 'models/mug.glb', build() { return modelInstance('mug') || this.procedural(); }, procedural() {
     const g = new THREE.Group();
     const body = cyl(.075, .065, .13, C.cream); body.userData.recolor = true; g.add(body);
     const handle = mesh(new THREE.TorusGeometry(.04, .012, 6, 12), C.cream, .095, .07, 0); handle.userData.recolor = true; g.add(handle);
     g.add(cyl(.062, .062, .012, 0x5b3d2a, 0, .125, 0)); return g;
   }},
-  candle: { label: 'Candle', category: 'small', layer: 'surface', lamp: true, tags: ['light', 'cozy'], w: 1, d: 1, defaultColor: C.cream, build() {
+  candle: { label: 'Candle', category: 'small', layer: 'surface', lamp: true, tags: ['light', 'cozy'], w: 1, d: 1, defaultColor: C.cream, model: 'models/candle.glb', build() { return withGlow(modelInstance('candle'), { emissive: 0xffb347, intensity: 1.2 }) || this.procedural(); }, procedural() {
     const g = new THREE.Group(); g.add(cyl(.09, .1, .03, C.brass));
     const wax = cyl(.06, .06, .16, C.cream, 0, .03, 0); wax.userData.recolor = true; g.add(wax);
     g.add(cyl(.006, .006, .03, C.black, 0, .19, 0));
@@ -83,7 +83,7 @@ const SMALL_CATALOG = {
     flame.material = material(0xffc76b).clone(); flame.material.emissive.setHex(0xffb347); flame.material.emissiveIntensity = 1.2; flame.userData.ownedMaterial = flame.material; g.add(flame);
     return g;
   }},
-  bookStack: { label: 'Book stack', category: 'small', layer: 'surface', tags: ['books', 'reading'], w: 1, d: 1, defaultColor: 0x9d6450, build() {
+  bookStack: { label: 'Book stack', category: 'small', layer: 'surface', tags: ['books', 'reading'], w: 1, d: 1, defaultColor: 0x9d6450, model: 'models/bookStack.glb', build() { return modelInstance('bookStack') || this.procedural(); }, procedural() {
     const g = new THREE.Group();
     const top = box(.2, .035, .27, 0x9d6450, 0, .075, 0, .006); top.userData.recolor = true;
     g.add(box(.24, .04, .3, 0x8a9a79, 0, 0, 0, .006), box(.22, .035, .28, 0xdfc8a0, .01, .04, -.01, .006), top);
@@ -100,14 +100,14 @@ const SMALL_CATALOG = {
     }
     return g;
   }},
-  frame: { label: 'Photo frame', category: 'small', layer: 'surface', tags: ['picture', 'photo'], w: 1, d: 1, defaultColor: C.wood, build() {
+  frame: { label: 'Photo frame', category: 'small', layer: 'surface', tags: ['picture', 'photo'], w: 1, d: 1, defaultColor: C.wood, model: 'models/frame.glb', build() { return modelInstance('frame') || this.procedural(); }, procedural() {
     const g = new THREE.Group();
     const f = box(.22, .26, .02, C.wood, 0, 0, 0, .004); f.rotation.x = -.15; f.userData.recolor = true; g.add(f);
     const pic = box(.17, .2, .006, 0xc3d6a8, 0, .03, .012, .002); pic.rotation.x = -.15; g.add(pic);
     g.add(box(.02, .2, .1, C.wood, 0, 0, -.06, .003).rotateX(.35));
     return g;
   }},
-  lantern: { label: 'Lantern', category: 'small', layer: 'surface', lamp: true, tags: ['light', 'candle', 'cozy'], w: 1, d: 1, defaultColor: C.black, build() {
+  lantern: { label: 'Lantern', category: 'small', layer: 'surface', lamp: true, tags: ['light', 'candle', 'cozy'], w: 1, d: 1, defaultColor: C.black, model: 'models/lantern.glb', build() { return withGlow(modelInstance('lantern'), { emissive: 0xffb347, intensity: 1.5 }) || this.procedural(); }, procedural() {
     const g = new THREE.Group();
     const base = cyl(.085, .09, .02, C.black); base.userData.recolor = true; g.add(base);
     const cage = mesh(new THREE.CylinderGeometry(.07, .07, .18, 6, 1, true), C.black, 0, .11, 0);
@@ -133,6 +133,30 @@ const SMALL_CATALOG = {
 
 // Wall-mounted decorations. Origin at the bottom-centre of the back face, extending +z into the room.
 // `wall: { w, h }` is the footprint in wall columns (1 unit) and rows (0.5 unit).
+
+// --- extras for loaded models: parts named <key>_glow become emissive, lamps get their point light,
+// --- and print canvases get the game's art texture. Names come from tools/blender/clean-generated.py.
+function withGlow(group, { emissive, intensity = 1 }) {
+  if (!group) return group;
+  group.traverse((o) => {
+    if (!o.isMesh || !o.name.endsWith('_glow')) return;
+    const m = ownMaterial(o, o.material.clone()); m.emissive.setHex(emissive); m.emissiveIntensity = intensity;
+  });
+  return group;
+}
+function withLight(group, { color, intensity, distance, y, emissive, glow = .3 }) {
+  if (!group) return group;
+  withGlow(group, { emissive, intensity: glow });
+  const light = new THREE.PointLight(color, intensity, distance, 2); light.position.set(0, y, 0); group.add(light);
+  return group;
+}
+function withCanvas(group, botanical) {
+  if (!group) return group;
+  group.traverse((o) => {
+    if (o.isMesh && o.name.endsWith('_canvas')) ownMaterial(o, new THREE.MeshStandardMaterial({ map: artTexture(botanical), roughness: 1 }));
+  });
+  return group;
+}
 function framedPrint(width, height, botanical) {
   const g = new THREE.Group();
   const frame = box(width + .16, height + .16, .08, C.wood, 0, 0, 0, .01); frame.position.y = height / 2 + .08; frame.position.z = .04; frame.userData.recolor = true; g.add(frame);
@@ -141,16 +165,16 @@ function framedPrint(width, height, botanical) {
   return g;
 }
 const WALL_CATALOG = {
-  worldMap: { label: 'World map', category: 'wall', layer: 'wall', tags: ['art', 'picture', 'poster'], w: 2, d: 1, wall: { w: 2, h: 3 }, defaultColor: C.wood, build: () => framedPrint(1.55, 1.2, false) },
-  botanicalPrint: { label: 'Botanical print', category: 'wall', layer: 'wall', tags: ['art', 'picture', 'plant'], w: 2, d: 1, wall: { w: 2, h: 3 }, defaultColor: C.wood, build: () => framedPrint(1.05, 1.3, true) },
+  worldMap: { label: 'World map', category: 'wall', layer: 'wall', tags: ['art', 'picture', 'poster'], w: 2, d: 1, wall: { w: 2, h: 3 }, defaultColor: C.wood, model: 'models/worldMap.glb', build: () => withCanvas(modelInstance('worldMap'), false) || framedPrint(1.55, 1.2, false) },
+  botanicalPrint: { label: 'Botanical print', category: 'wall', layer: 'wall', tags: ['art', 'picture', 'plant'], w: 2, d: 1, wall: { w: 2, h: 3 }, defaultColor: C.wood, model: 'models/botanicalPrint.glb', build: () => withCanvas(modelInstance('botanicalPrint'), true) || framedPrint(1.05, 1.3, true) },
   wallShelf: { label: 'Wall shelf', category: 'wall', layer: 'wall', tags: ['shelf', 'storage'], w: 2, d: 1, wall: { w: 2, h: 1 }, defaultColor: C.wood,
-    surface: { y: .42, slots: [{ x: -.5, z: .17 }, { x: .5, z: .17 }] }, build() {
+    surface: { y: .42, slots: [{ x: -.5, z: .17 }, { x: .5, z: .17 }] }, model: 'models/wallShelf.glb', build() { return modelInstance('wallShelf') || this.procedural(); }, procedural() {
     const g = new THREE.Group();
     const board = box(1.9, .05, .32, C.wood, 0, .37, .16, .008); board.userData.recolor = true; g.add(board);
     for (const x of [-.7, .7]) { g.add(box(.05, .3, .05, C.dark, x, .07, .03, .004), box(.05, .05, .26, C.dark, x, .32, .14, .004)); }
     return g;
   }},
-  mirror: { label: 'Round mirror', category: 'wall', layer: 'wall', tags: ['glass', 'reflection'], w: 1, d: 1, wall: { w: 1, h: 2 }, defaultColor: C.brass, build() {
+  mirror: { label: 'Round mirror', category: 'wall', layer: 'wall', tags: ['glass', 'reflection'], w: 1, d: 1, wall: { w: 1, h: 2 }, defaultColor: C.brass, model: 'models/mirror.glb', build() { return modelInstance('mirror') || this.procedural(); }, procedural() {
     const g = new THREE.Group();
     const ring = mesh(new THREE.TorusGeometry(.4, .035, 8, 32), C.brass, 0, .5, .05); ring.userData.recolor = true; g.add(ring);
     const glass = mesh(new THREE.CylinderGeometry(.38, .38, .02, 32), 0xd8e6e4, 0, .5, .04); glass.rotation.x = Math.PI / 2;
@@ -175,7 +199,7 @@ const WALL_CATALOG = {
     }
     return g;
   }},
-  clock: { label: 'Wall clock', category: 'wall', layer: 'wall', tags: ['time'], w: 1, d: 1, wall: { w: 1, h: 1 }, defaultColor: C.dark, build() {
+  clock: { label: 'Wall clock', category: 'wall', layer: 'wall', tags: ['time'], w: 1, d: 1, wall: { w: 1, h: 1 }, defaultColor: C.dark, model: 'models/clock.glb', build() { return modelInstance('clock') || this.procedural(); }, procedural() {
     const g = new THREE.Group();
     const rim = mesh(new THREE.CylinderGeometry(.23, .23, .05, 32), C.dark, 0, .25, .03); rim.rotation.x = Math.PI / 2; rim.userData.recolor = true; g.add(rim);
     const face = mesh(new THREE.CylinderGeometry(.2, .2, .01, 32), C.cream, 0, .25, .06); face.rotation.x = Math.PI / 2; g.add(face);
@@ -204,7 +228,7 @@ const JAPANDI_CATALOG = {
     for (const x of [-.7, .7]) g.add(box(.1, .32, .7, J.ash, x, 0, 0, .01));
     return g;
   }},
-  paperLamp: { label: 'Paper lamp', category: 'decor', collection: 'japandi', lamp: true, tags: ['japandi', 'light', 'lantern'], w: 1, d: 1, build() {
+  paperLamp: { label: 'Paper lamp', category: 'decor', collection: 'japandi', lamp: true, tags: ['japandi', 'light', 'lantern'], w: 1, d: 1, model: 'models/paperLamp.glb', build() { return withLight(modelInstance('paperLamp'), { color: 0xffd3a0, intensity: 2.2, distance: 3.5, y: .85, emissive: 0xffcf94, glow: .3 }) || this.procedural(); }, procedural() {
     const g = new THREE.Group();
     g.add(cyl(.2, .2, .03, J.charcoal), cyl(.02, .02, .55, J.charcoal, 0, .03, 0));
     const shade = cyl(.26, .26, .6, J.paper, 0, .55, 0);
@@ -228,7 +252,7 @@ const JAPANDI_CATALOG = {
 // Cottage: painted wood, rose and sage, soft rounded shapes.
 const K = { paint: 0xa7b98e, rose: 0xd9a3a3, cream: 0xf6efe2, oak: 0xb4885a };
 const COTTAGE_CATALOG = {
-  floralArmchair: { label: 'Cottage armchair', category: 'seating', collection: 'cottage', tags: ['cottage', 'floral', 'chair'], w: 1, d: 1, defaultColor: K.rose, build() {
+  floralArmchair: { label: 'Cottage armchair', category: 'seating', collection: 'cottage', tags: ['cottage', 'floral', 'chair'], w: 1, d: 1, defaultColor: K.rose, model: 'models/floralArmchair.glb', build() { return modelInstance('floralArmchair') || this.procedural(); }, procedural() {
     const g = new THREE.Group(); legs(g, .6, .6, .14, K.oak);
     const seat = cushion(.9, .34, .9, K.rose, 0, .14, 0); g.add(seat);
     const back = cushion(.9, .5, .24, K.rose, 0, .46, -.33); back.rotation.x = -.1; g.add(back);
@@ -236,14 +260,14 @@ const COTTAGE_CATALOG = {
     g.add(box(.5, .18, .1, K.cream, 0, .5, -.16, .04).rotateX(-.2));
     return g;
   }},
-  dresser: { label: 'Painted dresser', category: 'tables', collection: 'cottage', tags: ['cottage', 'drawers', 'storage'], w: 2, d: 1, defaultColor: K.paint, surface: { y: .92, slots: [{ x: -.55, z: 0 }, { x: .55, z: 0 }] }, model: 'models/dresser.glb', build() { return modelInstance('dresser') || this.procedural(); }, procedural() {
+  dresser: { label: 'Painted dresser', category: 'tables', collection: 'cottage', tags: ['cottage', 'drawers', 'storage'], w: 2, d: 1, defaultColor: K.paint, surface: { y: .94, slots: [{ x: -.55, z: 0 }, { x: .55, z: 0 }] }, model: 'models/dresser.glb', build() { return modelInstance('dresser') || this.procedural(); }, procedural() {
     const g = new THREE.Group(); legs(g, 1.5, .45, .1, K.oak);
     const body = box(1.85, .8, .6, K.paint, 0, .1, 0, .02); body.userData.recolor = true; g.add(body);
     g.add(box(1.9, .04, .64, K.oak, 0, .9, 0, .01));
     for (const x of [-.46, .46]) for (const y of [.2, .55]) { g.add(box(.8, .26, .025, K.cream, x, y, .3, .01), cyl(.025, .025, .04, C.brass, x, y + .13, .33).rotateX(Math.PI / 2)); }
     return g;
   }},
-  rockingChair: { label: 'Rocking chair', category: 'seating', collection: 'cottage', tags: ['cottage', 'porch', 'chair'], w: 1, d: 1, build() {
+  rockingChair: { label: 'Rocking chair', category: 'seating', collection: 'cottage', tags: ['cottage', 'porch', 'chair'], w: 1, d: 1, model: 'models/rockingChair.glb', build() { return modelInstance('rockingChair') || this.procedural(); }, procedural() {
     const g = new THREE.Group();
     for (const x of [-.32, .32]) {
       // An arc of a torus, centred below its pivot so the lowest point rests on the floor, turned to run along z.
@@ -257,7 +281,7 @@ const COTTAGE_CATALOG = {
     const pad = cushion(.62, .07, .56, K.rose, 0, .49, .02); g.add(pad);
     return g;
   }},
-  teapot: { label: 'Teapot', category: 'small', collection: 'cottage', layer: 'surface', tags: ['cottage', 'tea', 'kitchen'], w: 1, d: 1, defaultColor: K.cream, build() {
+  teapot: { label: 'Teapot', category: 'small', collection: 'cottage', layer: 'surface', tags: ['cottage', 'tea', 'kitchen'], w: 1, d: 1, defaultColor: K.cream, model: 'models/teapot.glb', build() { return modelInstance('teapot') || this.procedural(); }, procedural() {
     const g = new THREE.Group();
     const body = mesh(new THREE.SphereGeometry(.1, 12, 8), K.cream, 0, .1, 0); body.scale.y = .85; body.userData.recolor = true; g.add(body);
     g.add(cyl(.04, .04, .01, K.cream, 0, 0, 0));
@@ -272,7 +296,7 @@ export const CATALOG = {
   // `model` names a game-ready glb (see docs/PROP_BRIEFS.md); build() falls back to the procedural shape if it did not load.
   sofa: { label: 'Sofa', category: 'seating', w: 3, d: 1, model: 'models/sofa.glb', build: () => modelInstance('sofa') || seating(true) },
   armchair: { label: 'Armchair', category: 'seating', w: 1, d: 1, model: 'models/armchair.glb', build: () => modelInstance('armchair') || seating(false) },
-  coffeeTable: { label: 'Coffee table', category: 'tables', w: 2, d: 1, surface: { y: .56, slots: [{ x: -.62, z: .25 }, { x: .02, z: -.32 }] }, build() {
+  coffeeTable: { label: 'Coffee table', category: 'tables', w: 2, d: 1, surface: { y: .56, slots: [{ x: -.62, z: .25 }, { x: .02, z: -.32 }] }, model: 'models/coffeeTable.glb', build() { return modelInstance('coffeeTable') || this.procedural(); }, procedural() {
     const g = new THREE.Group(); legs(g, 1.25, .52, .47);
     const top = cyl(.5, .5, .09, C.wood, 0, .47, 0); top.scale.x = 1.7; g.add(top);
     g.add(box(.4, .04, .3, 0xe4d2b6, .25, .56, .03), box(.36, .035, .27, 0x8d9b79, .23, .6, .03));
@@ -290,7 +314,7 @@ export const CATALOG = {
     g.add(cyl(.12, .09, .23, C.cream, -.55, 1.34, 0)); return g;
   }},
   plant: { label: 'Plant', category: 'decor', w: 1, d: 1, defaultColor: C.pot, model: 'models/plant.glb', build: () => modelInstance('plant') || smallPlant(1.3) },
-  floorLamp: { label: 'Floor lamp', category: 'decor', lamp: true, w: 1, d: 1, build() {
+  floorLamp: { label: 'Floor lamp', category: 'decor', lamp: true, w: 1, d: 1, model: 'models/floorLamp.glb', build() { return withLight(modelInstance('floorLamp'), { color: 0xffbd73, intensity: 3, distance: 4, y: 1.45, emissive: 0xffcc85, glow: .22 }) || this.procedural(); }, procedural() {
     const g = new THREE.Group();
     for (let i = 0; i < 3; i++) {
       const a = i * Math.PI * 2 / 3, leg = cyl(.025, .035, 1.36, C.wood);
@@ -306,7 +330,7 @@ export const CATALOG = {
     for (let i = 0; i < 38; i++) for (const z of [-1.48, 1.48]) g.add(box(.028, .015, .14, 0xe6ceaa, -1.8 + i * .097, .012, z, .005));
     for (const z of [-1.28, 1.28]) g.add(box(3.62, .006, .018, 0xd5ba96, 0, .043, z, .003)); return g;
   }},
-  desk: { label: 'Desk', category: 'tables', w: 2, d: 1, surface: { y: .875, slots: [{ x: .7, z: -.25 }, { x: .7, z: .25 }, { x: -.65, z: .25 }] }, build() {
+  desk: { label: 'Desk', category: 'tables', w: 2, d: 1, surface: { y: .73, slots: [{ x: .7, z: -.25 }, { x: .7, z: .25 }, { x: -.65, z: .25 }] }, model: 'models/desk.glb', build() { return modelInstance('desk') || this.procedural(); }, procedural() {
     const g = new THREE.Group(); g.add(box(1.9, .095, .86, C.wood, 0, .78, 0));
     g.add(box(.47, .76, .75, C.wood, .65, .02, 0));
     for (const y of [.08, .33, .58]) { g.add(box(.43, .21, .025, 0xc38a56, .65, y, .39), box(.13, .02, .025, C.brass, .65, y + .16, .415)); }
@@ -314,23 +338,23 @@ export const CATALOG = {
     g.add(box(.1, .13, .1, C.cream, -.2, .875, -.17), box(.63, .39, .035, C.cream, -.2, 1, -.19), box(.57, .32, .012, 0x9ea6a0, -.2, 1.035, -.166), box(.48, .025, .17, 0xe6ded1, -.2, .88, .12));
     const plant = smallPlant(.3); plant.position.set(-.7, .88, -.13); g.add(plant); return g;
   }},
-  chair: { label: 'Office chair', category: 'seating', w: 1, d: 1, build() {
+  chair: { label: 'Office chair', category: 'seating', w: 1, d: 1, model: 'models/chair.glb', build() { return modelInstance('chair') || this.procedural(); }, procedural() {
     const g = new THREE.Group(); g.add(cyl(.27, .3, .04, C.black), cyl(.035, .035, .43, C.black, 0, .04, 0));
     g.add(cushion(.55, .12, .55, C.dark, 0, .47, 0), cushion(.55, .57, .12, C.dark, 0, .55, -.23)); return g;
   }},
   ottoman: { label: 'Ottoman', category: 'seating', w: 1, d: 1, model: 'models/ottoman.glb', build() { return modelInstance('ottoman') || this.procedural(); }, procedural() {
     const g = new THREE.Group(); legs(g, .65, .65, .1); g.add(cushion(.87, .36, .87, 0x976444, 0, .1, 0)); return g;
   }},
-  sideboard: { label: 'Sideboard', category: 'tables', w: 2, d: 1, surface: { y: .85, slots: [{ x: -.15, z: -.18 }, { x: -.15, z: .2 }] }, build() {
+  sideboard: { label: 'Sideboard', category: 'tables', w: 2, d: 1, surface: { y: .85, slots: [{ x: -.15, z: -.18 }, { x: -.15, z: .2 }] }, model: 'models/sideboard.glb', build() { return modelInstance('sideboard') || this.procedural(); }, procedural() {
     const g = new THREE.Group(); legs(g, 1.6, .5, .2); g.add(box(1.85, .65, .65, C.wood, 0, .2, 0));
     for (const x of [-.6, 0, .6]) { g.add(box(.56, .53, .03, 0xc58a5c, x, .26, .34), cyl(.025, .025, .03, C.brass, x, .65, .37).rotateX(Math.PI / 2)); }
     const plant = smallPlant(.45); plant.position.set(-.58, .85, 0); g.add(plant); books(g, .85, .15, 5); return g;
   }},
-  tvStand: { label: 'TV stand', category: 'tables', w: 2, d: 1, surface: { y: .57, slots: [{ x: -.65, z: .15 }, { x: .65, z: .15 }] }, build() {
+  tvStand: { label: 'TV stand', category: 'tables', w: 2, d: 1, surface: { y: .48, slots: [{ x: -.65, z: .15 }, { x: .65, z: .15 }] }, model: 'models/tvStand.glb', build() { return modelInstance('tvStand') || this.procedural(); }, procedural() {
     const g = new THREE.Group(); legs(g, 1.6, .5, .15); g.add(box(1.85, .42, .65, C.wood, 0, .15, 0));
     g.add(box(.08, .12, .08, C.black, 0, .57, 0), box(1.35, .78, .055, C.black, 0, .66, -.12), box(1.26, .69, .01, 0x4b5d58, 0, .705, -.085)); return g;
   }},
-  boxes: { label: 'Moving box', category: 'decor', w: 1, d: 1, build() {
+  boxes: { label: 'Moving box', category: 'decor', w: 1, d: 1, model: 'models/boxes.glb', build() { return modelInstance('boxes') || this.procedural(); }, procedural() {
     const g = new THREE.Group(); g.add(box(.7, .6, .7, 0xc89b68), box(.71, .012, .12, 0xe6c397, 0, .6, 0)); return g;
   }},
   bed: { label: 'Bed', category: 'seating', tags: ['bedroom', 'sleep', 'double'], w: 2, d: 3, defaultColor: C.cream, model: 'models/bed.glb', build() { return modelInstance('bed') || this.procedural(); }, procedural() {
@@ -388,7 +412,7 @@ export const CATALOG = {
     g.add(mesh(new THREE.TorusGeometry(.36, .018, 6, 24), 0xd9b48f, 0, .36, 0).rotateX(Math.PI / 2));
     return g;
   }},
-  basket: { label: 'Woven basket', category: 'decor', tags: ['storage', 'blanket', 'rattan'], w: 1, d: 1, defaultColor: C.sage, build() {
+  basket: { label: 'Woven basket', category: 'decor', tags: ['storage', 'blanket', 'rattan'], w: 1, d: 1, defaultColor: C.sage, model: 'models/basket.glb', build() { return modelInstance('basket') || this.procedural(); }, procedural() {
     const g = new THREE.Group();
     g.add(cyl(.3, .25, .42, 0xc8a06c, 0, 0, 0));
     for (let i = 1; i < 6; i++) g.add(mesh(new THREE.TorusGeometry(.26 + i * .008, .012, 5, 20), 0xb98b58, 0, i * .07, 0).rotateX(Math.PI / 2));

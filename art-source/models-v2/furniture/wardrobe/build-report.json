@@ -1,0 +1,16 @@
+{
+  "key": "wardrobe",
+  "triangles": 260,
+  "budget": 1499,
+  "parts": 7,
+  "recolorParts": 0,
+  "size": [
+    1.9199999570846558,
+    2.25,
+    0.7248862087726593
+  ],
+  "layer": "floor",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

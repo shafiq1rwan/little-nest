@@ -1,0 +1,16 @@
+{
+  "key": "bookStack",
+  "triangles": 144,
+  "budget": 399,
+  "parts": 12,
+  "recolorParts": 3,
+  "size": [
+    0.25859998911619186,
+    0.10728000104427338,
+    0.28999999165534973
+  ],
+  "layer": "surface",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

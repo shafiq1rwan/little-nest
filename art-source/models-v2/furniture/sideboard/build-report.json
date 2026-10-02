@@ -1,0 +1,16 @@
+{
+  "key": "sideboard",
+  "triangles": 360,
+  "budget": 1499,
+  "parts": 12,
+  "recolorParts": 0,
+  "size": [
+    1.850000023841858,
+    0.8548893332481384,
+    0.7050998508930206
+  ],
+  "layer": "floor",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

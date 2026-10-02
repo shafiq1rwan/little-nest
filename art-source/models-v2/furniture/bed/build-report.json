@@ -1,0 +1,16 @@
+{
+  "key": "bed",
+  "triangles": 1236,
+  "budget": 1499,
+  "parts": 11,
+  "recolorParts": 3,
+  "size": [
+    1.9199999570846558,
+    1.131645679473877,
+    2.9200000762939453
+  ],
+  "layer": "floor",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

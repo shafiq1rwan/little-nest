@@ -1,0 +1,16 @@
+{
+  "key": "armchair",
+  "triangles": 1080,
+  "budget": 1499,
+  "parts": 14,
+  "recolorParts": 2,
+  "size": [
+    0.8849999904632568,
+    1.0247313976287842,
+    0.8600000143051147
+  ],
+  "layer": "floor",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

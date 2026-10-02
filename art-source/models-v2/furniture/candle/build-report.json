@@ -1,0 +1,16 @@
+{
+  "key": "candle",
+  "triangles": 276,
+  "budget": 399,
+  "parts": 4,
+  "recolorParts": 1,
+  "size": [
+    0.20000000298023224,
+    0.28200000524520874,
+    0.20000000298023224
+  ],
+  "layer": "surface",
+  "glowParts": 1,
+  "generator": "Blender native",
+  "integrated": false
+}

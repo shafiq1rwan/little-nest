@@ -1,0 +1,16 @@
+{
+  "key": "frame",
+  "triangles": 232,
+  "budget": 399,
+  "parts": 6,
+  "recolorParts": 4,
+  "size": [
+    0.2199999988079071,
+    0.26310276985168457,
+    0.12245733104646206
+  ],
+  "layer": "surface",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

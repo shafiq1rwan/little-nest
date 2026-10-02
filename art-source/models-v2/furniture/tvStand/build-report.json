@@ -1,0 +1,16 @@
+{
+  "key": "tvStand",
+  "triangles": 756,
+  "budget": 1499,
+  "parts": 19,
+  "recolorParts": 0,
+  "size": [
+    1.850000023841858,
+    1.34028959274292,
+    0.6695271730422974
+  ],
+  "layer": "floor",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

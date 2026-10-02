@@ -1,0 +1,16 @@
+{
+  "key": "bench",
+  "triangles": 400,
+  "budget": 1499,
+  "parts": 8,
+  "recolorParts": 1,
+  "size": [
+    1.850000023841858,
+    0.6123162508010864,
+    0.6000000238418579
+  ],
+  "layer": "floor",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

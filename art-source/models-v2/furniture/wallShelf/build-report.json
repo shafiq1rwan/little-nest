@@ -1,0 +1,16 @@
+{
+  "key": "wallShelf",
+  "triangles": 244,
+  "budget": 299,
+  "parts": 7,
+  "recolorParts": 1,
+  "size": [
+    1.899999976158142,
+    0.42000001668930054,
+    0.3199999928474426
+  ],
+  "layer": "wall",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

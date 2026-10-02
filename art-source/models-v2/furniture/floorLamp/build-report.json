@@ -1,0 +1,16 @@
+{
+  "key": "floorLamp",
+  "triangles": 484,
+  "budget": 1499,
+  "parts": 6,
+  "recolorParts": 0,
+  "size": [
+    0.7200000286102295,
+    1.4811136722564697,
+    0.7200000286102295
+  ],
+  "layer": "floor",
+  "glowParts": 2,
+  "generator": "Blender native",
+  "integrated": false
+}

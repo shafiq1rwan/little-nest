@@ -1,0 +1,16 @@
+{
+  "key": "mirror",
+  "triangles": 272,
+  "budget": 299,
+  "parts": 2,
+  "recolorParts": 1,
+  "size": [
+    0.8700000047683716,
+    0.8700000047683716,
+    0.034990400075912476
+  ],
+  "layer": "wall",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

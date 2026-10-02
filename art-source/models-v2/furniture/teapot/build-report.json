@@ -1,0 +1,16 @@
+{
+  "key": "teapot",
+  "triangles": 344,
+  "budget": 399,
+  "parts": 6,
+  "recolorParts": 3,
+  "size": [
+    0.28897690773010254,
+    0.20999999344348907,
+    0.17119017243385315
+  ],
+  "layer": "surface",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

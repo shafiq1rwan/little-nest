@@ -1,0 +1,16 @@
+{
+  "key": "ottoman",
+  "triangles": 268,
+  "budget": 1499,
+  "parts": 5,
+  "recolorParts": 1,
+  "size": [
+    0.8700000047683716,
+    0.4775885343551636,
+    0.8700000047683716
+  ],
+  "layer": "floor",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

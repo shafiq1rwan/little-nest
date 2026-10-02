@@ -59,3 +59,21 @@ test('glb props load, replace their procedural shape, and keep the recolour part
   expect(info.size.h).toBeGreaterThan(0.8);
   expect(errors).toEqual([]);
 });
+
+test('loaded lamps carry a point light and a glowing part; loaded prints carry the painted canvas', async ({ page }) => {
+  const errors = await openGame(page);
+  const info = await page.evaluate(() => {
+    const s = window.__sim;
+    const lamp = s.items.find((i) => i.type === 'floorLamp');
+    let light = 0, glow = 0, canvas = 0;
+    lamp.mesh.traverse((o) => { if (o.isPointLight) light++; if (o.isMesh && o.userData.ownedMaterial && o.material.emissiveIntensity > 0) glow++; });
+    const map = s.items.find((i) => i.type === 'worldMap');
+    map.mesh.traverse((o) => { if (o.isMesh && o.material.map) canvas++; });
+    return { light, glow, canvas, keys: s.modelKeys.length };
+  });
+  expect(info.light).toBe(1);
+  expect(info.glow).toBe(1);
+  expect(info.canvas).toBe(1);
+  expect(info.keys).toBeGreaterThanOrEqual(36);
+  expect(errors).toEqual([]);
+});

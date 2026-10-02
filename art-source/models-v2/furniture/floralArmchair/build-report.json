@@ -1,0 +1,16 @@
+{
+  "key": "floralArmchair",
+  "triangles": 1208,
+  "budget": 1499,
+  "parts": 10,
+  "recolorParts": 5,
+  "size": [
+    0.9300000071525574,
+    0.9908787608146667,
+    0.8799999952316284
+  ],
+  "layer": "floor",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

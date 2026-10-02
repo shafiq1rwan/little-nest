@@ -1,0 +1,16 @@
+{
+  "key": "rockingChair",
+  "triangles": 792,
+  "budget": 1499,
+  "parts": 14,
+  "recolorParts": 1,
+  "size": [
+    0.6899999976158142,
+    1.0231655836105347,
+    0.8752973079681396
+  ],
+  "layer": "floor",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

@@ -196,5 +196,222 @@
       0.85
     ],
     "tris": 2500
+  },
+  "coffeeTable": {
+    "size": [
+      1.7,
+      1.0,
+      0.94
+    ],
+    "tris": 1600,
+    "note": "height chosen so the table top lands on the catalog slot height after the baked dressing is dropped"
+  },
+  "bookshelf": {
+    "size": [
+      1.86,
+      0.65,
+      2.4
+    ],
+    "tris": 1800,
+    "skip": "generated shelves are closed indentations, so the shelf slots would be inside solid wood; the procedural bookshelf stays"
+  },
+  "floorLamp": {
+    "size": [
+      0.72,
+      0.72,
+      1.5
+    ],
+    "tris": 900
+  },
+  "desk": {
+    "size": [
+      1.9,
+      0.86,
+      1.3
+    ],
+    "tris": 1800,
+    "note": "height chosen so the table top lands on the catalog slot height after the baked dressing is dropped"
+  },
+  "chair": {
+    "size": [
+      0.6,
+      0.6,
+      1.1
+    ],
+    "tris": 800
+  },
+  "sideboard": {
+    "size": [
+      1.85,
+      0.65,
+      0.85
+    ],
+    "tris": 1400,
+    "note": "height chosen so the table top lands on the catalog slot height after the baked dressing is dropped"
+  },
+  "tvStand": {
+    "size": [
+      1.85,
+      0.65,
+      1.25
+    ],
+    "tris": 1000
+  },
+  "boxes": {
+    "size": [
+      0.7,
+      0.7,
+      0.6
+    ],
+    "tris": 400
+  },
+  "basket": {
+    "size": [
+      0.6,
+      0.6,
+      0.55
+    ],
+    "tris": 900
+  },
+  "mug": {
+    "size": [
+      0.2,
+      0.14,
+      0.13
+    ],
+    "tris": 300
+  },
+  "candle": {
+    "size": [
+      0.2,
+      0.2,
+      0.27
+    ],
+    "tris": 300
+  },
+  "bookStack": {
+    "size": [
+      0.24,
+      0.18,
+      0.14
+    ],
+    "tris": 300
+  },
+  "frame": {
+    "size": [
+      0.22,
+      0.13,
+      0.26
+    ],
+    "tris": 300
+  },
+  "lantern": {
+    "size": [
+      0.2,
+      0.2,
+      0.3
+    ],
+    "tris": 400
+  },
+  "worldMap": {
+    "size": [
+      1.71,
+      0.08,
+      1.36
+    ],
+    "tris": 300,
+    "args": [
+      "--wall",
+      "--plate",
+      "0"
+    ]
+  },
+  "botanicalPrint": {
+    "size": [
+      1.21,
+      0.08,
+      1.46
+    ],
+    "tris": 300,
+    "args": [
+      "--wall",
+      "--plate",
+      "0"
+    ]
+  },
+  "wallShelf": {
+    "size": [
+      1.9,
+      0.32,
+      0.42
+    ],
+    "tris": 300,
+    "args": [
+      "--wall",
+      "--plate",
+      "0"
+    ]
+  },
+  "mirror": {
+    "size": [
+      0.87,
+      0.06,
+      0.87
+    ],
+    "tris": 300,
+    "args": [
+      "--wall",
+      "--plate",
+      "0"
+    ]
+  },
+  "clock": {
+    "size": [
+      0.46,
+      0.07,
+      0.46
+    ],
+    "tris": 260,
+    "args": [
+      "--wall",
+      "--plate",
+      "0"
+    ]
+  },
+  "paperLamp": {
+    "size": [
+      0.53,
+      0.53,
+      1.15
+    ],
+    "tris": 800
+  },
+  "floralArmchair": {
+    "size": [
+      0.9,
+      0.92,
+      0.97
+    ],
+    "tris": 1400
+  },
+  "rockingChair": {
+    "size": [
+      0.72,
+      0.97,
+      1.09
+    ],
+    "tris": 1400,
+    "args": [
+      "--smooth-passes",
+      "1"
+    ]
+  },
+  "teapot": {
+    "size": [
+      0.25,
+      0.2,
+      0.22
+    ],
+    "tris": 350
   }
 }

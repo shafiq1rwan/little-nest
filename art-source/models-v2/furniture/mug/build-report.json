@@ -1,0 +1,16 @@
+{
+  "key": "mug",
+  "triangles": 260,
+  "budget": 399,
+  "parts": 3,
+  "recolorParts": 2,
+  "size": [
+    0.17800000309944153,
+    0.12999999523162842,
+    0.1340000033378601
+  ],
+  "layer": "surface",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

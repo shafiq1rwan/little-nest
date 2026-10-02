@@ -1,0 +1,16 @@
+{
+  "key": "sideTable",
+  "triangles": 436,
+  "budget": 1499,
+  "parts": 3,
+  "recolorParts": 0,
+  "size": [
+    0.6800000071525574,
+    0.550000011920929,
+    0.6800000071525574
+  ],
+  "layer": "floor",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

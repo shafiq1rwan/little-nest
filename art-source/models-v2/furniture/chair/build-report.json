@@ -1,0 +1,16 @@
+{
+  "key": "chair",
+  "triangles": 988,
+  "budget": 1499,
+  "parts": 6,
+  "recolorParts": 4,
+  "size": [
+    0.6200000047683716,
+    1.1008492708206177,
+    0.6683030128479004
+  ],
+  "layer": "floor",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

@@ -1,0 +1,16 @@
+{
+  "key": "coffeeTable",
+  "triangles": 536,
+  "budget": 1499,
+  "parts": 23,
+  "recolorParts": 0,
+  "size": [
+    1.7000000476837158,
+    0.8414029479026794,
+    1.0
+  ],
+  "layer": "floor",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

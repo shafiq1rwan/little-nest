@@ -35,6 +35,9 @@ out = args.out or os.path.join(ROOT, 'public', 'models', args.key + '.glb')
 COLORS = {
     'cream': 0xf3e4d2, 'wood': 0xb87946, 'dark': 0x694b35, 'sage': 0x81936a, 'caramel': 0xbf895c,
     'black': 0x393932, 'brass': 0xbb9451, 'pot': 0xeee0ca, 'green': 0x4d7639, 'soil': 0x5b4030,
+    'shade': 0xffebc4, 'paper': 0xfff1dc, 'screen': 0x9ea6a0, 'tv': 0x4b5d58, 'books': 0x8a9a79, 'cardboard': 0xc89b68, 'tape': 0xe6c397,
+    'rattan': 0xc8a06c, 'coffee': 0x5b3d2a, 'flame': 0xffc76b, 'bookSage': 0x8a9a79, 'bookCream': 0xdfc8a0, 'rust': 0x9d6450,
+    'picture': 0xc3d6a8, 'glow': 0xffd58a, 'canvas': 0xeed1a0, 'glass': 0xd8e6e4, 'rose': 0xd9a3a3, 'charcoal': 0x3f3d3a,
     'ottoman': 0x976444, 'door': 0xc38a56, 'paint': 0xa7b98e, 'oak': 0xb4885a, 'cottageCream': 0xf6efe2, 'ash': 0xd9c7a7,
 }
 
@@ -130,6 +133,79 @@ def rule_bed(obj, size):
             parts[p.index] = 'blanket'
     return parts
 
+def rule_region(regions, base=None):
+    """Label faces by (predicate(u, normal), part); first match wins. u = (x/w, depth fraction with -0.5 at
+    the front face and +0.5 at the back, z/h)."""
+    def rule(obj, size):
+        w, d, h = size
+        parts = base(obj, size) if base else {}
+        front_y = min(v.co.y for v in obj.data.vertices)
+        for p in obj.data.polygons:
+            c = p.center; n = p.normal
+            u = (c.x / w, (c.y - front_y) / d - 0.5, c.z / h)
+            for pred, part in regions:
+                if pred(u, n):
+                    parts[p.index] = part; break
+        return parts
+    return rule
+
+def top_plane(obj, h):
+    """Height fraction of the largest upward-facing plane (a table or cabinet top), from an area histogram."""
+    bins = {}
+    for p in obj.data.polygons:
+        if p.normal.z > 0.8: bins[round(p.center.z / h, 2)] = bins.get(round(p.center.z / h, 2), 0) + p.area
+    if not bins: return 1.0
+    biggest = max(bins.values())
+    return max(z for z, a in bins.items() if a > biggest * 0.25)
+
+def rule_dressing(part_fn, base=None):
+    """Everything above the main top plane is dressing; part_fn(u) names the part (or None to keep)."""
+    def rule(obj, size):
+        w, d, h = size
+        parts = base(obj, size) if base else {}
+        top = top_plane(obj, h)
+        front_y = min(v.co.y for v in obj.data.vertices)
+        for p in obj.data.polygons:
+            c = p.center
+            u = (c.x / w, (c.y - front_y) / d - 0.5, c.z / h)
+            if u[2] > top + 0.015:
+                part = part_fn(u, p.normal)
+                if part: parts[p.index] = part
+        return parts
+    return rule
+
+front = lambda n: n.y < -0.6
+up = lambda n: n.z > 0.6
+RULES_MORE = {
+    'coffeeTable': rule_dressing(lambda u, n: 'drop'),
+    'bookshelf': rule_region([(lambda u, n: u[2] < 0.3 and front(n) and u[1] < -0.3, 'door'),
+                              (lambda u, n: 0.3 < u[2] < 0.97 and front(n) and u[1] > 0.15 and abs(u[0]) < 0.46, 'dark'),
+                              (lambda u, n: 0.33 < u[2] < 0.95 and front(n) and -0.4 < u[1] <= 0.15 and abs(u[0]) < 0.44, 'books')]),
+    'floorLamp': rule_region([(lambda u, n: u[2] > 0.7, 'shade')]),
+    'desk': rule_dressing(lambda u, n: 'drop' if u[0] > 0.2 else ('screen' if (u[2] > 0.84 and front(n)) else 'cream'),
+                          base=rule_region([(lambda u, n: u[2] < 0.6 and u[0] > 0.22 and front(n) and u[1] < -0.3, 'door')])),
+    'chair': rule_bands([(0.42, 'black')]),
+    'sideboard': rule_dressing(lambda u, n: 'drop', base=rule_region([(lambda u, n: 0.22 < u[2] < 0.78 and front(n) and u[1] < -0.3, 'door')])),
+    'tvStand': rule_region([(lambda u, n: u[2] > 0.56 and front(n) and abs(u[0]) < 0.33, 'screen'),
+                            (lambda u, n: u[2] > 0.5, 'black')]),
+    'boxes': rule_region([(lambda u, n: up(n) and u[2] > 0.9 and abs(u[0]) < 0.09, 'tape')]),
+    'basket': rule_region([(lambda u, n: u[2] > 0.8 and (u[0] ** 2 + u[1] ** 2) ** 0.5 < 0.45, 'blanket')]),
+    'mug': rule_region([(lambda u, n: up(n) and u[2] > 0.85 and abs(u[0]) < 0.3 and abs(u[1]) < 0.4, 'coffee')]),
+    'candle': rule_region([(lambda u, n: u[2] > 0.84, 'flame'), (lambda u, n: u[2] < 0.12, 'brass')]),
+    'bookStack': rule_bands([(0.34, 'book1'), (0.67, 'book2')]),
+    'frame': rule_region([(lambda u, n: n.y < -0.3 and abs(u[0]) < 0.33 and 0.2 < u[2] < 0.8 and u[1] < -0.2, 'picture')]),
+    'lantern': rule_region([(lambda u, n: u[2] > 0.9, 'brass'), (lambda u, n: 0.3 < u[2] < 0.75 and abs(u[0]) < 0.3 and abs(u[1]) < 0.3, 'glow')]),
+    'worldMap': rule_region([(lambda u, n: front(n) and abs(u[0]) < 0.43 and 0.1 < u[2] < 0.9, 'canvas')]),
+    'botanicalPrint': rule_region([(lambda u, n: front(n) and abs(u[0]) < 0.41 and 0.1 < u[2] < 0.9, 'canvas')]),
+    'wallShelf': rule_bands([(0.6, 'dark')]),
+    'mirror': rule_region([(lambda u, n: front(n) and (u[0] ** 2 + (u[2] - 0.5) ** 2) ** 0.5 < 0.42, 'glass')]),
+    'clock': rule_region([(lambda u, n: front(n) and (u[0] ** 2 + (u[2] - 0.5) ** 2) ** 0.5 < 0.4, 'face')]),
+    'paperLamp': rule_region([(lambda u, n: 0.35 < u[2] < 0.95, 'shade')]),
+    'floralArmchair': rule_bands([(0.12, 'oak')]),
+    'rockingChair': rule_region([(lambda u, n: up(n) and 0.38 < u[2] < 0.5 and abs(u[0]) < 0.4 and -0.35 < u[1] < 0.2, 'pad')]),
+    'teapot': rule_region([(lambda u, n: u[2] > 0.8, 'lid')]),
+}
+
 PARTS = {
     # key: (rule, { part: (material role, colour name, recolour?) }, body material)
     'sofa': (rule_sofa, {'legs': ('wood', 'wood', False), 'pillowLeft': ('pillow', 'caramel', False), 'pillowRight': ('pillow', 'sage', False)}, ('fabric', 'cream', True)),
@@ -144,6 +220,29 @@ PARTS = {
     'pouf': (lambda o, sz: {}, {}, ('fabric', 'cream', True)),
     'sideTable': (rule_bands([(0.86, 'dark')]), {'dark': ('dark', 'dark', False)}, ('wood', 'wood', False)),
     'lowTable': (lambda o, sz: {}, {}, ('ash', 'ash', False)),
+    'coffeeTable': (RULES_MORE['coffeeTable'], {'drop': ('drop', 'cream', False)}, ('wood', 'wood', False)),
+    'bookshelf': (RULES_MORE['bookshelf'], {'door': ('door', 'door', False), 'books': ('books', 'books', False), 'dark': ('back', 'dark', False)}, ('wood', 'wood', False)),
+    'floorLamp': (RULES_MORE['floorLamp'], {'shade': ('glow', 'shade', False)}, ('wood', 'wood', False)),
+    'desk': (RULES_MORE['desk'], {'screen': ('screen', 'screen', False), 'cream': ('monitor', 'cream', False), 'drop': ('drop', 'cream', False), 'door': ('door', 'door', False)}, ('wood', 'wood', False)),
+    'chair': (RULES_MORE['chair'], {'black': ('base', 'black', False)}, ('fabric', 'dark', True)),
+    'sideboard': (RULES_MORE['sideboard'], {'drop': ('drop', 'cream', False), 'door': ('door', 'door', False)}, ('wood', 'wood', False)),
+    'tvStand': (RULES_MORE['tvStand'], {'screen': ('screen', 'tv', False), 'black': ('tv', 'black', False)}, ('wood', 'wood', False)),
+    'boxes': (RULES_MORE['boxes'], {'tape': ('tape', 'tape', False)}, ('cardboard', 'cardboard', False)),
+    'basket': (RULES_MORE['basket'], {'blanket': ('blanket', 'sage', True)}, ('rattan', 'rattan', False)),
+    'mug': (RULES_MORE['mug'], {'coffee': ('coffee', 'coffee', False)}, ('ceramic', 'cream', True)),
+    'candle': (RULES_MORE['candle'], {'flame': ('glow', 'flame', False), 'brass': ('brass', 'brass', False)}, ('wax', 'cream', True)),
+    'bookStack': (RULES_MORE['bookStack'], {'book1': ('book', 'bookSage', False), 'book2': ('book', 'bookCream', False)}, ('cover', 'rust', True)),
+    'frame': (RULES_MORE['frame'], {'picture': ('picture', 'picture', False)}, ('wood', 'wood', True)),
+    'lantern': (RULES_MORE['lantern'], {'brass': ('brass', 'brass', False), 'glow': ('glow', 'glow', False)}, ('metal', 'black', True)),
+    'worldMap': (RULES_MORE['worldMap'], {'canvas': ('canvas', 'canvas', False)}, ('wood', 'wood', True)),
+    'botanicalPrint': (RULES_MORE['botanicalPrint'], {'canvas': ('canvas', 'canvas', False)}, ('wood', 'wood', True)),
+    'wallShelf': (RULES_MORE['wallShelf'], {'dark': ('bracket', 'dark', False)}, ('wood', 'wood', True)),
+    'mirror': (RULES_MORE['mirror'], {'glass': ('glass', 'glass', False)}, ('ring', 'brass', True)),
+    'clock': (RULES_MORE['clock'], {'face': ('face', 'cream', False)}, ('rim', 'dark', True)),
+    'paperLamp': (RULES_MORE['paperLamp'], {'shade': ('glow', 'paper', False)}, ('base', 'charcoal', False)),
+    'floralArmchair': (RULES_MORE['floralArmchair'], {'oak': ('oak', 'oak', False)}, ('fabric', 'rose', True)),
+    'rockingChair': (RULES_MORE['rockingChair'], {'pad': ('pad', 'rose', True)}, ('oak', 'oak', False)),
+    'teapot': (RULES_MORE['teapot'], {'lid': ('lid', 'paint', False)}, ('ceramic', 'cottageCream', True)),
 }
 
 def material(name, hex_color):
@@ -252,6 +351,10 @@ for o in [o for o in bpy.context.scene.objects if o.type == 'MESH']:
     for n in used: o.data.materials.append(bpy.data.materials[n])
     for p in o.data.polygons: p.material_index = 0
 
+# --- parts in the 'drop' role are baked dressing that would sit on the surface slots: delete them ---
+for o in [o for o in bpy.context.scene.objects if o.type == 'MESH' and o.name.endswith('_drop')]:
+    bpy.data.objects.remove(o, do_unlink=True)
+
 # --- decimate each part on its own so colour boundaries stay crisp, then smooth by angle ---
 parts_objs = [o for o in bpy.context.scene.objects if o.type == 'MESH']
 total_faces = sum(len(o.data.polygons) for o in parts_objs)
@@ -269,11 +372,22 @@ for o in parts_objs:
         try: bpy.ops.object.shade_auto_smooth(angle=math.radians(args.angle))
         except Exception: pass
 
+# --- planar UVs for painted canvases (the game maps its art texture onto parts named *_canvas) ---
+for o in [o for o in bpy.context.scene.objects if o.type == 'MESH' and o.name.endswith('_canvas')]:
+    me2 = o.data
+    xs = [v.co.x for v in me2.vertices]; zs = [v.co.z for v in me2.vertices]
+    x0, x1, z0, z1 = min(xs), max(xs), min(zs), max(zs)
+    uv = me2.uv_layers.new(name='canvas')
+    for poly in me2.polygons:
+        for li in poly.loop_indices:
+            v = me2.vertices[me2.loops[li].vertex_index].co
+            uv.data[li].uv = ((v.x - x0) / max(1e-6, x1 - x0), (v.z - z0) / max(1e-6, z1 - z0))
+
 # --- export ---
 os.makedirs(os.path.dirname(out), exist_ok=True)
 for o in bpy.context.scene.objects: o.select_set(o == root or o.parent == root)
 bpy.ops.export_scene.gltf(filepath=out, export_format='GLB', use_selection=True, export_yup=True, export_apply=True,
-                          export_extras=True, export_materials='EXPORT', export_image_format='NONE', export_normals=True, export_texcoords=False)
+                          export_extras=True, export_materials='EXPORT', export_image_format='NONE', export_normals=True, export_texcoords=True)
 total = sum(len(o.data.polygons) for o in bpy.context.scene.objects if o.type == 'MESH')
 print(f'{args.key}: {before} -> {total} triangles, size {W}x{D}x{H}, parts {[o.name for o in bpy.context.scene.objects if o.type == "MESH"]}')
 print('wrote', out)

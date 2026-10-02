@@ -1,0 +1,16 @@
+{
+  "key": "boxes",
+  "triangles": 240,
+  "budget": 1499,
+  "parts": 4,
+  "recolorParts": 0,
+  "size": [
+    0.699999988079071,
+    0.6069999933242798,
+    0.7110000252723694
+  ],
+  "layer": "floor",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

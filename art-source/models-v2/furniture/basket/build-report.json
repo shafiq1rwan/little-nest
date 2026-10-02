@@ -1,0 +1,16 @@
+{
+  "key": "basket",
+  "triangles": 1064,
+  "budget": 1499,
+  "parts": 28,
+  "recolorParts": 6,
+  "size": [
+    0.6060000061988831,
+    0.4326791763305664,
+    0.6368654072284698
+  ],
+  "layer": "floor",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

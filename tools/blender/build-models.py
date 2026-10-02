@@ -20,6 +20,8 @@ keys = sys.argv[1:] or list(manifest)
 done = []
 for key in keys:
     spec = manifest[key]
+    if spec.get('skip'):
+        print(key + ': skipped (' + spec['skip'] + ')'); continue
     if spec.get('source'):
         source = os.path.join(ROOT, spec['source'])
         shutil.copyfile(source, os.path.join(ROOT, 'public', 'models', key + '.glb'))

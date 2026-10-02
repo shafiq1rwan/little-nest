@@ -55,7 +55,7 @@ test('small items sit in slots, follow their supporter, cascade on removal, and 
 
   // Move the table: the mug and vase move with it (world x changes together).
   const before = await childOf(page, 'coffeeTable');
-  const from = await itemPoint(page, 'coffeeTable', 0.45);
+  const from = await itemPoint(page, 'coffeeTable', 0.6);   // through the table top; the loaded model has no dressing at its centre
   const to = await tilePoint(page, 'coffeeTable', 0, 6);
   await page.mouse.move(from.x, from.y);
   await page.mouse.down();

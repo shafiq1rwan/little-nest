@@ -1,0 +1,16 @@
+{
+  "key": "lantern",
+  "triangles": 294,
+  "budget": 399,
+  "parts": 11,
+  "recolorParts": 7,
+  "size": [
+    0.20000000298023224,
+    0.339629590511322,
+    0.20000000298023224
+  ],
+  "layer": "surface",
+  "glowParts": 1,
+  "generator": "Blender native",
+  "integrated": false
+}

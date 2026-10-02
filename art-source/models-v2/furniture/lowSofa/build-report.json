@@ -1,0 +1,16 @@
+{
+  "key": "lowSofa",
+  "triangles": 1468,
+  "budget": 1499,
+  "parts": 13,
+  "recolorParts": 6,
+  "size": [
+    2.9000000953674316,
+    0.8697819113731384,
+    0.9599999785423279
+  ],
+  "layer": "floor",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

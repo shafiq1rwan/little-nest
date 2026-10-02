@@ -36,11 +36,14 @@ for key in args.keys:
     if not crops:
         print(key + ': no crop found in art-source/prop-crops'); continue
     started = time.time()
-    result = client.predict(
-        None, handle_file(crops[0]), None, None, None, None,
-        args.steps, args.guidance, args.seed if args.seed is not None else 1234, args.octree,
-        True, args.chunks, args.seed is None,
-        api_name='/shape_generation')
+    try:
+        result = client.predict(
+            None, handle_file(crops[0]), None, None, None, None,
+            args.steps, args.guidance, args.seed if args.seed is not None else 1234, args.octree,
+            True, args.chunks, args.seed is None,
+            api_name='/shape_generation')
+    except Exception as error:
+        print(key + ': failed (' + str(error).splitlines()[-1][:120] + '); try a cleaner crop or --octree 256'); continue
     mesh_file, _html, stats, seed = result
     path = mesh_file if isinstance(mesh_file, str) else mesh_file.get('path') or mesh_file.get('value')
     shutil.copyfile(path, target)

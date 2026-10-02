@@ -1,0 +1,562 @@
+[
+  {
+    "key": "armchair",
+    "triangles": 1080,
+    "budget": 1499,
+    "parts": 14,
+    "recolorParts": 2,
+    "size": [
+      0.8849999904632568,
+      1.0247313976287842,
+      0.8600000143051147
+    ],
+    "layer": "floor",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "coffeeTable",
+    "triangles": 536,
+    "budget": 1499,
+    "parts": 23,
+    "recolorParts": 0,
+    "size": [
+      1.7000000476837158,
+      0.8414029479026794,
+      1.0
+    ],
+    "layer": "floor",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "bookshelf",
+    "triangles": 1044,
+    "budget": 1499,
+    "parts": 44,
+    "recolorParts": 0,
+    "size": [
+      1.8600000143051147,
+      2.406062364578247,
+      0.679099828004837
+    ],
+    "layer": "floor",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "floorLamp",
+    "triangles": 484,
+    "budget": 1499,
+    "parts": 6,
+    "recolorParts": 0,
+    "size": [
+      0.7200000286102295,
+      1.4811136722564697,
+      0.7200000286102295
+    ],
+    "layer": "floor",
+    "glowParts": 2,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "rug",
+    "triangles": 540,
+    "budget": 1499,
+    "parts": 29,
+    "recolorParts": 1,
+    "size": [
+      3.859999895095825,
+      0.04800000041723251,
+      2.700000047683716
+    ],
+    "layer": "floor",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "desk",
+    "triangles": 824,
+    "budget": 1499,
+    "parts": 16,
+    "recolorParts": 0,
+    "size": [
+      1.899999976158142,
+      1.2950000762939453,
+      0.8600000143051147
+    ],
+    "layer": "floor",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "chair",
+    "triangles": 988,
+    "budget": 1499,
+    "parts": 6,
+    "recolorParts": 4,
+    "size": [
+      0.6200000047683716,
+      1.1008492708206177,
+      0.6683030128479004
+    ],
+    "layer": "floor",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "ottoman",
+    "triangles": 268,
+    "budget": 1499,
+    "parts": 5,
+    "recolorParts": 1,
+    "size": [
+      0.8700000047683716,
+      0.4775885343551636,
+      0.8700000047683716
+    ],
+    "layer": "floor",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "sideboard",
+    "triangles": 360,
+    "budget": 1499,
+    "parts": 12,
+    "recolorParts": 0,
+    "size": [
+      1.850000023841858,
+      0.8548893332481384,
+      0.7050998508930206
+    ],
+    "layer": "floor",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "tvStand",
+    "triangles": 756,
+    "budget": 1499,
+    "parts": 19,
+    "recolorParts": 0,
+    "size": [
+      1.850000023841858,
+      1.34028959274292,
+      0.6695271730422974
+    ],
+    "layer": "floor",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "boxes",
+    "triangles": 240,
+    "budget": 1499,
+    "parts": 4,
+    "recolorParts": 0,
+    "size": [
+      0.699999988079071,
+      0.6069999933242798,
+      0.7110000252723694
+    ],
+    "layer": "floor",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "bed",
+    "triangles": 1236,
+    "budget": 1499,
+    "parts": 11,
+    "recolorParts": 3,
+    "size": [
+      1.9199999570846558,
+      1.131645679473877,
+      2.9200000762939453
+    ],
+    "layer": "floor",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "nightstand",
+    "triangles": 232,
+    "budget": 1499,
+    "parts": 8,
+    "recolorParts": 0,
+    "size": [
+      0.6000000238418579,
+      0.5814023613929749,
+      0.5550998449325562
+    ],
+    "layer": "floor",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "wardrobe",
+    "triangles": 260,
+    "budget": 1499,
+    "parts": 7,
+    "recolorParts": 0,
+    "size": [
+      1.9199999570846558,
+      2.25,
+      0.7248862087726593
+    ],
+    "layer": "floor",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "bench",
+    "triangles": 400,
+    "budget": 1499,
+    "parts": 8,
+    "recolorParts": 1,
+    "size": [
+      1.850000023841858,
+      0.6123162508010864,
+      0.6000000238418579
+    ],
+    "layer": "floor",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "sideTable",
+    "triangles": 436,
+    "budget": 1499,
+    "parts": 3,
+    "recolorParts": 0,
+    "size": [
+      0.6800000071525574,
+      0.550000011920929,
+      0.6800000071525574
+    ],
+    "layer": "floor",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "pouf",
+    "triangles": 480,
+    "budget": 1499,
+    "parts": 2,
+    "recolorParts": 1,
+    "size": [
+      0.800000011920929,
+      0.44999998807907104,
+      0.800000011920929
+    ],
+    "layer": "floor",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "basket",
+    "triangles": 1064,
+    "budget": 1499,
+    "parts": 28,
+    "recolorParts": 6,
+    "size": [
+      0.6060000061988831,
+      0.4326791763305664,
+      0.6368654072284698
+    ],
+    "layer": "floor",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "mug",
+    "triangles": 260,
+    "budget": 399,
+    "parts": 3,
+    "recolorParts": 2,
+    "size": [
+      0.17800000309944153,
+      0.12999999523162842,
+      0.1340000033378601
+    ],
+    "layer": "surface",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "candle",
+    "triangles": 276,
+    "budget": 399,
+    "parts": 4,
+    "recolorParts": 1,
+    "size": [
+      0.20000000298023224,
+      0.28200000524520874,
+      0.20000000298023224
+    ],
+    "layer": "surface",
+    "glowParts": 1,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "bookStack",
+    "triangles": 144,
+    "budget": 399,
+    "parts": 12,
+    "recolorParts": 3,
+    "size": [
+      0.25859998911619186,
+      0.10728000104427338,
+      0.28999999165534973
+    ],
+    "layer": "surface",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "frame",
+    "triangles": 232,
+    "budget": 399,
+    "parts": 6,
+    "recolorParts": 4,
+    "size": [
+      0.2199999988079071,
+      0.26310276985168457,
+      0.12245733104646206
+    ],
+    "layer": "surface",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "lantern",
+    "triangles": 294,
+    "budget": 399,
+    "parts": 11,
+    "recolorParts": 7,
+    "size": [
+      0.20000000298023224,
+      0.339629590511322,
+      0.20000000298023224
+    ],
+    "layer": "surface",
+    "glowParts": 1,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "worldMap",
+    "triangles": 188,
+    "budget": 299,
+    "parts": 5,
+    "recolorParts": 4,
+    "size": [
+      1.709999918937683,
+      1.3600000143051147,
+      0.07999999821186066
+    ],
+    "layer": "wall",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "botanicalPrint",
+    "triangles": 188,
+    "budget": 299,
+    "parts": 5,
+    "recolorParts": 4,
+    "size": [
+      1.209999918937683,
+      1.4600000381469727,
+      0.07999999821186066
+    ],
+    "layer": "wall",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "wallShelf",
+    "triangles": 244,
+    "budget": 299,
+    "parts": 7,
+    "recolorParts": 1,
+    "size": [
+      1.899999976158142,
+      0.42000001668930054,
+      0.3199999928474426
+    ],
+    "layer": "wall",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "mirror",
+    "triangles": 272,
+    "budget": 299,
+    "parts": 2,
+    "recolorParts": 1,
+    "size": [
+      0.8700000047683716,
+      0.8700000047683716,
+      0.034990400075912476
+    ],
+    "layer": "wall",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "clock",
+    "triangles": 292,
+    "budget": 299,
+    "parts": 5,
+    "recolorParts": 1,
+    "size": [
+      0.46000000834465027,
+      0.46000000834465027,
+      0.04595448821783066
+    ],
+    "layer": "wall",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "lowSofa",
+    "triangles": 1468,
+    "budget": 1499,
+    "parts": 13,
+    "recolorParts": 6,
+    "size": [
+      2.9000000953674316,
+      0.8697819113731384,
+      0.9599999785423279
+    ],
+    "layer": "floor",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "lowTable",
+    "triangles": 196,
+    "budget": 1499,
+    "parts": 3,
+    "recolorParts": 0,
+    "size": [
+      1.7999999523162842,
+      0.4000000059604645,
+      0.800000011920929
+    ],
+    "layer": "floor",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "paperLamp",
+    "triangles": 1204,
+    "budget": 1499,
+    "parts": 7,
+    "recolorParts": 0,
+    "size": [
+      0.5099999904632568,
+      1.149999976158142,
+      0.5099999904632568
+    ],
+    "layer": "floor",
+    "glowParts": 2,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "floralArmchair",
+    "triangles": 1208,
+    "budget": 1499,
+    "parts": 10,
+    "recolorParts": 5,
+    "size": [
+      0.9300000071525574,
+      0.9908787608146667,
+      0.8799999952316284
+    ],
+    "layer": "floor",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "dresser",
+    "triangles": 424,
+    "budget": 1499,
+    "parts": 14,
+    "recolorParts": 1,
+    "size": [
+      1.899999976158142,
+      0.9450376629829407,
+      0.693099856376648
+    ],
+    "layer": "floor",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "rockingChair",
+    "triangles": 792,
+    "budget": 1499,
+    "parts": 14,
+    "recolorParts": 1,
+    "size": [
+      0.6899999976158142,
+      1.0231655836105347,
+      0.8752973079681396
+    ],
+    "layer": "floor",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  },
+  {
+    "key": "teapot",
+    "triangles": 344,
+    "budget": 399,
+    "parts": 6,
+    "recolorParts": 3,
+    "size": [
+      0.28897690773010254,
+      0.20999999344348907,
+      0.17119017243385315
+    ],
+    "layer": "surface",
+    "glowParts": 0,
+    "generator": "Blender native",
+    "integrated": false
+  }
+]

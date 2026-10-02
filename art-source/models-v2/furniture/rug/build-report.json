@@ -1,0 +1,16 @@
+{
+  "key": "rug",
+  "triangles": 540,
+  "budget": 1499,
+  "parts": 29,
+  "recolorParts": 1,
+  "size": [
+    3.859999895095825,
+    0.04800000041723251,
+    2.700000047683716
+  ],
+  "layer": "floor",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

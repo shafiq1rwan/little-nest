@@ -1,0 +1,16 @@
+{
+  "key": "pouf",
+  "triangles": 480,
+  "budget": 1499,
+  "parts": 2,
+  "recolorParts": 1,
+  "size": [
+    0.800000011920929,
+    0.44999998807907104,
+    0.800000011920929
+  ],
+  "layer": "floor",
+  "glowParts": 0,
+  "generator": "Blender native",
+  "integrated": false
+}

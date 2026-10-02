@@ -10,7 +10,7 @@ const VIEWPORTS = [
   [568, 320],
   [1440, 900],
 ];
-const IMPORTANT_CONTROLS = ['main-menu-toggle', 'save', 'load', 'help-toggle', 'music-toggle', 'undo-tool', 'redo-tool', 'grid-tool', 'walls-tool', 'zoom-in', 'photo-tool'];
+const IMPORTANT_CONTROLS = ['main-menu-toggle', 'save', 'load', 'help-toggle', 'music-toggle', 'undo-tool', 'redo-tool', 'grid-tool', 'walls-tool', 'zoom-in', 'photo-tool', 'orbit-left', 'orbit-right'];
 
 for (const [width, height] of VIEWPORTS) {
   const compact = width <= 900 || height <= 600;
@@ -32,6 +32,7 @@ for (const [width, height] of VIEWPORTS) {
       }
 
       for (const id of IMPORTANT_CONTROLS) {
+        if (width < 640 && id.startsWith('orbit-')) continue;   // hidden on narrow phones, which orbit with two fingers
         const b = await page.locator('#' + id).boundingBox();
         expect(b, id + ' is rendered').not.toBeNull();
         expect(b.x >= 0 && b.x + b.width <= width + 0.5 && b.y >= 0 && b.y + b.height <= height + 0.5, id + ' on screen').toBe(true);

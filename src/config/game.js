@@ -15,6 +15,7 @@ export const CAMERA = {
   minZoom: 0.65,
   maxZoom: 2.2,
   zoomStep: 1.15,
+  orbitStep: Math.PI / 12,   // 15 degrees per orbit button press
 };
 
 export const RENDER = {

@@ -13,6 +13,10 @@
 #scene { display: block; width: 100%; height: 100%; touch-action: none; }
 .mode-pill { position: absolute; top: 84px; left: 22px; display: flex; align-items: center; gap: 7px; background: var(--sage-deep); color: var(--cream); padding: 7px 12px; border-radius: 14px; font-size: 11px; box-shadow: 0 3px 0 var(--sage-bottom); }
 .mode-pill svg { width: 16px; height: 16px; }
+.mode-pill .pill-button { display: inline-flex; align-items: center; gap: 5px; min-height: 26px; padding: 0 9px; margin-left: 2px; font-size: 11px; font-weight: 600; color: var(--sage-deep); background: var(--cream); border: 1px solid var(--sage-bottom); border-radius: 10px; box-shadow: 0 2px 0 var(--sage-bottom); }
+.mode-pill .pill-button svg { width: 13px; height: 13px; }
+.mode-pill .pill-button.active { background: var(--paper-glow); box-shadow: inset 0 2px 0 var(--sage-bottom); }
+.mode-pill .pill-button[hidden] { display: none; }
 .tool-rail { position: absolute; top: 134px; left: 22px; display: flex; flex-direction: column; gap: 6px; padding: 6px; border: 2px solid var(--panel-edge); border-radius: 18px; background: var(--cream); box-shadow: var(--panel-shadow); }
 .tool-rail .icon-button { width: 38px; height: 38px; }
 .tool-rail svg, .camera-tools svg { width: 19px; height: 19px; }

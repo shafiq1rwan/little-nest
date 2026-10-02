@@ -6,7 +6,7 @@ The rules from the first roadmap still apply: keep the style guide and saved roo
 
 | Phase | Focus | Status | Dependency |
 | --- | --- | --- | --- |
-| 7 | Finish the core loop | Planned | Phases 0–5 |
+| 7 | Finish the core loop | In progress (increment 1 done 2 October 2026) | Phases 0–5 |
 | 8 | A living room: animation and sound | Planned | Phase 7 |
 | 9 | More room: structure, ceiling, night | Planned | Phase 7 |
 | 10 | Expression and progression | Planned | Phases 8, 9 |
@@ -21,7 +21,7 @@ Goal: every interaction a player reaches in the first five minutes feels complet
 
 Increments, in order:
 
-1. **Placement controls in the mode pill.** While holding an item: Cancel, Keep placing (place another of the same type), and two orbit buttons. Keyboard equivalents already exist; this makes them visible and touch-friendly (44px on compact).
+1. Done 2 October 2026: **Placement controls in the mode pill.** While holding an item the pill shows Keep placing (a remembered switch that keeps placing mode after each drop, like Shift) and Cancel; the View tray gained orbit-left and orbit-right buttons that turn the camera 15 degrees within the azimuth limits. On phones narrower than 640px the orbit buttons are hidden because the tray must fit beside the tool rail and two-finger orbit exists. Covered by tests/browser/placement.spec.js.
 2. **Pillows and throws as items.** New `small`-style category `soft` with a `layer: 'seat'`; sofas, armchairs, beds and benches declare seat slots the way tables declare surface slots. Pillows and throws are recolourable. The baked pillows on the sofa and armchair models move out of the glb into these items. Save version 8: slot kind recorded per item.
 3. **Curtains that open and close.** A wall item spanning a window footprint, with a rail and two panels. The lamp switch generalises to a per-item toggle (`lit` stays the stored field; label changes by type). Opening tweens the panels over about 450 ms with ease-out and keeps calling `invalidate()` until done; loading a room jumps to the final pose. Closed curtains dim the sun by a mood-dependent factor.
 4. **Per-wall finishes and a second floor material.** Walls tab gets Back and Left swatches; floor gets a tile option. Save version 9: `finishes.wallLeft` optional, defaults to `finishes.wall`.

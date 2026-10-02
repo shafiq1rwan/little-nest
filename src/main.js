@@ -31,7 +31,7 @@ await Promise.all([preloadModels(CATALOG), preloadArt(['worldMap', 'botanicalPri
 
 // ---------- renderer / scene ----------
 const canvas = $('scene');
-const { renderer, scene, camera, controls, hemisphere, sun, resetView, zoomBy, resize, setFrame } = createScene({ canvas, camera: CAMERA, render: RENDER, backdrop: BACKDROP });
+const { renderer, scene, camera, controls, hemisphere, sun, resetView, zoomBy, orbitBy, resize, setFrame } = createScene({ canvas, camera: CAMERA, render: RENDER, backdrop: BACKDROP });
 
 // ---------- room shell ----------
 // The shell (floor, walls, windows, grid) is rebuilt whenever the room preset changes. `placement`
@@ -130,6 +130,7 @@ lampsReady = true;
 const commands = createCommands({ state, finishes, room: roomConfig });   // every room mutation goes through here so it can be undone
 const meshes = new Map();             // record id -> THREE.Group
 let selectedType = null;              // catalog key while placing
+let keepPlacing = false;              // the mode pill's Keep placing switch: stay in placing mode after a drop
 let ghost = null;                     // preview mesh while placing
 let dragging = null;                  // record being moved
 let dragTarget = null;                // { gx, gz } or { parent, slot } the drag would drop onto
@@ -285,7 +286,8 @@ function startPlacing(type) {
   ghost.visible = false;
   scene.add(ghost);
   const where = placement.isSurfaceItem(type) ? ' on a table or shelf' : placement.isWallItem(type) ? ' on a wall' : '';
-  $('mode-label').textContent = 'Place ' + CATALOG[type].label.toLowerCase() + where + ' · Esc to cancel';
+  $('mode-label').textContent = 'Place ' + CATALOG[type].label.toLowerCase() + where;
+  $('keep-placing').hidden = $('cancel-placing').hidden = false;
   canvas.style.cursor = 'crosshair';
   updateSelection();
   if (hud.isCompact()) hud.setExpanded(false);
@@ -296,6 +298,7 @@ function cancelPlacing() {
   ghostTarget = null;
   selectedType = null;
   $('mode-label').textContent = 'Decorate mode';
+  $('keep-placing').hidden = $('cancel-placing').hidden = true;
   canvas.style.cursor = 'grab';
   updateSelection();
 }
@@ -386,14 +389,14 @@ const input = createInput({
       if (!ghostTarget) { toast('Wall decorations go on the two walls. Point at one to place it.'); return; }
       if (!ghostTarget.free) { toast('That part of the wall is taken. Try a clear spot.'); return; }
       const placed = addItem(selectedType, null, null, 0, null, null, null, null, ghostTarget.wall, ghostTarget.col, ghostTarget.row);
-      if (placed && !shiftKey) { cancelPlacing(); setSelected(placed); }
+      if (placed && !shiftKey && !keepPlacing) { cancelPlacing(); setSelected(placed); }
       return;
     }
     if (ghost && placement.isSurfaceItem(selectedType)) {
       if (!ghostTarget) { toast('Small items go on tables and shelves. Point at one to place it.'); return; }
       if (!ghostTarget.free) { toast('That spot is taken. Try another part of the surface.'); return; }
       const placed = addItem(selectedType, null, null, ghost.userData.rot, null, null, ghostTarget.parent, ghostTarget.slot);
-      if (placed && !shiftKey) { cancelPlacing(); setSelected(placed); }
+      if (placed && !shiftKey && !keepPlacing) { cancelPlacing(); setSelected(placed); }
       return;
     }
     if (ghost) {
@@ -402,7 +405,7 @@ const input = createInput({
       const { gx, gz } = snap(hit, selectedType, rot);
       if (isFree(selectedType, gx, gz, rot)) {
         const placed = addItem(selectedType, gx, gz, rot);
-        if (!shiftKey) { cancelPlacing(); setSelected(placed); }
+        if (!shiftKey && !keepPlacing) { cancelPlacing(); setSelected(placed); }
       } else toast('That tile is occupied. Choose a free spot.');
       return;
     }
@@ -508,6 +511,10 @@ $('help-toggle').onclick = () => { $('help-panel').hidden = !$('help-panel').hid
 
 const music = createMusic({ src: MUSIC.src, volume: MUSIC.volume, storageKey: MUSIC_KEY, button: $('music-toggle'), installIcons, onToggle: (on) => toast(on ? 'Music on.' : 'Music off.') });
 
+$('keep-placing').onclick = () => { keepPlacing = !keepPlacing; $('keep-placing').setAttribute('aria-pressed', String(keepPlacing)); $('keep-placing').classList.toggle('active', keepPlacing); };
+$('cancel-placing').onclick = () => { cancelPlacing(); $('scene').focus({ preventScroll: true }); };
+$('orbit-left').onclick = () => { if (orbitBy(CAMERA.orbitStep)) invalidate(); };
+$('orbit-right').onclick = () => { if (orbitBy(-CAMERA.orbitStep)) invalidate(); };
 $('zoom-in').onclick = () => { zoomBy(CAMERA.zoomStep); invalidate(); };
 $('zoom-out').onclick = () => { zoomBy(1 / CAMERA.zoomStep); invalidate(); };
 $('reset-view').onclick = () => { resetView(); invalidate(); };
@@ -732,6 +739,8 @@ window.__sim = {
   get items() { return state.items.map(withMesh); },
   get ghost() { return ghost; },
   get selectedType() { return selectedType; },
+  get keepPlacing() { return keepPlacing; },
+  startPlacing, orbitBy,
   get selected() { return withMesh(selected); },
 };
 await onProgress(100, 'Your little nest is ready.');

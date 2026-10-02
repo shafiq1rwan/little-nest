@@ -51,6 +51,16 @@ export function createScene({ canvas, camera: cam, render, backdrop }) {
     camera.updateProjectionMatrix();
     controls.update();
   }
+  /** Turns the view around its target by `delta` radians, within the configured azimuth limits. */
+  function orbitBy(delta) {
+    const current = controls.getAzimuthalAngle();
+    const next = THREE.MathUtils.clamp(current + delta, controls.minAzimuthAngle, controls.maxAzimuthAngle);
+    const offset = camera.position.clone().sub(controls.target);
+    offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), next - current);
+    camera.position.copy(controls.target).add(offset);
+    controls.update();
+    return next !== current;
+  }
   function zoomBy(factor) {
     camera.zoom = THREE.MathUtils.clamp(camera.zoom * factor, controls.minZoom, controls.maxZoom);
     camera.updateProjectionMatrix();
@@ -75,5 +85,5 @@ export function createScene({ canvas, camera: cam, render, backdrop }) {
     resize(true);
   }
 
-  return { renderer, scene, camera, controls, hemisphere, sun, resetView, zoomBy, resize, setFrame };
+  return { renderer, scene, camera, controls, hemisphere, sun, resetView, zoomBy, orbitBy, resize, setFrame };
 }

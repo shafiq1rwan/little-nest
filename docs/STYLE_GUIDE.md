@@ -95,6 +95,10 @@ The loading screen is the backdrop colour with soft dappled light, the cream Fre
 
 Do not change canvas dimensions while a drag or pinch is active. One finger decorates; two fingers operate the camera. Mouse users drag objects, right-drag to orbit, and scroll to zoom. Touch help must explain touch gestures rather than only desktop keyboard shortcuts.
 
+## Mode pill
+
+The pill names the current mode. While placing it also holds two pill buttons, Keep placing (toggle, pressed state shown inset) and Cancel: cream on sage, 26px tall on desktop and 44px on compact, where the pill may wrap to two lines. The View tray holds photo, orbit left/right, zoom and reset; orbit buttons are hidden below 640px wide.
+
 ## Room and object art
 
 The [48-prop concept sheet](../art-source/prop-sheet.png) is the target look for modelled props; see [PROP_BRIEFS](PROP_BRIEFS.md). It is not yet in the live renderer, so current game screenshots remain the runtime baseline.

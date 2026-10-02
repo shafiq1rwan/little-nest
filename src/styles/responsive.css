@@ -16,6 +16,9 @@
   .mode-pill { top: 12px; left: max(12px, env(safe-area-inset-left)); max-width: calc(100% - 24px); padding: 8px 13px; font-size: 12px; min-height: 36px; }
   #mode-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .mode-pill svg { width: 17px; height: 17px; flex-shrink: 0; }
+  .mode-pill { flex-wrap: wrap; row-gap: 6px; }
+  .mode-pill .pill-button { min-height: 44px; min-width: 44px; padding: 0 12px; font-size: 12px; border-radius: 12px; }
+  .mode-pill .pill-button svg { width: 16px; height: 16px; }
   .tool-rail { top: 58px; left: max(12px, env(safe-area-inset-left)); flex-direction: row; gap: 4px; padding: 5px; border-radius: 14px; }
   .tool-rail .icon-button { width: 44px; height: 44px; border-radius: 10px; }
   .tool-rail #undo-tool, .tool-rail #grid-tool { margin-top: 0; }
@@ -23,6 +26,7 @@
   .camera-tools { right: max(12px, env(safe-area-inset-right)); bottom: 12px; padding: 5px; gap: 4px; }
   .camera-tools > span, .hint-strip { display: none; }
   .camera-tools .icon-button { width: 44px; height: 44px; }
+  @media (max-width: 639px) { #orbit-left, #orbit-right { display: none; } }   /* narrow phones orbit with two fingers; the tray must fit beside the tool rail */
   #panel { width: 100%; height: auto; margin: 0; flex: 0 0 min(430px, 51dvh); min-height: 0; padding: 0 max(16px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(16px, env(safe-area-inset-left)); border: 2px solid var(--panel-edge); border-bottom: 0; border-radius: 22px 22px 0 0; box-shadow: var(--panel-shadow); }
   .drawer-heading { display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; height: 58px; min-height: 58px; gap: 12px; }
   .drawer-heading h2 { margin: 2px 0 0; font: 600 19px var(--font-heading); }

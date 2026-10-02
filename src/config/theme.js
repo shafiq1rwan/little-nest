@@ -3,6 +3,7 @@
 
 export const BACKDROP = 0xdf9d80;         // peach ground and scene background
 export const SELECTION_OUTLINE = 0x91ad79;
+export const HOVER_OUTLINE = 0xf3e4d2;     // softer cream box under the mouse before a click
 export const GHOST_OK = 0x88cc88;
 export const GHOST_BLOCKED = 0xdd5555;
 

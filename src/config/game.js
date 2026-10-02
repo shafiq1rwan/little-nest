@@ -18,6 +18,12 @@ export const CAMERA = {
   orbitStep: Math.PI / 12,   // 15 degrees per orbit button press
 };
 
+// Small motion touches; all are skipped when the system asks for reduced motion.
+export const MOTION = {
+  settleMs: 260,    // squash-and-settle after an item is placed or dropped
+  settleSquash: 0.08,
+};
+
 export const RENDER = {
   exposure: 1.25,
   maxPixelRatio: 2,

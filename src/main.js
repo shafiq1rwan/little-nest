@@ -6,8 +6,8 @@ import { createThumbnails } from './scene/thumbnails.js';
 import { preloadModels, preloadArt, loadedModelKeys } from './scene/models.js';
 import { tintModel as tint, disposeModel, measureModel, compactModel } from './scene/geometry.js';
 import { installIcons } from './ui/icons.js';
-import { CELL, CAMERA, RENDER, MUSIC, SAVE_KEY, ROOMS_KEY, MUSIC_KEY, MAX_SAVED_ITEMS } from './config/game.js';
-import { BACKDROP, SELECTION_OUTLINE, GHOST_OK, GHOST_BLOCKED, WALL_FINISHES, FLOOR_FINISHES, FLOOR_STYLES, DEFAULT_FLOOR_STYLE, ITEM_COLORS } from './config/theme.js';
+import { CELL, CAMERA, RENDER, MOTION, MUSIC, SAVE_KEY, ROOMS_KEY, MUSIC_KEY, MAX_SAVED_ITEMS } from './config/game.js';
+import { BACKDROP, SELECTION_OUTLINE, HOVER_OUTLINE, GHOST_OK, GHOST_BLOCKED, WALL_FINISHES, FLOOR_FINISHES, FLOOR_STYLES, DEFAULT_FLOOR_STYLE, ITEM_COLORS } from './config/theme.js';
 import { ROOM_PRESETS, DEFAULT_PRESET, WALL_HEIGHT, MIN_ROOM_SIZE, MAX_ROOM_SIZE, presetFixtures, presetWallRows } from './data/presets.js';
 import { COLLECTIONS, DEFAULT_COLLECTION } from './data/collections.js';
 import { LIGHTING, DEFAULT_LIGHTING } from './data/lighting.js';
@@ -180,6 +180,56 @@ let pendingSelection = false;         // selection card update deferred until th
 const selectionBox = new THREE.Box3Helper(new THREE.Box3(), SELECTION_OUTLINE);
 selectionBox.visible = false;
 scene.add(selectionBox);
+// The item under a mouse pointer gets a softer outline before it is clicked. Touch has no hover.
+const hoverBox = new THREE.Box3Helper(new THREE.Box3(), HOVER_OUTLINE);
+hoverBox.material.transparent = true; hoverBox.material.opacity = 0.75;
+hoverBox.visible = false;
+scene.add(hoverBox);
+let hoverId = null;
+function setHover(id) {
+  if (id === hoverId) return;
+  hoverId = id;
+  invalidate();
+}
+// A soft rounded shadow under floor ghosts shows where the item will land.
+const ghostShadow = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(64, 64, 10, 64, 64, 64);
+  grad.addColorStop(0, 'rgba(60,36,20,0.42)'); grad.addColorStop(0.7, 'rgba(60,36,20,0.22)'); grad.addColorStop(1, 'rgba(60,36,20,0)');
+  g.fillStyle = grad; g.fillRect(0, 0, 128, 128);
+  const map = new THREE.CanvasTexture(c); map.colorSpace = THREE.SRGBColorSpace;
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map, transparent: true, depthWrite: false, toneMapped: false }));
+  mesh.rotation.x = -Math.PI / 2; mesh.renderOrder = 1; mesh.visible = false;
+  scene.add(mesh);
+  return mesh;
+})();
+function placeGhostShadow(type, gx, gz, rot) {
+  const { w, d } = placement.footprint(type, rot);
+  const p = worldPos(type, gx, gz, rot);
+  ghostShadow.position.set(p.x, 0.012, p.z);
+  ghostShadow.scale.set(w * CELL * 1.08, d * CELL * 1.08, 1);
+  ghostShadow.visible = true;
+}
+// Settle bounce: a short squash when an item lands, applied on top of the model's own scale.
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const bounces = new Map();   // record id -> { mesh, base: Vector3, start }
+function bounce(record) {
+  if (!record || reducedMotion.matches) return;
+  const mesh = meshOf(record);
+  if (!mesh) return;
+  const base = bounces.get(record.id)?.base ?? mesh.scale.clone();
+  bounces.set(record.id, { mesh, base, start: performance.now() });
+  invalidate();
+}
+function stepBounces(now) {
+  for (const [id, b] of bounces) {
+    const k = Math.min(1, (now - b.start) / MOTION.settleMs);
+    const e = Math.sin(k * Math.PI) * (1 - k * 0.5) * MOTION.settleSquash;
+    b.mesh.scale.set(b.base.x * (1 + e / 2), b.base.y * (1 - e), b.base.z * (1 + e / 2));
+    if (k >= 1) { b.mesh.scale.copy(b.base); bounces.delete(id); }
+  }
+}
 
 const { footprint } = placement;
 function isFree(type, gx, gz, rot, ignoreId = null) {
@@ -268,6 +318,8 @@ commands.subscribe((kind, p) => {
     updateCount();
   } else if (kind === 'remove') {
     tweens.delete(p.id);
+    bounces.delete(p.id);
+    if (hoverId === p.id) hoverId = null;
     if (meshes.get(p.id)?.userData.open !== undefined) relightSoon();   // a curtain left: the sun may brighten
     if (selected?.id === p.id) setSelected(null);
     const mesh = meshes.get(p.id);
@@ -343,6 +395,7 @@ function cancelPlacing() {
   if (ghost) { scene.remove(ghost); disposeModel(ghost); }
   ghost = null;
   ghostTarget = null;
+  ghostShadow.visible = false;
   selectedType = null;
   $('mode-label').textContent = 'Decorate mode';
   $('keep-placing').hidden = $('cancel-placing').hidden = true;
@@ -362,10 +415,12 @@ function finishDrag(showControls = true, allReleased = input.activePointers() ==
   if (dragging) {
     // One history entry per completed drag. A blocked drop leaves the record untouched; the mesh
     // snaps back to the committed position either way.
-    if (dragTarget && dragging.parent) commands.place(dragging.id, dragTarget.parent, dragTarget.slot);
-    else if (dragTarget && dragging.wall) commands.mount(dragging.id, dragTarget.wall, dragTarget.col, dragTarget.row);
-    else if (dragTarget) commands.move(dragging.id, dragTarget.gx, dragTarget.gz);
+    let landed = false;
+    if (dragTarget && dragging.parent) landed = !!commands.place(dragging.id, dragTarget.parent, dragTarget.slot);
+    else if (dragTarget && dragging.wall) landed = !!commands.mount(dragging.id, dragTarget.wall, dragTarget.col, dragTarget.row);
+    else if (dragTarget) landed = !!commands.move(dragging.id, dragTarget.gx, dragTarget.gz);
     applyTransform(dragging);
+    if (landed) bounce(dragging);
     tint(meshOf(dragging), null);
     dragging = null;
     dragTarget = null;
@@ -383,6 +438,7 @@ const input = createInput({
   move(hit, ev) {
     invalidate();
     if (!editing || photoMode) return;
+    setHover(!ghost && !dragging && ev.pointerType === 'mouse' ? input.pickAt(ev) : null);
     if (ghost && placement.isWallItem(selectedType)) {
       ghostTarget = wallUnder(ev, selectedType);
       ghost.visible = !!ghostTarget;
@@ -414,6 +470,7 @@ const input = createInput({
       ghost.position.copy(worldPos(selectedType, gx, gz, rot));
       ghost.rotation.y = (rot * Math.PI) / 2;
       tint(ghost, isFree(selectedType, gx, gz, rot) ? GHOST_OK : GHOST_BLOCKED);
+      if (placement.occupies(selectedType)) placeGhostShadow(selectedType, gx, gz, rot);
     } else if (dragging && dragging.parent) {
       const target = surfaceUnder(ev, dragging.type, dragging.id);
       if (!target) return;
@@ -436,6 +493,7 @@ const input = createInput({
       if (!ghostTarget) { toast('Wall decorations go on the two walls. Point at one to place it.'); return; }
       if (!ghostTarget.free) { toast('That part of the wall is taken. Try a clear spot.'); return; }
       const placed = addItem(selectedType, null, null, 0, null, null, null, null, ghostTarget.wall, ghostTarget.col, ghostTarget.row);
+      bounce(placed);
       if (placed && !shiftKey && !keepPlacing) { cancelPlacing(); setSelected(placed); }
       return;
     }
@@ -443,6 +501,7 @@ const input = createInput({
       if (!ghostTarget) { toast((placement.surfaceKindOf(selectedType) === 'seat' ? 'Soft things go on ' : 'Small items go on ') + surfaceWhere(selectedType) + '. Point at one to place it.'); return; }
       if (!ghostTarget.free) { toast('That spot is taken. Try another part of the surface.'); return; }
       const placed = addItem(selectedType, null, null, ghost.userData.rot, null, null, ghostTarget.parent, ghostTarget.slot);
+      bounce(placed);
       if (placed && !shiftKey && !keepPlacing) { cancelPlacing(); setSelected(placed); }
       return;
     }
@@ -452,6 +511,7 @@ const input = createInput({
       const { gx, gz } = snap(hit, selectedType, rot);
       if (isFree(selectedType, gx, gz, rot)) {
         const placed = addItem(selectedType, gx, gz, rot);
+        bounce(placed);
         if (!shiftKey && !keepPlacing) { cancelPlacing(); setSelected(placed); }
       } else toast('That tile is occupied. Choose a free spot.');
       return;
@@ -578,6 +638,7 @@ $('help-toggle').onclick = () => { $('help-panel').hidden = !$('help-panel').hid
 
 const music = createMusic({ src: MUSIC.src, volume: MUSIC.volume, storageKey: MUSIC_KEY, button: $('music-toggle'), installIcons, onToggle: (on) => toast(on ? 'Music on.' : 'Music off.') });
 
+canvas.addEventListener('pointerleave', () => setHover(null));
 $('keep-placing').onclick = () => { keepPlacing = !keepPlacing; $('keep-placing').setAttribute('aria-pressed', String(keepPlacing)); $('keep-placing').classList.toggle('active', keepPlacing); };
 $('cancel-placing').onclick = () => { cancelPlacing(); $('scene').focus({ preventScroll: true }); };
 $('orbit-left').onclick = () => { if (orbitBy(CAMERA.orbitStep)) invalidate(); };
@@ -780,9 +841,13 @@ renderer.setAnimationLoop(() => {
   if (resize()) dirty = true;
   if (controls.update()) dirty = true;
   if (tweens.size) { stepTweens(performance.now()); dirty = true; }
+  if (bounces.size) { stepBounces(performance.now()); dirty = true; }
   if (!dirty) return;
   dirty = false;
   if (selected) { selectionBox.box.setFromObject(meshOf(selected)); selectionBox.updateMatrixWorld(true); }
+  const hoverMesh = hoverId && hoverId !== selected?.id && editing && !photoMode ? meshes.get(hoverId) : null;
+  hoverBox.visible = !!hoverMesh;
+  if (hoverMesh) { hoverBox.box.setFromObject(hoverMesh); hoverBox.updateMatrixWorld(true); }
   renderer.render(scene, camera);
   perf.renders++;
 });
@@ -809,6 +874,8 @@ window.__sim = {
   get selectedType() { return selectedType; },
   get keepPlacing() { return keepPlacing; },
   get tweening() { return tweens.size > 0; },
+  get bouncing() { return bounces.size > 0; },
+  get hoverId() { return hoverId; }, get hoverVisible() { return hoverBox.visible; }, get ghostShadowVisible() { return ghostShadow.visible; },
   wallWindows,
   startPlacing, orbitBy,
   get selected() { return withMesh(selected); },

@@ -95,6 +95,10 @@ The loading screen is the backdrop colour with soft dappled light, the cream Fre
 
 Do not change canvas dimensions while a drag or pinch is active. One finger decorates; two fingers operate the camera. Mouse users drag objects, right-drag to orbit, and scroll to zoom. Touch help must explain touch gestures rather than only desktop keyboard shortcuts.
 
+## Motion
+
+Motion is small and optional. Hover shows a soft cream outline (desktop mouse only). A floor ghost casts a soft footprint shadow. Items settle with a 260 ms squash when they land; curtains slide over 450 ms. Decorative motion is skipped when the system asks for reduced motion.
+
 ## Finish options
 
 The Walls and Floor tabs put a row of option buttons above the swatches: the wall target (Both walls, Back, Left) and the floor pattern (Parquet, Planks, Tile). Active options use the sage primary style; 32px on desktop and 44px on compact.

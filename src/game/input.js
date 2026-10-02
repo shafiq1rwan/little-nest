@@ -94,5 +94,5 @@ export function createInput({ canvas, camera, pickables, idOf }, handlers) {
     if (action) handlers.key(action, ev);
   });
 
-  return { floorHit, hitAmong, hitFirst, activePointers: () => touchPointers.size };
+  return { floorHit, hitAmong, hitFirst, pickAt: pick, activePointers: () => touchPointers.size };
 }

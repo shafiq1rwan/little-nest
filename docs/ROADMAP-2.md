@@ -6,7 +6,7 @@ The rules from the first roadmap still apply: keep the style guide and saved roo
 
 | Phase | Focus | Status | Dependency |
 | --- | --- | --- | --- |
-| 7 | Finish the core loop | In progress (increments 1–4 done 2 October 2026) | Phases 0–5 |
+| 7 | Finish the core loop | Complete 2 October 2026 | Phases 0–5 |
 | 8 | A living room: animation and sound | Planned | Phase 7 |
 | 9 | More room: structure, ceiling, night | Planned | Phase 7 |
 | 10 | Expression and progression | Planned | Phases 8, 9 |
@@ -25,9 +25,11 @@ Increments, in order:
 2. Done 2 October 2026: **Pillows and throws as items.** Surfaces now carry a `kind` ('table' by default, 'seat' for sofa, armchair, ottoman, bed, bench, pouf, low sofa, cottage armchair, rocking chair) and surface items a matching `surfaceKind`; `placement.acceptsOn()` keeps mugs off sofas and pillows off tables. New `soft` category with a throw pillow and a throw blanket, both recolourable. The baked pillows on the sofa, armchair, low sofa and cottage armchair are omitted from the loaded models (`omit` on the catalog entry) and the starter sofa carries two pillow items instead. No save version was needed: the kind is derived from the catalog and records still store parent and slot. Covered by tests/browser/seats.spec.js.
 3. Done 2 October 2026: **Curtains that open and close.** A wall item spanning a window footprint, with a rail and two panels. The lamp switch generalises to a per-item toggle (`lit` stays the stored field; label changes by type). Opening tweens the panels over about 450 ms with ease-out and keeps calling `invalidate()` until done; loading a room jumps to the final pose. Closed curtains dim the sun by a mood-dependent factor.
 4. Done 2 October 2026: **Per-wall finishes and floor patterns.** The Walls tab has a Both walls / Back / Left target row above the swatches (Both is one undo step through `commands.setFinishes`); the left wall has its own material. The Floor tab has Parquet / Planks / Tile above the colours. Save version 8 adds `wallLeft` (defaults to `wall`) and `floorStyle` (defaults to `parquet`); keys live in `FLOOR_STYLES` and `FLOOR_STYLE_KEYS`.
-5. **Selection polish.** Hover outline on desktop, a subtle drop shadow under the ghost, and a short settle bounce when an item lands.
+5. Done 2 October 2026: **Selection polish.** A soft cream hover outline follows the item under a mouse pointer (never on touch, never on the selected item); floor ghosts cast a footprint-sized soft shadow; placed and dropped items squash and settle over 260 ms (`MOTION` in src/config/game.js), skipped under prefers-reduced-motion.
 
 Completion criteria: a new player can place, duplicate, cancel and recolour anything without the keyboard; pillows are items; curtains work in all presets with windows; old saves load unchanged; suite passes with specs for each increment.
+
+Met 2 October 2026: placement, Keep placing, Cancel, Copy, Rotate and the swatches are all buttons; pillows and throws are seat items; curtains hang on any preset window (the balcony has none); saves from versions 2–7 migrate in the unit suite; specs: placement, seats, curtains, finishes, polish. Suite 98 passed, 1 skipped by design.
 
 ## Phase 8 — a living room: animation and sound
 

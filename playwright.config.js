@@ -29,6 +29,8 @@ export default defineConfig({
       use: {
         baseURL: 'http://localhost:' + port,
         ...(channel ? { channel } : {}),
+        // Decorative motion (the settle bounce) is off so geometry checks never race it; polish.spec opts back in.
+        reducedMotion: 'reduce',
         // Software WebGL keeps the checks runnable on machines without a GPU.
         launchOptions: { args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] },
         screenshot: 'only-on-failure',

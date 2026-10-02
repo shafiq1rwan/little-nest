@@ -10,6 +10,7 @@
     "tris": 1364
   },
   "armchair": {
+    "source": "art-source/models-v2/furniture/armchair/armchair.glb",
     "size": [
       0.88,
       0.9,

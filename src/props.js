@@ -154,7 +154,7 @@ function withCanvas(group, key, botanical) {
   if (!group) return group;
   group.traverse((o) => {
     if (o.isMesh && (o.name.endsWith('_canvas') || o.name.endsWith('_picture') || o.userData.role === 'canvas')) {
-      ownMaterial(o, new THREE.MeshStandardMaterial({ map: artImage(key) || artTexture(botanical), roughness: 1 }));
+      ownMaterial(o, new THREE.MeshStandardMaterial({ map: artImage(key) || artTexture(botanical), roughness: 1, side: THREE.DoubleSide }));   // generated canvases may face either way
     }
   });
   return group;

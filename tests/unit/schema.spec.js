@@ -9,7 +9,7 @@ const options = { catalog, placement, maxItems: 5, newId: () => 'gen' + counter+
 
 test('writer emits the current version with ids and explicit null colors', () => {
   const out = serializeRoom({ wall: 1, floor: 2, items: [{ id: 'a', type: 'sofa', gx: 0, gz: 0, rot: 0 }] });
-  expect(out).toEqual({ version: CURRENT_VERSION, room: { preset: 'livingRoom', width: 8, depth: 8 }, wall: 1, wallLeft: 1, floor: 2, floorStyle: 'parquet', lighting: 'morning', items: [{ id: 'a', type: 'sofa', gx: 0, gz: 0, rot: 0, color: null, parent: null, slot: null, wall: null, col: null, row: null, lit: null }] });
+  expect(out).toEqual({ version: CURRENT_VERSION, room: { preset: 'livingRoom', width: 8, depth: 8 }, wall: 1, wallLeft: 1, floor: 2, floorStyle: 'parquet', lighting: 'morning', pet: { present: false, color: 'ginger' }, items: [{ id: 'a', type: 'sofa', gx: 0, gz: 0, rot: 0, color: null, parent: null, slot: null, wall: null, col: null, row: null, lit: null }] });
 });
 
 test('legacy saves without a version migrate and receive ids', () => {

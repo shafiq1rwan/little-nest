@@ -99,6 +99,10 @@ Do not change canvas dimensions while a drag or pinch is active. One finger deco
 
 Motion is small and optional. Hover shows a soft cream outline (desktop mouse only). A floor ghost casts a soft footprint shadow. Items settle with a 260 ms squash when they land; curtains slide over 450 ms. Ambient motion is subtle: lamps breathe by a few percent, candles flicker, string lights twinkle only in the Evening mood, and plants sway about a degree and a half, with pots still. It can be switched off in Settings. Decorative motion is skipped when the system asks for reduced motion.
 
+## The cat
+
+A chunky low-poly cat in the furniture's rounded style: big head, short body, cream muzzle and paws, four fur colours (ginger, grey, cream, black). It walks, sits, curls on rugs and seats, and turns its head toward the cursor. It is about half a cell long and never stands inside furniture.
+
 ## Finish options
 
 The Walls and Floor tabs put a row of option buttons above the swatches: the wall target (Both walls, Back, Left) and the floor pattern (Parquet, Planks, Tile). Active options use the sage primary style; 32px on desktop and 44px on compact.

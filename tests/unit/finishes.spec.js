@@ -10,15 +10,15 @@ const placement = createPlacement({ catalog, room: 8 });
 const opts = { catalog, placement, newId: () => 'x' };
 
 test('version 8 adds a left wall color and a floor style, and older saves migrate to the defaults', () => {
-  expect(CURRENT_VERSION).toBe(8);
+  expect(CURRENT_VERSION).toBeGreaterThanOrEqual(8);
   expect(FLOOR_STYLES.map((s) => s.key)).toEqual(FLOOR_STYLE_KEYS);   // theme and schema agree on stored keys
 
   const v7 = { version: 7, room: { preset: 'livingRoom', width: 8, depth: 8 }, wall: 0x92725c, floor: 0xe3a372, lighting: 'morning', items: [] };
-  expect(migrateRoom(v7)).toMatchObject({ version: 8, wallLeft: 0x92725c, floorStyle: 'parquet' });
+  expect(migrateRoom(v7)).toMatchObject({ version: CURRENT_VERSION, wallLeft: 0x92725c, floorStyle: 'parquet' });
   expect(parseRoom(v7, opts)).toMatchObject({ wall: 0x92725c, wallLeft: 0x92725c, floorStyle: 'parquet' });
 
   const saved = serializeRoom({ wall: 1, wallLeft: 2, floor: 3, floorStyle: 'tile', items: [] });
-  expect(saved).toMatchObject({ version: 8, wall: 1, wallLeft: 2, floor: 3, floorStyle: 'tile' });
+  expect(saved).toMatchObject({ version: CURRENT_VERSION, wall: 1, wallLeft: 2, floor: 3, floorStyle: 'tile' });
   expect(parseRoom(saved, opts)).toMatchObject({ wall: 1, wallLeft: 2, floorStyle: 'tile' });
   expect(serializeRoom({ wall: 5, floor: 3, items: [] })).toMatchObject({ wallLeft: 5, floorStyle: 'parquet' });   // defaults when omitted
 

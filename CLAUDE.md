@@ -24,7 +24,7 @@ Run `npm run build` and `npm test` before every commit that touches src/. Docume
 - Rendering is on demand. Any change to what the scene looks like that does not go through commands, input, or the camera must call `invalidate()` in main.js or it will not be drawn.
 - Models are merged per material by `compactModel()` when placed. Parts that must stay separate carry `userData.recolor` or an owned material.
 - Data lives in `src/data/` (presets, collections, lighting) and constants in `src/config/`.
-- Saved rooms are versioned (currently 7). Change the shape only by adding a version and a migration in `src/persistence/schema.js`, and keep catalog keys, surface slot order, and preset keys stable.
+- Saved rooms are versioned (currently 9). Change the shape only by adding a version and a migration in `src/persistence/schema.js`, and keep catalog keys, surface slot order, and preset keys stable.
 
 ## Working conventions learned here
 
@@ -39,6 +39,7 @@ Run `npm run build` and `npm test` before every commit that touches src/. Docume
 - Compact screens (width ≤ 900px or height ≤ 600px) keep 44px touch targets. Desktop controls are deliberately smaller; see STYLE_GUIDE.
 - Modelled props: `art-source/generated/<key>.glb` is raw image-to-3D output (ignored), `public/models/<key>.glb` is game-ready (tracked). `tools/blender/clean-generated.py` converts one to the other; the catalog entry gets `model:` plus a `modelInstance(key) || procedural` build. Bump `MODELS_VERSION` after re-exporting a file. Blender 5.2 is at `C:/Program Files/Blender Foundation/Blender 5.2/blender.exe` on this machine. Three.js strips dots from glTF node names, so part objects use underscores.
 - Sound effects: `src/ui/sfx.js` plays named sounds (`sfx.play('place')`); add a file under public/audio/sfx, an entry in `SFX` with a gain, and a line in SOURCES.md. Kenney packs are CC0; the full packs sit in art-source/sfx-packs (ignored). Browser tests run with reduced motion but sound is on; `window.__sim.sfx.log` lists what played.
+- The cat: brain in src/game/pet.js (pure, unit-tested), model in src/scene/cat.js, state as the `petPresent`/`petColor` finishes. The starter living room has a cat; it is not a catalog item and is not pickable. `window.__sim.pet` exposes action, cell and the brain; `brain.setCalm(true)` freezes it for deterministic checks.
 - The author credit is "Saiss". The music is "Lofi Dreams" from Pixabay; fonts are OFL and bundled in `public/fonts` with their licences.
 
 ## Commits

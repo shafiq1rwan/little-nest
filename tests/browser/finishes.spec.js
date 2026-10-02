@@ -43,7 +43,7 @@ for (const [width, height, label] of [[1440, 900, 'desktop'], [390, 844, 'phone'
       expect((await colors()).map).toBe(parquet);
       await tap(page.locator('#redo-tool'));
       await tap(page.locator('#save'));
-      expect((await galleryStore(page)).rooms[0].room).toMatchObject({ version: 8, wall: 0x9ba58c, wallLeft: 0xb77d66, floorStyle: 'tile' });
+      expect((await galleryStore(page)).rooms[0].room).toMatchObject({ version: 9, wall: 0x9ba58c, wallLeft: 0xb77d66, floorStyle: 'tile' });
       await tap(page.locator('#clear'));
       await loadCurrentRoom(page);
       expect(await colors()).toMatchObject({ back: 0x9ba58c, left: 0xb77d66 });

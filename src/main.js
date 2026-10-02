@@ -7,7 +7,7 @@ import { preloadModels, preloadArt, loadedModelKeys } from './scene/models.js';
 import { tintModel as tint, disposeModel, measureModel, compactModel } from './scene/geometry.js';
 import { installIcons } from './ui/icons.js';
 import { CELL, CAMERA, RENDER, MOTION, MUSIC, SAVE_KEY, ROOMS_KEY, MUSIC_KEY, SFX_KEY, SFX_VOLUME_KEY, AMBIENT_KEY, MAX_SAVED_ITEMS } from './config/game.js';
-import { BACKDROP, SELECTION_OUTLINE, HOVER_OUTLINE, GHOST_OK, GHOST_BLOCKED, WALL_FINISHES, FLOOR_FINISHES, FLOOR_STYLES, DEFAULT_FLOOR_STYLE, ITEM_COLORS } from './config/theme.js';
+import { BACKDROP, SELECTION_OUTLINE, HOVER_OUTLINE, GHOST_OK, GHOST_BLOCKED, WALL_FINISHES, FLOOR_FINISHES, FLOOR_STYLES, DEFAULT_FLOOR_STYLE, ITEM_COLORS, PET_COLORS, DEFAULT_PET_COLOR } from './config/theme.js';
 import { ROOM_PRESETS, DEFAULT_PRESET, WALL_HEIGHT, MIN_ROOM_SIZE, MAX_ROOM_SIZE, presetFixtures, presetWallRows } from './data/presets.js';
 import { COLLECTIONS, DEFAULT_COLLECTION } from './data/collections.js';
 import { LIGHTING, DEFAULT_LIGHTING } from './data/lighting.js';
@@ -24,6 +24,9 @@ import { createToast, buildCatalog, setCatalogActive, bindCatalogFilter, bindTab
 import { createMusic } from './ui/music.js';
 import { createSfx } from './ui/sfx.js';
 import { createMotion } from './scene/motion.js';
+import { createCat, disposeCat } from './scene/cat.js';
+import { createPetBrain } from './game/pet.js';
+import { cellKey } from './game/placement.js';
 import { readString, writeString } from './persistence/storage.js';
 
 export async function initializeGame({ onProgress = async () => {}, onOpenRoom = () => {}, onNotice = () => {} } = {}) {
@@ -40,7 +43,7 @@ const { renderer, scene, camera, controls, hemisphere, sun, resetView, zoomBy, o
 // The shell (floor, walls, windows, grid) is rebuilt whenever the room preset changes. `placement`
 // and `wallBlocked` are reconfigured in place so everything holding them keeps working.
 const roomConfig = { preset: DEFAULT_PRESET, width: ROOM_PRESETS[DEFAULT_PRESET].width, depth: ROOM_PRESETS[DEFAULT_PRESET].depth };
-const finishes = { wall: WALL_FINISHES[0].color, wallLeft: WALL_FINISHES[0].color, floor: FLOOR_FINISHES[0].color, floorStyle: DEFAULT_FLOOR_STYLE, lighting: DEFAULT_LIGHTING };
+const finishes = { wall: WALL_FINISHES[0].color, wallLeft: WALL_FINISHES[0].color, floor: FLOOR_FINISHES[0].color, floorStyle: DEFAULT_FLOOR_STYLE, lighting: DEFAULT_LIGHTING, petPresent: false, petColor: DEFAULT_PET_COLOR };
 let wallTarget = 'both';   // which wall the Walls tab swatches paint
 const WALL_ROWS = WALL_HEIGHT / 0.5;
 const placement = createPlacement({ catalog: CATALOG, width: roomConfig.width, depth: roomConfig.depth, cell: CELL, wallRows: WALL_ROWS, wallRow: 0.5 });
@@ -158,6 +161,73 @@ let ambientOn = readString(AMBIENT_KEY) !== 'off';
 function syncAmbient() { motion.setEnabled(ambientOn && !window.matchMedia('(prefers-reduced-motion: reduce)').matches); invalidate(); }
 window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener?.('change', syncAmbient);
 const ambient = { isOn: () => ambientOn, setOn(on) { ambientOn = !!on; writeString(AMBIENT_KEY, ambientOn ? 'on' : 'off'); syncAmbient(); } };
+// ---------- the cat ----------
+// The brain (src/game/pet.js) reads the room through this view; the model (src/scene/cat.js) shows it.
+const petWorld = {
+  dims: () => ({ width: roomConfig.width, depth: roomConfig.depth, cell: CELL }),
+  isFree: (gx, gz) => !state.occupancy.has(cellKey(gx, gz)),
+  seats() {
+    const out = [];
+    for (const r of state.items) {
+      const surface = placement.surfaceOf(r.type);
+      if (r.parent || surface?.kind !== 'seat' || !meshes.has(r.id)) continue;
+      const used = state.slotsUsed.get(r.id);
+      surface.slots.forEach((_, slot) => { if (!used?.has(slot)) { const p = slotWorld(r.id, slot); out.push({ key: r.id + ':' + slot, x: p.x, y: p.y, z: p.z }); } });
+    }
+    return out;
+  },
+  favourites() {
+    const rug = [], sun = [];
+    for (const r of state.items) {
+      if (r.type !== 'rug' || r.gx === null) continue;
+      const { w, d } = placement.footprint(r.type, r.rot);
+      for (let x = 0; x < w; x++) for (let z = 0; z < d; z++) rug.push({ gx: r.gx + x, gz: r.gz + z });
+    }
+    const half = { back: roomConfig.width / 2, left: roomConfig.depth / 2 };
+    for (const f of presetFixtures(presetFor(roomConfig)).filter((f) => f.kind === 'window')) {
+      const n = f.wall === 'back' ? roomConfig.width : roomConfig.depth;
+      for (let i = 0; i < n; i++) {
+        const mid = -half[f.wall] + i + 0.5;
+        if (mid > f.from && mid < f.to) for (const depth of [0, 1]) sun.push(f.wall === 'back' ? { gx: i, gz: depth } : { gx: depth, gz: i });
+      }
+    }
+    return { rug, sun };
+  },
+};
+const brain = createPetBrain(petWorld);
+let pet = null;          // { root, setPose, color } while a cat is visiting
+let petClock = 0, petRestRender = 0;
+function syncPet() {
+  if (!lampsReady) return;
+  const recolour = pet && finishes.petPresent && pet.color !== finishes.petColor;
+  if (pet && (!finishes.petPresent || recolour)) { disposeCat(pet); pet = null; }
+  if (finishes.petPresent && !pet) {
+    pet = { ...createCat(finishes.petColor), color: finishes.petColor };
+    scene.add(pet.root);
+    if (!recolour) placePetSoon();   // a new visitor: find a spot once the room has finished loading
+    pet.setPose(brain.pose(), 1, 0);
+    petClock = 0;
+  }
+  invalidate();
+}
+let petPlaceQueued = false;
+function placePetSoon() {
+  if (petPlaceQueued) return;
+  petPlaceQueued = true;
+  queueMicrotask(() => { petPlaceQueued = false; if (pet) { brain.reset(); pet.setPose(brain.pose(), 1, 0); invalidate(); } });
+}
+/** Advances the cat. Returns true when a frame should be drawn: always while it moves, about 15 fps while it rests. */
+function stepPet(now) {
+  if (!pet) return false;
+  const dt = petClock ? Math.min(0.1, (now - petClock) / 1000) : 1 / 60;
+  petClock = now;
+  brain.setCalm(!motion.isEnabled());
+  const pose = brain.update(dt);
+  pet.setPose(pose, dt, now / 1000);
+  if (pose.action === 'walk' || pose.action === 'hop') return true;
+  if (motion.isEnabled() && now - petRestRender > 66) { petRestRender = now; return true; }
+  return false;
+}
 let relightQueued = false;
 function relightSoon() {
   if (relightQueued) return;
@@ -188,6 +258,7 @@ buildShell(roomConfig);
 const state = createRoomState({ placement, wallBlocked, wallWindows });
 lampsReady = true;
 syncAmbient();
+syncPet();
 const commands = createCommands({ state, finishes, room: roomConfig });   // every room mutation goes through here so it can be undone
 const meshes = new Map();             // record id -> THREE.Group
 let selectedType = null;              // catalog key while placing
@@ -364,9 +435,11 @@ commands.subscribe((kind, p) => {
   } else if (kind === 'finish') {
     if (p.key === 'lighting') { applyLighting(p.color); syncLightingOptions(); }
     else if (p.key === 'floorStyle') { shell.setFloorStyle(p.color); syncFloorStyles(); }
+    else if (p.key === 'petPresent' || p.key === 'petColor') { syncPet(); syncPetControls(); }
     else { ({ wall: shell.wallMat, wallLeft: shell.wallLeftMat, floor: shell.floorMat })[p.key].color.setHex(p.color); syncFinishSwatches(); }
   } else if (kind === 'room') {
     buildShell(p);
+    if (pet) placePetSoon();
   } else if (kind === 'history') {
     $('undo-tool').disabled = !p.canUndo;
     $('redo-tool').disabled = !p.canRedo;
@@ -464,6 +537,7 @@ const input = createInput({
     invalidate();
     if (!editing || photoMode) return;
     setHover(!ghost && !dragging && ev.pointerType === 'mouse' ? input.pickAt(ev) : null);
+    if (pet) brain.lookAt(ev.pointerType === 'mouse' ? hit : null);
     if (ghost && placement.isWallItem(selectedType)) {
       ghostTarget = wallUnder(ev, selectedType);
       ghost.visible = !!ghostTarget;
@@ -641,6 +715,22 @@ function syncFloorStyles() {
   $('floor-styles').querySelectorAll('button').forEach((b) => { const on = b.dataset.style === finishes.floorStyle; b.classList.toggle('active', on); b.setAttribute('aria-pressed', String(on)); });
 }
 syncFloorStyles();
+// Light tab: invite the cat and pick its fur. Both are undoable finishes.
+for (const { key, name, fur } of PET_COLORS) {
+  const b = document.createElement('button');
+  b.className = 'swatch'; b.dataset.pet = key; b.title = name; b.setAttribute('aria-label', name + ' cat');
+  b.style.backgroundColor = '#' + fur.toString(16).padStart(6, '0');
+  b.onclick = () => commands.setFinishes({ petColor: key, petPresent: true });
+  $('pet-colors').append(b);
+}
+$('pet-toggle').onclick = () => commands.setFinish('petPresent', !finishes.petPresent);
+function syncPetControls() {
+  $('pet-toggle').setAttribute('aria-pressed', String(finishes.petPresent));
+  $('pet-toggle').textContent = finishes.petPresent ? 'Cat is visiting' : 'Invite a cat';
+  $('pet-toggle').classList.toggle('active', finishes.petPresent);
+  $('pet-colors').querySelectorAll('button').forEach((b) => { const on = finishes.petPresent && b.dataset.pet === finishes.petColor; b.classList.toggle('active', on); b.setAttribute('aria-pressed', String(on)); });
+}
+syncPetControls();
 const syncLightingOptions = buildLightingOptions({
   container: $('lighting-options'), moods: LIGHTING, icons: { morning: 'sun', sunset: 'sunset', evening: 'moon' },
   current: () => finishes.lighting, onPick: (key) => commands.setFinish('lighting', key),
@@ -669,7 +759,7 @@ document.addEventListener('click', (ev) => {
 }, true);
 const music = createMusic({ src: MUSIC.src, volume: MUSIC.volume, storageKey: MUSIC_KEY, button: $('music-toggle'), installIcons, onToggle: (on) => toast(on ? 'Music on.' : 'Music off.') });
 
-canvas.addEventListener('pointerleave', () => setHover(null));
+canvas.addEventListener('pointerleave', () => { setHover(null); if (pet) brain.lookAt(null); });
 $('keep-placing').onclick = () => { keepPlacing = !keepPlacing; $('keep-placing').setAttribute('aria-pressed', String(keepPlacing)); $('keep-placing').classList.toggle('active', keepPlacing); };
 $('cancel-placing').onclick = () => { cancelPlacing(); $('scene').focus({ preventScroll: true }); };
 $('orbit-left').onclick = () => { if (orbitBy(CAMERA.orbitStep)) invalidate(); };
@@ -700,7 +790,7 @@ function presetRoomData(presetId) {
     });
   }
   return {
-    data: { room: { preset: presetId, width: preset.width, depth: preset.depth }, wall: WALL_FINISHES[0].color, wallLeft: WALL_FINISHES[0].color, floor: FLOOR_FINISHES[0].color, floorStyle: DEFAULT_FLOOR_STYLE, lighting: DEFAULT_LIGHTING, items },
+    data: { room: { preset: presetId, width: preset.width, depth: preset.depth }, wall: WALL_FINISHES[0].color, wallLeft: WALL_FINISHES[0].color, floor: FLOOR_FINISHES[0].color, floorStyle: DEFAULT_FLOOR_STYLE, lighting: DEFAULT_LIGHTING, pet: { present: !!preset.pet, color: preset.pet || DEFAULT_PET_COLOR }, items },
     selectId,
   };
 }
@@ -721,7 +811,7 @@ function setCurrentRoom(summary) {
 }
 function currentRoomData() {
   finishDrag();
-  return serializeRoom({ room: roomConfig, wall: finishes.wall, wallLeft: finishes.wallLeft, floor: finishes.floor, floorStyle: finishes.floorStyle, lighting: finishes.lighting, items: state.items });
+  return serializeRoom({ room: roomConfig, wall: finishes.wall, wallLeft: finishes.wallLeft, floor: finishes.floor, floorStyle: finishes.floorStyle, lighting: finishes.lighting, pet: { present: finishes.petPresent, color: finishes.petColor }, items: state.items });
 }
 /** Saves into entry `id` (or a new entry when null). Returns the summary, or null when storage refused. */
 function saveRoom(id, name) {
@@ -874,6 +964,7 @@ renderer.setAnimationLoop(() => {
   if (tweens.size) { stepTweens(performance.now()); dirty = true; }
   if (bounces.size) { stepBounces(performance.now()); dirty = true; }
   if (motion.step(performance.now())) dirty = true;
+  if (stepPet(performance.now())) dirty = true;
   if (!dirty) return;
   dirty = false;
   if (selected) { selectionBox.box.setFromObject(meshOf(selected)); selectionBox.updateMatrixWorld(true); }
@@ -902,6 +993,7 @@ window.__sim = {
   collections: COLLECTIONS,
   get musicOn() { return music.isOn(); },
   sfx, motion, ambient,
+  get pet() { return pet ? { action: brain.action, cell: brain.cell(), onSeat: brain.onSeat, pose: brain.pose(), root: pet.root, view: pet, brain } : null; },
   get items() { return state.items.map(withMesh); },
   get ghost() { return ghost; },
   get selectedType() { return selectedType; },

@@ -32,6 +32,15 @@ export const FLOOR_STYLES = [
 ];
 export const DEFAULT_FLOOR_STYLE = 'parquet';
 
+// Cat fur. Keys are stored in saved rooms (pet.color): add new ones, never rename.
+export const PET_COLORS = [
+  { key: 'ginger', name: 'Ginger', fur: 0xd98c4e, belly: 0xf3dcc0 },
+  { key: 'grey', name: 'Grey', fur: 0x8e8984, belly: 0xd9d3cc },
+  { key: 'cream', name: 'Cream', fur: 0xece2d0, belly: 0xfaf4ea },
+  { key: 'black', name: 'Black', fur: 0x3b3634, belly: 0x5a5350 },
+];
+export const DEFAULT_PET_COLOR = 'ginger';
+
 // Colors offered for upholstery, rugs, and plant pots.
 export const ITEM_COLORS = [
   { name: 'Linen', color: 0xf3e4d2 },

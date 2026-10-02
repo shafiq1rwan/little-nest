@@ -14,6 +14,7 @@ export const ROOM_PRESETS = {
     name: 'Living room',
     blurb: 'A sunny corner room with a sofa, a desk, and plenty of plants.',
     width: 8, depth: 8,
+    pet: 'ginger',   // the starter room comes with a cat
     windows: [{ wall: 'back', at: -1.5, width: 4.7 }, { wall: 'left', at: -1.9, width: 3.9 }],
     lights: true,
     items: [

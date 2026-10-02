@@ -73,5 +73,5 @@ export function galleryStore(page) {
   return page.evaluate(() => JSON.parse(localStorage.getItem('home-deco-sim:rooms') || 'null'));
 }
 
-export const STARTER_ITEM_COUNT = 20;   // 16 floor items, two on surfaces, two on walls
+export const STARTER_ITEM_COUNT = 22;   // 16 floor items, two on tables, two pillows on the sofa, two on walls
 export const TERRACOTTA = 0xb96949;

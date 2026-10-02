@@ -18,7 +18,9 @@ export const ROOM_PRESETS = {
     lights: true,
     items: [
       { type: 'rug', gx: 2, gz: 3, rot: 0 },
-      { type: 'sofa', gx: 2, gz: 1, rot: 0 },
+      { type: 'sofa', gx: 2, gz: 1, rot: 0, key: 'sofa' },
+      { type: 'pillow', on: 'sofa', slot: 0, rot: 0, color: 0xbf895c },
+      { type: 'pillow', on: 'sofa', slot: 2, rot: 0 },
       { type: 'coffeeTable', gx: 3, gz: 4, rot: 0, key: 'coffeeTable' },
       { type: 'mug', on: 'coffeeTable', slot: 0, rot: 0 },
       { type: 'armchair', gx: 6, gz: 3, rot: 3, color: 0x81936a, select: true },

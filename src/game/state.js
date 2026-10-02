@@ -71,7 +71,7 @@ export function createRoomState({ placement, wallBlocked = new Set() }) {
   /** True when a surface item can sit in `slot` of `parentId`, ignoring `ignoreId` (the item itself while moving). */
   function canPlaceOn(type, parentId, slot, ignoreId = null) {
     const parent = byId.get(parentId);
-    if (!parent || !placement.isSurfaceItem(type) || parent.parent) return false;
+    if (!parent || !placement.acceptsOn(type, parent.type) || parent.parent) return false;
     if (!placement.slotLocal(parent.type, slot)) return false;
     const used = slotsUsed.get(parentId);
     if (!used || !used.has(slot)) return true;

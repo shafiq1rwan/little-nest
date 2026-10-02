@@ -7,7 +7,8 @@ import { ROOM_PRESETS, DEFAULT_PRESET, MIN_ROOM_SIZE, MAX_ROOM_SIZE, presetFixtu
 
 // The real catalog's footprints and surfaces, without Three.js: only the fields the rules read.
 const catalog = {
-  rug: { w: 4, d: 3, layer: 'floor' }, sofa: { w: 3, d: 1 }, armchair: { w: 1, d: 1 }, bookshelf: { w: 2, d: 1, surface: { y: 1, slots: [{ x: 0, z: 0 }, { x: 0, z: 0 }, { x: 0, z: 0 }] } },
+  rug: { w: 4, d: 3, layer: 'floor' }, sofa: { w: 3, d: 1, surface: { kind: 'seat', y: .5, slots: [{ x: 0, z: 0 }, { x: 0, z: 0 }, { x: 0, z: 0 }] } }, armchair: { w: 1, d: 1 },
+  pillow: { w: 1, d: 1, layer: 'surface', surfaceKind: 'seat' }, bookshelf: { w: 2, d: 1, surface: { y: 1, slots: [{ x: 0, z: 0 }, { x: 0, z: 0 }, { x: 0, z: 0 }] } },
   floorLamp: { w: 1, d: 1 }, sideboard: { w: 2, d: 1, surface: { y: 1, slots: [{ x: 0, z: 0 }, { x: 0, z: 0 }] } }, chair: { w: 1, d: 1 },
   coffeeTable: { w: 2, d: 1, surface: { y: 1, slots: [{ x: 0, z: 0 }, { x: 0, z: 0 }] } }, desk: { w: 2, d: 1, surface: { y: 1, slots: [{ x: 0, z: 0 }, { x: 0, z: 0 }, { x: 0, z: 0 }] } },
   sideTable: { w: 1, d: 1, surface: { y: 1, slots: [{ x: 0, z: 0 }] } }, pouf: { w: 1, d: 1 }, basket: { w: 1, d: 1 },

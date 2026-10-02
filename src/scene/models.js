@@ -41,7 +41,7 @@ export async function preloadModels(catalog, { onProgress = () => {} } = {}) {
   await Promise.all(entries.map(async ([key, def]) => {
     try {
       const gltf = await loader.loadAsync(def.model + '?v=' + MODELS_VERSION);
-      templates.set(key, prepare(gltf.scene));
+      templates.set(key, prepare(gltf.scene, new Set(def.omit || [])));
     } catch (error) {
       console.warn('Little Nest: model for ' + key + ' did not load, using the built-in shape.', error);
     }
@@ -51,11 +51,11 @@ export async function preloadModels(catalog, { onProgress = () => {} } = {}) {
 }
 
 /** Replaces file materials with shared flat ones and strips anything that is not a mesh. */
-function prepare(scene) {
+function prepare(scene, omit = new Set()) {
   const group = new THREE.Group();
   scene.updateMatrixWorld(true);
   scene.traverse((o) => {
-    if (!o.isMesh) return;
+    if (!o.isMesh || omit.has(o.name)) return;   // e.g. baked pillows, now placeable items
     const color = o.material.color.getHex();
     const mesh = new THREE.Mesh(o.geometry, sharedMaterial(color, o.material.roughness ?? 0.85));
     mesh.applyMatrix4(o.matrixWorld);

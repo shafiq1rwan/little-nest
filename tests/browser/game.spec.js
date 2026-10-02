@@ -113,7 +113,7 @@ test('saves carry stable ids and a legacy version 2 save is imported into the ga
   await page.evaluate(() => localStorage.removeItem('home-deco-sim:rooms'));
   await page.evaluate(() => localStorage.setItem('home-deco-sim:room', JSON.stringify({
     version: 2, wall: 0x92725c, floor: 0xe3a372,
-    items: [{ type: 'sofa', gx: 2, gz: 1, rot: 0 }, { type: 'rug', gx: 2, gz: 3, rot: 0 }, { type: 'armchair', gx: 6, gz: 3, rot: 3, color: 0x81936a }],
+    items: [{ type: 'sofa', gx: 2, gz: 1, rot: 0 }, { type: 'rug', gx: 2, gz: 3, rot: 0 }, { type: 'armchair', gx: 6, gz: 3, rot: 3, color: 0x81936a }],   // the legacy sample room has no pillows
   })));
   await page.reload();
   await page.waitForFunction(() => !!window.__sim);

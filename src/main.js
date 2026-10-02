@@ -192,9 +192,10 @@ function placeWallGhost(target) {
   ghost.rotation.y = w.rotY;
 }
 /** Meshes of floor items that offer surface slots. */
-function supporterMeshes() {
-  return state.items.filter((r) => !r.parent && placement.surfaceOf(r.type)).map(meshOf);
+function supporterMeshes(type = null) {
+  return state.items.filter((r) => !r.parent && placement.surfaceOf(r.type) && (!type || placement.acceptsOn(type, r.type))).map(meshOf);
 }
+const surfaceWhere = (type) => (placement.surfaceKindOf(type) === 'seat' ? 'sofas, chairs and beds' : 'tables and shelves');
 /** World position of a slot on a supporter. */
 function slotWorld(parentId, slot) {
   const parentRecord = state.get(parentId);
@@ -203,7 +204,7 @@ function slotWorld(parentId, slot) {
 }
 /** Nearest surface slot under the pointer: { parent, slot, free } or null. `ignoreId` is the item being moved. */
 function surfaceUnder(ev, type, ignoreId = null) {
-  const hit = input.hitAmong(ev, supporterMeshes(), (id) => id !== ignoreId && !state.get(id)?.parent);
+  const hit = input.hitAmong(ev, supporterMeshes(type), (id) => id !== ignoreId && !state.get(id)?.parent);
   if (!hit) return null;
   const parentRecord = state.get(hit.id);
   const local = meshes.get(hit.id).worldToLocal(hit.point.clone());
@@ -285,7 +286,7 @@ function startPlacing(type) {
   tint(ghost, GHOST_OK);
   ghost.visible = false;
   scene.add(ghost);
-  const where = placement.isSurfaceItem(type) ? ' on a table or shelf' : placement.isWallItem(type) ? ' on a wall' : '';
+  const where = placement.isSurfaceItem(type) ? (placement.surfaceKindOf(type) === 'seat' ? ' on a seat' : ' on a table or shelf') : placement.isWallItem(type) ? ' on a wall' : '';
   $('mode-label').textContent = 'Place ' + CATALOG[type].label.toLowerCase() + where;
   $('keep-placing').hidden = $('cancel-placing').hidden = false;
   canvas.style.cursor = 'crosshair';
@@ -393,7 +394,7 @@ const input = createInput({
       return;
     }
     if (ghost && placement.isSurfaceItem(selectedType)) {
-      if (!ghostTarget) { toast('Small items go on tables and shelves. Point at one to place it.'); return; }
+      if (!ghostTarget) { toast((placement.surfaceKindOf(selectedType) === 'seat' ? 'Soft things go on ' : 'Small items go on ') + surfaceWhere(selectedType) + '. Point at one to place it.'); return; }
       if (!ghostTarget.free) { toast('That spot is taken. Try another part of the surface.'); return; }
       const placed = addItem(selectedType, null, null, ghost.userData.rot, null, null, ghostTarget.parent, ghostTarget.slot);
       if (placed && !shiftKey && !keepPlacing) { cancelPlacing(); setSelected(placed); }
@@ -473,7 +474,7 @@ function updateSelection() {
     item: selected,
     def,
     thumbnail: selected && thumbnails[selected.type],
-    sizeText: !selected ? '' : selected.parent ? 'Sits on tables and shelves' : selected.wall ? 'On the wall' : (({ w, d }) => w + ' × ' + d + ' tiles')(footprint(selected.type, selected.rot)),
+    sizeText: !selected ? '' : selected.parent ? 'Sits on ' + surfaceWhere(selected.type) : selected.wall ? 'On the wall' : (({ w, d }) => w + ' × ' + d + ' tiles')(footprint(selected.type, selected.rot)),
     canRecolor,
     colors: ITEM_COLORS,
     activeColor: selected && (selected.color ?? def.defaultColor ?? ITEM_COLORS[0].color),

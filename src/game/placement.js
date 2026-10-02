@@ -54,6 +54,14 @@ export function createPlacement({ catalog, room = 8, width = room, depth = room,
   function isSurfaceItem(type) {
     return catalog[type].layer === 'surface';
   }
+  /** Surface items and surfaces each have a kind: 'table' (default) or 'seat'. An item only sits on a matching surface. */
+  function surfaceKindOf(type) {
+    return catalog[type]?.surfaceKind ?? 'table';
+  }
+  function acceptsOn(type, parentType) {
+    const s = surfaceOf(parentType);
+    return !!s && isSurfaceItem(type) && (s.kind ?? 'table') === surfaceKindOf(type);
+  }
   /** Surface definition { y, slots: [{ x, z, y? }] } in the supporter's local space, or null. */
   function surfaceOf(type) {
     return catalog[type]?.surface ?? null;
@@ -179,7 +187,7 @@ export function createPlacement({ catalog, room = 8, width = room, depth = room,
     get wallRows() { return dims.wallRows; },
     cell, wallRow, configure,
     footprint, cellsOf, inBounds, occupies, isFree, worldPos, snap,
-    isLamp, isSurfaceItem, surfaceOf, slotCount, slotLocal, nearestSlot,
+    isLamp, isSurfaceItem, surfaceKindOf, acceptsOn, surfaceOf, slotCount, slotLocal, nearestSlot,
     isWallItem, wallSize, wallColumns, wallCellsOf, wallInBounds, wallFree, wallWorld, wallSnap, blockedWallCells,
   };
 }

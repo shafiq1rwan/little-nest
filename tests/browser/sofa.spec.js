@@ -9,14 +9,15 @@ for (const [label, width, height] of [['desktop', 1440, 900], ['phone', 390, 844
       const colors = () => page.evaluate(() => {
         const sofa = window.__sim.items.find((i) => i.type === 'sofa');
         const fabric = [], fixed = [];
-        sofa.mesh.traverse((o) => {
-          if (o.isMesh) (o.userData.recolor ? fabric : fixed).push(o.material.color.getHex());
+        sofa.mesh.traverse((o) => {   // only the sofa's own parts: pillows are child items with their own itemId
+          let owner = o; while (owner && !owner.userData.itemId) owner = owner.parent;
+          if (o.isMesh && owner === sofa.mesh) (o.userData.recolor ? fabric : fixed).push(o.material.color.getHex());
         });
         return { fabric, fixed: fixed.sort() };
       });
       const initial = await colors();
       expect(initial.fabric).toEqual(Array(9).fill(0xf3e4d2));
-      expect(initial.fixed).toEqual([0xb87946, 0xbf895c, 0x81936a].sort());
+      expect(initial.fixed).toEqual([0xb87946]);   // the pillows are items now
       await page.evaluate(() => window.__sim.setSelected(window.__sim.items.find((i) => i.type === 'sofa')));
       await twoFrames(page);
       await page.screenshot({ path: testInfo.outputPath('sofa-integrated.png') });

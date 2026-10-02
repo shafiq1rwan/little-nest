@@ -43,6 +43,8 @@ Remaining native v2 batch, 2 October 2026: all 35 non-plant props beyond the sof
 | Smoothing | Flat shading for facets; smooth only cylinders, pots and cushions. |
 | Textures | None in the final file. The two framed prints get their art from the game, so the canvas is a plain flat quad. |
 
+Seat slots: seating entries declare `surface: { kind: 'seat', y, slots }` at the cushion top; `pillow` and `throwBlanket` (category `soft`, `surfaceKind: 'seat'`) sit there. A model's baked pillows are listed in the entry's `omit` so the loader drops them.
+
 Footprint cells are width (x) by depth (z). Rotations are quarter turns, so items need not be symmetric.
 
 ---

@@ -105,6 +105,8 @@ Current browser checks previously passed placement, saving, plants, HUD/touch in
 
 ## Current handoff
 
+- 2 October 2026, Phase 7 increment 2: pillows and throws are items on seat slots. placement.js gained `surfaceKindOf()` and `acceptsOn()`; state.canPlaceOn and main.js targeting use them; seating entries in props.js declare `surface: { kind: 'seat', ... }` and omit their baked pillows via `omit`, which src/scene/models.js honours. New `soft` category chip and two items (pillow, throwBlanket). Starter room: the sofa's pillows are items, so STARTER_ITEM_COUNT is 22. Tests that traverse the sofa mesh now skip child items. No schema change. Suite: 90 passed, 1 skipped by design. Next: Phase 7 increment 3, curtains.
+
 - 2 October 2026, Phase 7 increment 1: the mode pill shows Keep placing and Cancel while an item is held (`keepPlacing` in main.js, remembered between items; Shift still works), and the View tray has orbit buttons backed by `orbitBy()` in create-scene.js with `CAMERA.orbitStep` (15 degrees). Orbit buttons hide under 640px wide. Help text updated. tests/browser/placement.spec.js covers both on desktop and phone; hud.spec lists the orbit buttons. Next: Phase 7 increment 2, pillows and throws as seat items.
 
 - 2 October 2026, roadmap 2: docs/ROADMAP-2.md plans Phases 7–12 (core loop, animation and sound, structure and night, expression and progression, desktop release, content packs) with ordered increments, save-version notes and completion criteria. Nothing from it is implemented yet. Next recommended work: Phase 7 increment 1, the mode-pill placement controls.

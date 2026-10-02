@@ -92,6 +92,6 @@ test('wall decorations snap to walls, avoid windows, drag between walls, refuse 
   await page.locator('#clear').click();
   await loadCurrentRoom(page);
   expect((await wallItems(page)).map((w) => w.type).sort()).toEqual(['botanicalPrint', 'clock', 'wallShelf', 'worldMap']);
-  expect(await page.evaluate(() => window.__sim.items.filter((i) => i.parent).map((i) => i.type).sort())).toEqual(['frame', 'mug', 'mug']);
+  expect(await page.evaluate(() => window.__sim.items.filter((i) => i.parent).map((i) => i.type).sort())).toEqual(['frame', 'mug', 'mug', 'pillow', 'pillow']);
   expect(errors).toEqual([]);
 });

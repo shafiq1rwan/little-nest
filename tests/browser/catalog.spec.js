@@ -48,13 +48,13 @@ test('glb props load, replace their procedural shape, and keep the recolour part
   const info = await page.evaluate(() => {
     const sofa = window.__sim.items.find((i) => i.type === 'sofa');
     const parts = [];
-    sofa.mesh.traverse((o) => { if (o.isMesh) parts.push({ name: o.name, recolor: !!o.userData.recolor, color: o.material.color.getHex() }); });
+    sofa.mesh.traverse((o) => { let owner = o; while (owner && !owner.userData.itemId) owner = owner.parent; if (o.isMesh && owner === sofa.mesh) parts.push({ name: o.name, recolor: !!o.userData.recolor, color: o.material.color.getHex() }); });
     return { keys: window.__sim.modelKeys, parts, size: window.__sim.measure(sofa.mesh) };
   });
   expect(info.keys).toContain('sofa');
   expect(info.parts.filter((p) => p.recolor)).toHaveLength(9);
   expect(info.parts.filter((p) => p.recolor).every((p) => p.color === 0xf3e4d2)).toBe(true);
-  expect(info.parts.filter((p) => !p.recolor).map((p) => p.color).sort()).toEqual([0xb87946, 0xbf895c, 0x81936a].sort());
+  expect(info.parts.filter((p) => !p.recolor).map((p) => p.color)).toEqual([0xb87946]);   // pillows are items now
   expect(info.size.w).toBeGreaterThan(2.7);
   expect(info.size.h).toBeGreaterThan(0.8);
   expect(errors).toEqual([]);

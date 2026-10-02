@@ -20,6 +20,7 @@ ap.add_argument('--tris', type=int, default=1500)
 ap.add_argument('--angle', type=float, default=38, help='smooth-by-angle threshold in degrees')
 ap.add_argument('--wall', action='store_true', help='wall item: origin at the back face, model extends to the front')
 ap.add_argument('--plate', type=float, default=0.03, help='remove faces in this bottom fraction of the raw height (ground plate); 0 keeps them')
+ap.add_argument('--label-tris', type=int, default=40000, help='triangles kept while assigning colour parts (boundary accuracy)')
 ap.add_argument('--smooth-passes', type=int, default=2, help='label smoothing passes at part boundaries; 0 disables')
 ap.add_argument('--preview', default=None)
 ap.add_argument('--src', default=None)
@@ -187,20 +188,15 @@ for v in me.vertices:
     v.co = Vector(((v.co.x - cx) * s.x, (v.co.y - (back_y if args.wall else cy)) * s.y, (v.co.z - cz) * s.z))
 me.update()
 
-# --- decimate to budget, then smooth by angle ---
-ratio = min(1.0, args.tris / max(1, len(me.polygons)))
-mod = obj.modifiers.new('decimate', 'DECIMATE'); mod.ratio = ratio; mod.use_collapse_triangulate = True
-bpy.ops.object.modifier_apply(modifier='decimate')
-bm = bmesh.new(); bm.from_mesh(me)
-bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-4)
-bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
-bm.to_mesh(me); bm.free(); me.update()
-for p in me.polygons: p.use_smooth = True
-try:
-    bpy.ops.object.shade_smooth_by_angle(angle=math.radians(args.angle))
-except Exception:
-    try: bpy.ops.object.shade_auto_smooth(angle=math.radians(args.angle))
-    except Exception: pass
+# --- coarse pre-decimation so labelling stays fast while boundaries stay fine ---
+def decimate(o, target):
+    ratio = min(1.0, target / max(1, len(o.data.polygons)))
+    if ratio >= 1.0: return
+    mod = o.modifiers.new('decimate', 'DECIMATE'); mod.ratio = ratio; mod.use_collapse_triangulate = True
+    bpy.context.view_layer.objects.active = o
+    bpy.ops.object.modifier_apply(modifier='decimate')
+decimate(obj, args.label_tris)
+me = obj.data
 
 # --- split colour parts and assign flat materials ---
 rule, part_specs, body_spec = PARTS.get(args.key, (lambda o, sz: {}, {}, ('body', 'cream', True)))
@@ -255,6 +251,23 @@ for o in [o for o in bpy.context.scene.objects if o.type == 'MESH']:
     o.data.materials.clear()
     for n in used: o.data.materials.append(bpy.data.materials[n])
     for p in o.data.polygons: p.material_index = 0
+
+# --- decimate each part on its own so colour boundaries stay crisp, then smooth by angle ---
+parts_objs = [o for o in bpy.context.scene.objects if o.type == 'MESH']
+total_faces = sum(len(o.data.polygons) for o in parts_objs)
+for o in parts_objs:
+    decimate(o, max(60, int(args.tris * len(o.data.polygons) / total_faces)))
+    bm = bmesh.new(); bm.from_mesh(o.data)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-4)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.to_mesh(o.data); bm.free(); o.data.update()
+    for p in o.data.polygons: p.use_smooth = True
+    for other in bpy.context.scene.objects: other.select_set(other == o)
+    bpy.context.view_layer.objects.active = o
+    try: bpy.ops.object.shade_smooth_by_angle(angle=math.radians(args.angle))
+    except Exception:
+        try: bpy.ops.object.shade_auto_smooth(angle=math.radians(args.angle))
+        except Exception: pass
 
 # --- export ---
 os.makedirs(os.path.dirname(out), exist_ok=True)

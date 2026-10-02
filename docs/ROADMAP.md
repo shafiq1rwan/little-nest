@@ -142,6 +142,8 @@ Possible work:
 
 Accounts, backend storage, moderation, and online sharing need a separate scope and technical plan. They are not assumed requirements of earlier phases. Timers, daily rewards, currencies, and monetization remain outside the baseline unless requested.
 
+Phases 7–12 are planned in [ROADMAP-2.md](ROADMAP-2.md); Phase 6 is absorbed into its Phase 10.
+
 ## How to start a phase
 
 Give a future coding session the phase name and a concrete first increment, for example:

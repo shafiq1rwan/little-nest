@@ -1,0 +1,92 @@
+# Roadmap 2 — from finished prototype to a game people keep
+
+Baseline: 2 October 2026. Phases 0–5 of [ROADMAP.md](ROADMAP.md) are complete, the front door exists, and all 48 props load from models. This file plans the next phases, 7 to 12. Phase 6 of the first roadmap (optional goals and sharing) is absorbed into Phase 10 here.
+
+The rules from the first roadmap still apply: keep the style guide and saved rooms intact, work in small reviewable increments, and mark a phase complete only when its criteria are met. Timers, currencies, daily rewards, accounts and monetisation stay out unless requested.
+
+| Phase | Focus | Status | Dependency |
+| --- | --- | --- | --- |
+| 7 | Finish the core loop | Planned | Phases 0–5 |
+| 8 | A living room: animation and sound | Planned | Phase 7 |
+| 9 | More room: structure, ceiling, night | Planned | Phase 7 |
+| 10 | Expression and progression | Planned | Phases 8, 9 |
+| 11 | Desktop release | Planned | Phase 7 (can run alongside 8–10) |
+| 12 | Content packs and seasons | Ongoing after release | Phase 11 |
+
+Start a phase the way the first roadmap describes: give a session the phase name and a concrete first increment, and record what changed and what remains in HANDOFF.
+
+## Phase 7 — finish the core loop
+
+Goal: every interaction a player reaches in the first five minutes feels complete.
+
+Increments, in order:
+
+1. **Placement controls in the mode pill.** While holding an item: Cancel, Keep placing (place another of the same type), and two orbit buttons. Keyboard equivalents already exist; this makes them visible and touch-friendly (44px on compact).
+2. **Pillows and throws as items.** New `small`-style category `soft` with a `layer: 'seat'`; sofas, armchairs, beds and benches declare seat slots the way tables declare surface slots. Pillows and throws are recolourable. The baked pillows on the sofa and armchair models move out of the glb into these items. Save version 8: slot kind recorded per item.
+3. **Curtains that open and close.** A wall item spanning a window footprint, with a rail and two panels. The lamp switch generalises to a per-item toggle (`lit` stays the stored field; label changes by type). Opening tweens the panels over about 450 ms with ease-out and keeps calling `invalidate()` until done; loading a room jumps to the final pose. Closed curtains dim the sun by a mood-dependent factor.
+4. **Per-wall finishes and a second floor material.** Walls tab gets Back and Left swatches; floor gets a tile option. Save version 9: `finishes.wallLeft` optional, defaults to `finishes.wall`.
+5. **Selection polish.** Hover outline on desktop, a subtle drop shadow under the ghost, and a short settle bounce when an item lands.
+
+Completion criteria: a new player can place, duplicate, cancel and recolour anything without the keyboard; pillows are items; curtains work in all presets with windows; old saves load unchanged; suite passes with specs for each increment.
+
+## Phase 8 — a living room: animation and sound
+
+Goal: the room feels inhabited.
+
+Increments:
+
+1. **Sound effects.** Placement thud, pick-up, rotate tick, lamp click, curtain swish, recolour pop, soft UI taps. Short OGG/MP3 files under `public/audio/sfx`, one `src/ui/sfx.js` with a volume setting beside the music switch. Respect the music toggle rules and never autoplay before the first gesture.
+2. **Idle motion.** Lamp glow breathes very slightly, string lights twinkle in Evening, plants sway a few degrees when the camera settles. All driven by one clock in `src/scene/motion.js` that only runs while something animated is visible, so the on-demand renderer stays idle otherwise.
+3. **A cat.** One animated character with four states: walk, sit, curl on a rug or sofa seat, look at the pointer. Pathing on the free floor cells from `state.occupancy`; targets are rugs, sunny tiles near windows and seat slots. Built as a low-poly model through the same tools/blender pipeline, animated with three glTF clips. A `pet` entry in the room record (version 10) stores presence and colour; position is not saved.
+4. **Weather at the window.** Rain and clouds variants of the window view, picked in the Light tab next to the moods, with a faint rain-on-glass overlay.
+
+Completion criteria: sound can be muted independently of music; idle motion costs under 1 ms per frame on the benchmark; the cat never stands inside furniture and resumes after undo/redo and room loads; suite and `npm run bench` pass.
+
+## Phase 9 — more room: structure, ceiling, night
+
+Goal: rooms read as part of a house, not a box.
+
+Increments:
+
+1. **Doors and openings.** Presets declare `doors` the way they declare `windows`; a door blocks wall cells like a window and shows a frame, a door leaf and a strip of hallway floor beyond. Save data unchanged (presets are code).
+2. **Ceiling items.** A `ceiling` layer with a grid like the wall grid: pendant lamp, ceiling fan, string lights, hanging plant. Lamps feed the existing mood system. Save version 11: `ceiling` layer records `{ cx, cz }`.
+3. **Window views.** The garden-day image becomes the default view, cropped per window aspect with an offset per wall; a dusk variant generated through tools/comfy crossfades on mood change; Phase 8 weather variants reuse the same slot.
+4. **Room sizes beyond presets.** Width and depth sliders in the Rooms dialog within the existing size range, with windows and doors re-laid from the preset's rules.
+
+Completion criteria: every preset has at least one door; two ceiling items exist and switch with moods; the window view changes with mood and weather; saves from versions 7–11 all load in the unit suite.
+
+## Phase 10 — expression and progression
+
+Goal: reasons to come back, without timers or money.
+
+Increments:
+
+1. **Photo mode upgrades.** Tilt and zoom presets, a polaroid frame, a caption, and a date stamp; export at 2x. Photos save to the gallery beside rooms.
+2. **Custom pictures.** Drop or pick an image for any print or the photo frame; stored as a small data URL in the room record (version 12, capped at 200 KB per picture) with a clear fallback when absent.
+3. **Styling challenges.** A `src/data/briefs.js` list: a brief, required tags, a palette hint and a mood. Scoring is local and deterministic (coverage of required tags, colour harmony against the brief's palette, a mood bonus). Results show a gentle three-star card; nothing is locked behind failure.
+4. **Sticker book.** Local achievements for firsts: first lamp lit, first cat nap, every preset furnished, every collection used. Stored under `home-deco-sim:stickers`.
+5. **Furniture discovery (optional, off by default).** A setting that starts the catalog at the classics and unlocks collections through briefs. Free decorating always remains available.
+
+Completion criteria: a challenge can be completed end to end and reopened later; custom pictures survive export/import; stickers never block any feature; everything works offline.
+
+## Phase 11 — desktop release
+
+Goal: a sellable build on itch.io, with Steam-ready plumbing.
+
+Increments:
+
+1. **Electron shell.** `electron/` folder with a preload bridge; file-based saves in the user data folder with the browser gallery imported on first run; window state remembered; fullscreen toggle; no remote content.
+2. **Settings for desktop.** Resolution scale, vsync, sound and music volumes, language placeholder.
+3. **Controller support.** Cursor-style navigation for the catalog and the room with the existing keyboard actions mapped.
+4. **Real-hardware QA.** A checklist run on a low-end laptop and a 4K display; frame budget recorded with `npm run bench`.
+5. **Store page.** Capsule art rendered from the game, six screenshots, a 30-second trailer cut from photo mode and the cat, a one-paragraph pitch, Pixabay and font credits.
+
+Completion criteria: an installer for Windows that runs without a browser or network; saves survive updates; the page is live on itch.io.
+
+## Phase 12 — content packs and seasons
+
+Goal: ongoing content after release, each pack a small self-contained increment.
+
+Pattern for every pack: a collection key in `src/data/collections.js`, 8–12 props through the model pipeline (`docs/PROP_BRIEFS.md`), one preset, one window view, one brief, and a HANDOFF entry. Candidates: Cottage Christmas, Autumn Reading, Seaside Studio, Midnight Office, Garden Balcony. Patterns for wallpaper and rugs through a tools/comfy batch belong here too.
+
+Completion is per pack, never for the phase.

@@ -7,7 +7,7 @@ This file travels with the project. Read it before editing this repository; do n
 1. [README.md](README.md) — how to run the game and where to start. ([CLAUDE.md](CLAUDE.md) holds Claude-specific working notes and defers to this file.)
 2. [docs/STYLE_GUIDE.md](docs/STYLE_GUIDE.md) — visual identity, room art, and HUD behavior.
 3. [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — current structure, contracts, and planned module boundaries.
-4. [docs/ROADMAP.md](docs/ROADMAP.md) — phased work and completion criteria.
+4. [docs/ROADMAP.md](docs/ROADMAP.md) and [docs/ROADMAP-2.md](docs/ROADMAP-2.md) — phased work and completion criteria.
    - [docs/PROP_BRIEFS.md](docs/PROP_BRIEFS.md) — per-prop descriptions for concept art and external 3D modelling; keep in sync with the catalog.
 5. [docs/HANDOFF.md](docs/HANDOFF.md) — moving computers, validation, and current project status.
 

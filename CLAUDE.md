@@ -46,4 +46,4 @@ Small, verified increments on `main`, one feature or fix per commit, with a body
 
 ## What is next
 
-See the "Next recommended work" line at the end of HANDOFF's status section. As of 1 October 2026: placement controls in the mode pill (Cancel, Keep placing, orbit buttons), then the Electron shell with file-based saves, real-hardware QA, and the itch.io page.
+See the "Next recommended work" line at the end of HANDOFF's status section. Phases 7–12 are planned in docs/ROADMAP-2.md; Phase 7 (finish the core loop) starts with the mode-pill placement controls, then pillows as items and curtains.

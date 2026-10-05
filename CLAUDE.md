@@ -48,4 +48,4 @@ Small, verified increments on `main`, one feature or fix per commit, with a body
 
 ## What is next
 
-See the "Next recommended work" line at the end of HANDOFF's status section. Phases 7–12 are planned in docs/ROADMAP-2.md; Phase 7 (finish the core loop) starts with the mode-pill placement controls, then pillows as items and curtains.
+See the "Next recommended work" line at the end of HANDOFF's status section. Phases 7–12 are planned in docs/ROADMAP-2.md. Phase 7 is complete; Phase 8 has its last increment left (weather at the window). The Electron desktop release (Phase 11) can start any time.

@@ -99,6 +99,10 @@ Do not change canvas dimensions while a drag or pinch is active. One finger deco
 
 Motion is small and optional. Hover shows a soft cream outline (desktop mouse only). A floor ghost casts a soft footprint shadow. Items settle with a 260 ms squash when they land; curtains slide over 450 ms. Ambient motion is subtle: lamps breathe by a few percent, candles flicker, string lights twinkle only in the Evening mood, and plants sway about a degree and a half, with pots still. It can be switched off in Settings. Decorative motion is skipped when the system asks for reduced motion.
 
+## Outside the room
+
+The room sits on a small diorama island: a lawn top over a cut slice of soil and stone, softly lit against the mood-tinted backdrop. Trees and fuller shrubs stand only behind the two walls, peeking over them; the open front sides carry only low things (stepping stones, a picket fence, flowers, tufts) so nothing hides furniture or the pointer. The balcony sits on a pale stone ledge with terracotta planters instead. Leaves drift by day and fireflies blink at night when ambient motion is on.
+
 ## The cat
 
 A chunky low-poly cat in the furniture's rounded style: big head, short body, cream muzzle and paws, four fur colours (ginger, grey, cream, black). It walks, sits, curls on rugs and seats, and turns its head toward the cursor. It is about half a cell long and never stands inside furniture.

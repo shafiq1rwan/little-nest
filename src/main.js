@@ -54,6 +54,7 @@ let grid = null;
 let gridVisible = false;
 let wallsVisible = true;
 const motion = createMotion();
+let removeOutsideTicker = null;   // the shell's particle ticker, replaced on every rebuild
 let lampsReady = false;   // state is created after the first shell build; lamps are applied as they are added
 let dirty = true;         // true when the next animation frame must render
 function invalidate() { dirty = true; }
@@ -83,11 +84,14 @@ function makeGrid(width, depth) {
 }
 function buildShell(room) {
   const preset = presetFor(room);
-  if (shell) shell.dispose();
+  if (shell) { shell.outside.trees.forEach((_, i) => motion.forget('outside-tree-' + i)); shell.dispose(); }
   if (grid) { scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); }
   shell = createRoom(scene, preset, WALL_HEIGHT, { wallColor: finishes.wall, wallLeftColor: finishes.wallLeft, floorColor: finishes.floor, floorStyle: finishes.floorStyle });
   shell.walls.visible = wallsVisible;
   motion.setBulbs(shell.bulbs);
+  removeOutsideTicker?.();
+  removeOutsideTicker = motion.addTicker(shell.outside.ticker);
+  shell.outside.trees.forEach((t, i) => motion.track('outside-tree-' + i, t, 'plant'));
   placement.configure({ width: room.width, depth: room.depth, wallRows: presetWallRows(preset) });
   wallBlocked.clear();
   for (const c of placement.blockedWallCells(presetFixtures(preset))) wallBlocked.add(c);
@@ -113,6 +117,7 @@ function applyLighting(key) {
   sun.position.set(...mood.sun.position);
   scene.background.setHex(mood.backdrop);
   motion.setTwinkle(key === 'evening');
+  shell?.outside.setMood(key);
   renderer.toneMappingExposure = mood.exposure;
   if (shell) {
     shell.groundMat.color.setHex(mood.backdrop);
@@ -980,7 +985,7 @@ renderer.setAnimationLoop(() => {
 const withMesh = (r) => (r ? { ...r, mesh: meshOf(r) } : null);
 window.__sim = {
   state, placement, commands, finishes, gallery, roomConfig, presets: ROOM_PRESETS, lighting: LIGHTING, hemisphere, sun, renderer, perf, occupancy: state.occupancy, bgm: music.audio, scene, camera, controls,
-  get grid() { return grid; }, get walls() { return shell.walls; }, get wallMat() { return shell.wallMat; }, get wallLeftMat() { return shell.wallLeftMat; }, get floorMat() { return shell.floorMat; }, get wallPanels() { return shell.wallPanels; },
+  get grid() { return grid; }, get outside() { return shell.outside; }, get walls() { return shell.walls; }, get wallMat() { return shell.wallMat; }, get wallLeftMat() { return shell.wallLeftMat; }, get floorMat() { return shell.floorMat; }, get wallPanels() { return shell.wallPanels; },
   get currentRoom() { return currentRoom; },
   get photoMode() { return photoMode; },
   pointerToFloor: input.floorHit, snap, isFree, worldPos, meshOf, addItem, setSelected, rotateSelected, slotWorld, surfaceUnder, supporterMeshes, hitAmong: input.hitAmong, wallBlocked, startPreset,

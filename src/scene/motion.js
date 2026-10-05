@@ -20,6 +20,7 @@ export function createMotion({ fps = 24, amplitude = THREE.MathUtils.degToRad(1.
   const lamps = new Map();    // id -> { targets: [{ o, key }], phase, flicker, isLit }
   let bulbs = [];             // [{ material, base, phase }]
   let twinkle = false;
+  const tickers = new Set();   // { step(t), rest() } driven by the same clock, e.g. outdoor particles
 
   function hash(id) { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) | 0; return (h >>> 0) % 1000 / 1000 * Math.PI * 2; }
 
@@ -63,12 +64,13 @@ export function createMotion({ fps = 24, amplitude = THREE.MathUtils.degToRad(1.
   }
   /** Puts everything back at rest: lamps at their exact values, plants at their resting matrices. */
   function rest() {
+    for (const tk of tickers) tk.rest();
     for (const p of plants.values()) for (const { mesh, base } of p.parts) mesh.matrix.copy(base);
     for (const l of lamps.values()) for (const t of l.targets) t.o[t.key] = lampValue(t);
     for (const b of bulbs) b.material.emissiveIntensity = b.base;
   }
   function active() {
-    return enabled && (plants.size > 0 || [...lamps.values()].some((l) => l.isLit()) || (twinkle && bulbs.length > 0));
+    return enabled && (tickers.size > 0 || plants.size > 0 || [...lamps.values()].some((l) => l.isLit()) || (twinkle && bulbs.length > 0));
   }
   /** Advances the clock. Returns true when something changed and a frame should be drawn. */
   function step(now) {
@@ -76,6 +78,7 @@ export function createMotion({ fps = 24, amplitude = THREE.MathUtils.degToRad(1.
     if (now >= last && now - last < 1000 / fps) return false;   // a clock that jumped backwards just restarts
     last = now;
     const t = now / 1000;
+    for (const tk of tickers) tk.step(t);
     for (const { parts, phase } of plants.values()) {
       const a = amplitude * Math.sin(t * 0.9 + phase), b = amplitude * 0.6 * Math.sin(t * 1.3 + phase * 1.7);
       swayAxis.set(b, 0, a);
@@ -95,5 +98,6 @@ export function createMotion({ fps = 24, amplitude = THREE.MathUtils.degToRad(1.
     return true;
   }
   function setEnabled(on) { enabled = !!on; if (!enabled) rest(); }
-  return { track, forget, clear, setBulbs, setTwinkle, step, rest, active, setEnabled, isEnabled: () => enabled, counts: () => ({ plants: plants.size, lamps: lamps.size, bulbs: bulbs.length }) };
+  function addTicker(tk) { tickers.add(tk); if (!enabled) tk.rest(); return () => { tickers.delete(tk); tk.rest(); }; }
+  return { addTicker, track, forget, clear, setBulbs, setTwinkle, step, rest, active, setEnabled, isEnabled: () => enabled, counts: () => ({ plants: plants.size, lamps: lamps.size, bulbs: bulbs.length }) };
 }

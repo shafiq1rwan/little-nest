@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createOutside, vignetteTexture } from './scene/outside.js';
 
 function texture(draw, size = 1024) {
   const canvas = document.createElement('canvas'); canvas.width = canvas.height = size;
@@ -95,7 +96,7 @@ function tileTexture() {
   });
 }
 function textures() {
-  if (!sharedTextures) sharedTextures = { floor: woodTexture(true), planks: plankTexture(), tile: tileTexture(), wall: woodTexture(false), view: viewTexture() };
+  if (!sharedTextures) sharedTextures = { floor: woodTexture(true), planks: plankTexture(), tile: tileTexture(), wall: woodTexture(false), view: viewTexture(), vignette: vignetteTexture() };
   return sharedTextures;
 }
 /** Texture key for a floor style; unknown styles fall back to parquet. */
@@ -185,18 +186,20 @@ export function createRoom(scene, preset, wallHeight = 4, { wallColor = 0x92725c
       const p = curve.getPoint(t), bulb = new THREE.Mesh(new THREE.SphereGeometry(.055, 10, 8), bulbMat); bulb.position.copy(p); walls.add(bulb);
     }
   }
-  const groundMat = new THREE.MeshBasicMaterial({ color: 0xdf9d80, toneMapped: false });
+  const outside = createOutside(root, { width, depth, style: preset.walls === 'railing' ? 'ledge' : 'garden' });
+  const groundMat = new THREE.MeshBasicMaterial({ color: 0xdf9d80, map: tex.vignette, toneMapped: false });
   const shadowMat = new THREE.ShadowMaterial({ opacity: .18 });
   owned.push(groundMat, shadowMat);
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), groundMat);
-  ground.rotation.x = -Math.PI / 2; ground.position.y = -.34; root.add(ground);
+  ground.rotation.x = -Math.PI / 2; ground.position.y = -.9; root.add(ground);
   const groundShadow = new THREE.Mesh(new THREE.PlaneGeometry(200, 200), shadowMat);
-  groundShadow.rotation.x = -Math.PI / 2; groundShadow.position.y = -.335; groundShadow.receiveShadow = true; root.add(groundShadow);
+  groundShadow.rotation.x = -Math.PI / 2; groundShadow.position.y = -.895; groundShadow.receiveShadow = true; root.add(groundShadow);
 
   function dispose() {
+    outside.dispose();
     scene.remove(root);
     root.traverse((o) => { if (o.isMesh) o.geometry.dispose(); });
     for (const m of owned) m.dispose();
   }
-  return { root, bulbs, floorMat, wallMat, wallLeftMat, setFloorStyle, viewMat, groundMat, walls, wallPanels: { back: backPanel, left: leftPanel }, dispose };
+  return { root, outside, bulbs, floorMat, wallMat, wallLeftMat, setFloorStyle, viewMat, groundMat, walls, wallPanels: { back: backPanel, left: leftPanel }, dispose };
 }

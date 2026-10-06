@@ -30,7 +30,7 @@ Run `npm run build` and `npm test` before every commit that touches src/. Docume
 
 - Catalog counts in tests: searching "plant" matches tags, and category chips count entries, so adding a tagged item changes expectations in `game.spec`, `hud.spec`, `plants.spec`, `surfaces.spec`, `walls.spec`, and `collections.spec`. Update them deliberately.
 - Browser tests enter the game through `openGame()` in `tests/browser/helpers.js`, which clicks the menu's Start button and waits for the loading fade. Use `openGame(page, undefined, { enter: false })` to test the menu itself.
-- The shipped starter living room is furnished from the Modern home collection (`items` in presets.js). Browser tests run against the original layout (`classicItems`): `openGame()` loads `/?starter=classic` by default, so `STARTER_ITEM_COUNT` and the sofa, coffee table and armchair checks refer to it. Pass `'/'` to test the shipped room.
+- Every room preset ships furnished from the Modern home collection (`items` in presets.js). Browser tests run against the original layouts (`classicItems`): `openGame()` loads `/?starter=classic` by default, so `STARTER_ITEM_COUNT`, the studio and bedroom checks, and the sofa, coffee table and armchair checks refer to them. Pass `'/'` to test the shipped rooms (residents.spec does).
 - Playwright clears `tests/output` at the start of each run. Capture screenshots after tests, or into the scratchpad, not before a run you still need.
 - Ad hoc screenshot scripts must live inside the project (Playwright resolves from the script's location) and use a port other than 5173. Delete them afterwards and stop any Vite server they started.
 - Playwright contexts start with empty storage, so caches (thumbnails) only show on a reload inside one test.

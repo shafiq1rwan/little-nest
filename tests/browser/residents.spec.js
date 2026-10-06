@@ -113,7 +113,7 @@ test('every room preset with walls has a door with clear floor inside it', async
   expect(errors).toEqual([]);
 });
 
-test('the shipped starter living room is furnished from the Modern home collection', async ({ page }) => {
+test('the shipped room presets are furnished from the Modern home collection', async ({ page }) => {
   const errors = await openGame(page, '/');
   const room = await page.evaluate(() => {
     const s = window.__sim;
@@ -129,5 +129,22 @@ test('the shipped starter living room is furnished from the Modern home collecti
   });
   // 38 Modern home pieces plus a fern, snake plant, monstera, vase and botanical print.
   expect(room).toEqual({ count: 43, modern: 38, kitchen: 4, seats: 9, doorClear: true, residents: 2, cat: true });
+
+  // The other presets are furnished from the Modern home collection too, with somewhere to sit and a clear doorway.
+  const others = await page.evaluate(() => {
+    const s = window.__sim, out = {};
+    for (const id of ['studio', 'bedroom', 'readingNook', 'balcony']) {
+      s.startPreset(id);
+      const w = s.residents.world, d = w.door();
+      out[id] = { count: s.items.length, modern: s.items.filter((i) => s.catalogCollection(i.type) === 'modern').length, seats: w.seats().length, kitchen: w.spots().filter((q) => q.kind === 'kitchen').length, door: d ? s.isFree('pouf', d.gx, d.gz, 0) : null };
+    }
+    return out;
+  });
+  expect(others).toEqual({
+    studio: { count: 28, modern: 26, seats: 3, kitchen: 3, door: true },
+    bedroom: { count: 25, modern: 22, seats: 4, kitchen: 0, door: true },
+    readingNook: { count: 17, modern: 13, seats: 2, kitchen: 0, door: true },
+    balcony: { count: 13, modern: 8, seats: 3, kitchen: 0, door: null },
+  });
   expect(errors).toEqual([]);
 });

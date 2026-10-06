@@ -18,7 +18,7 @@ const catalog = {
   worldMap: { w: 2, d: 1, layer: 'wall', wall: { w: 2, h: 3 } }, botanicalPrint: { w: 2, d: 1, layer: 'wall', wall: { w: 2, h: 3 } }, clock: { w: 1, d: 1, layer: 'wall', wall: { w: 1, h: 1 } },
   wallShelf: { w: 2, d: 1, layer: 'wall', wall: { w: 2, h: 1 }, surface: { y: 0.4, slots: [{ x: 0, z: 0 }, { x: 0, z: 0 }] } }, macrame: { w: 1, d: 1, layer: 'wall', wall: { w: 1, h: 3 } },
   mirror: { w: 1, d: 1, layer: 'wall', wall: { w: 1, h: 2 } },
-  vase: { w: 1, d: 1, layer: 'surface' },
+  vase: { w: 1, d: 1, layer: 'surface' }, teapot: { w: 1, d: 1, layer: 'surface' },
   bed: { w: 2, d: 3 }, nightstand: { w: 1, d: 1, surface: { y: 0.6, slots: [{ x: 0, z: 0 }] } }, wardrobe: { w: 2, d: 1 }, planter: { w: 2, d: 1 }, bench: { w: 2, d: 1 },
 };
 // The Modern home entries straight from the importer's data (footprints, layers, surfaces).

@@ -14,14 +14,66 @@ export const MAX_ROOM_SIZE = 12;
 export const ROOM_PRESETS = {
   livingRoom: {
     name: 'Living room',
-    blurb: 'A sunny corner room with a sofa, a desk, and plenty of plants.',
+    blurb: 'A sunny open-plan room with a kitchen corner, a dining table, and a reading chair.',
     width: 8, depth: 8,
     pet: 'ginger',   // the starter room comes with a cat
     windows: [{ wall: 'back', at: -1.5, width: 4.7 }, { wall: 'left', at: -1.9, width: 3.9 }],
     door: { wall: 'left', end: 'front' },
     residents: 2,   // two people live here
     lights: true,
+    // Modern home furniture (Kenney's Furniture Kit) with a few Little Nest plants and a print.
     items: [
+      // Back wall: sofa corner under the window, then the kitchen run to the right.
+      { type: 'kitPottedPlant', gx: 0, gz: 0, rot: 0 },
+      { type: 'kitLoungeSofa', gx: 1, gz: 0, rot: 0, key: 'sofa', select: true },
+      { type: 'kitPillow', on: 'sofa', slot: 0, rot: 0, color: 0x81936a },
+      { type: 'kitSideTableDrawers', gx: 3, gz: 0, rot: 0, key: 'sofaSide' },
+      { type: 'kitLampRoundTable', on: 'sofaSide', slot: 0, rot: 0 },
+      { type: 'kitKitchenCabinetDrawer', gx: 4, gz: 0, rot: 0, key: 'counter' },
+      { type: 'kitKitchenCoffeeMachine', on: 'counter', slot: 0, rot: 0 },
+      { type: 'kitKitchenStove', gx: 5, gz: 0, rot: 0 },
+      { type: 'kitKitchenSink', gx: 6, gz: 0, rot: 0 },
+      { type: 'kitKitchenFridge', gx: 7, gz: 0, rot: 0 },
+      { type: 'kitHoodModern', wall: 'back', col: 5, row: 3 },
+      { type: 'kitKitchenCabinetUpper', wall: 'back', col: 6, row: 3 },
+      { type: 'kitKitchenCabinetUpperLow', wall: 'back', col: 7, row: 4 },
+      // Lounge: two chairs around the coffee table on a rug, a fern under the side window.
+      { type: 'kitRugRectangle', gx: 0, gz: 1, rot: 0, color: 0xc38e62 },
+      { type: 'kitTableCoffee', gx: 1, gz: 2, rot: 0, key: 'coffee' },
+      { type: 'kitBooks', on: 'coffee', slot: 0, rot: 0 },
+      { type: 'kitPlantSmall2', on: 'coffee', slot: 1, rot: 0 },
+      { type: 'kitLoungeChair', gx: 0, gz: 2, rot: 1, color: 0x81936a },
+      { type: 'kitLoungeChair', gx: 3, gz: 2, rot: 3, color: 0xc38e62 },
+      { type: 'fern', gx: 0, gz: 3, rot: 0 },
+      // Left wall: a bookcase under the print, and a doormat inside the door.
+      { type: 'kitBookcaseClosedWide', gx: 0, gz: 4, rot: 1, key: 'books' },
+      { type: 'kitBooks', on: 'books', slot: 0, rot: 0 },
+      { type: 'kitPlantSmall1', on: 'books', slot: 1, rot: 0 },
+      { type: 'botanicalPrint', wall: 'left', col: 5, row: 4 },
+      { type: 'kitRugDoormat', gx: 0, gz: 7, rot: 1 },
+      // Dining table for four in front of the kitchen.
+      { type: 'kitTable', gx: 5, gz: 3, rot: 0, key: 'dining' },
+      { type: 'vase', on: 'dining', slot: 0, rot: 0 },
+      { type: 'kitChairCushion', gx: 5, gz: 2, rot: 0 },
+      { type: 'kitChairCushion', gx: 6, gz: 2, rot: 0 },
+      { type: 'kitChairCushion', gx: 5, gz: 4, rot: 2 },
+      { type: 'kitChairCushion', gx: 6, gz: 4, rot: 2 },
+      { type: 'snakePlant', gx: 7, gz: 4, rot: 0 },
+      // Front: a desk, and a reading corner with a floor lamp.
+      { type: 'kitDesk', gx: 2, gz: 7, rot: 2, key: 'desk' },
+      { type: 'kitLaptop', on: 'desk', slot: 0, rot: 2 },
+      { type: 'kitLampSquareTable', on: 'desk', slot: 1, rot: 0 },
+      { type: 'kitChairDesk', gx: 2, gz: 6, rot: 0 },
+      { type: 'monstera', gx: 4, gz: 7, rot: 0 },
+      { type: 'kitRugRound', gx: 5, gz: 6, rot: 0 },
+      { type: 'kitLoungeChair', gx: 6, gz: 6, rot: 3 },
+      { type: 'kitSideTable', gx: 6, gz: 7, rot: 0, key: 'reading' },
+      { type: 'kitRadio', on: 'reading', slot: 0, rot: 0 },
+      { type: 'kitLampRoundFloor', gx: 7, gz: 6, rot: 0 },
+      { type: 'kitPottedPlant', gx: 7, gz: 7, rot: 0 },
+    ],
+    // The original hand-modelled layout. Not offered in the game; browser tests open it with ?starter=classic.
+    classicItems: [
       { type: 'rug', gx: 2, gz: 3, rot: 0 },
       { type: 'sofa', gx: 2, gz: 1, rot: 0, key: 'sofa' },
       { type: 'pillow', on: 'sofa', slot: 0, rot: 0, color: 0xbf895c },

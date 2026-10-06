@@ -249,7 +249,7 @@ test('keyboard shortcuts stay inactive while typing in search', async ({ page })
 });
 
 test('background music waits for a gesture and remembers the mute choice', async ({ page }) => {
-  await openGame(page, '/', { enter: false });
+  await openGame(page, undefined, { enter: false });
   const music = () => page.evaluate(() => ({
     on: window.__sim.musicOn,
     paused: window.__sim.bgm.paused,

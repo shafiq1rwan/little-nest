@@ -1,8 +1,9 @@
 // Shared helpers for the browser checks. They talk to the game through window.__sim,
 // the development hook exposed at the end of src/main.js.
 
-/** Open the game and wait until the scene hook exists. Returns the collected page errors array. */
-export async function openGame(page, path = '/', { enter = true } = {}) {
+/** Open the game and wait until the scene hook exists. Returns the collected page errors array.
+ *  Tests run against the classic starter layout unless the path asks otherwise (the shipped default is the Modern home one). */
+export async function openGame(page, path = '/?starter=classic', { enter = true } = {}) {
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto(path);

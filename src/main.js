@@ -898,12 +898,14 @@ function settle() { finishDrag(); cancelPlacing(); setSelected(null); }
 function clearRoom() { settle(); commands.clear(); }
 
 /** Saved-room data for a preset's starter layout, with fresh ids. Returns the data and the id to select. */
+// `?starter=classic` opens the living room with its original layout (the browser tests are written against it).
+const STARTER = new URLSearchParams(location.search).get('starter');
 function presetRoomData(presetId) {
   const preset = ROOM_PRESETS[presetId];
   const byKey = new Map();
   const items = [];
   let selectId = null;
-  for (const it of preset.items) {
+  for (const it of (STARTER === 'classic' && preset.classicItems) || preset.items) {
     const id = newItemId();
     if (it.key) byKey.set(it.key, id);
     if (it.select) selectId = id;

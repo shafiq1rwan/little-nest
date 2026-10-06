@@ -6,7 +6,7 @@ for (const [width, height, label] of [[1440, 900, 'desktop'], [390, 844, 'phone'
     test.use({ viewport: { width, height }, hasTouch: width < 700, isMobile: width < 700 });
 
     test('loading leads to the menu; the menu starts, returns, opens rooms and settings', async ({ page }) => {
-      const errors = await openGame(page, '/', { enter: false });
+      const errors = await openGame(page, undefined, { enter: false });
       const screenName = () => page.evaluate(() => document.body.dataset.screen);
 
       // The loading screen has faded; the menu shows over a live, non-interactive room.

@@ -112,3 +112,22 @@ test('every room preset with walls has a door with clear floor inside it', async
   expect(doors).toEqual({ livingRoom: true, studio: true, bedroom: true, balcony: null, readingNook: true });
   expect(errors).toEqual([]);
 });
+
+test('the shipped starter living room is furnished from the Modern home collection', async ({ page }) => {
+  const errors = await openGame(page, '/');
+  const room = await page.evaluate(() => {
+    const s = window.__sim;
+    const d = s.residents.world.door();
+    return {
+      count: s.items.length,
+      modern: s.items.filter((i) => s.catalogCollection(i.type) === 'modern').length,
+      kitchen: s.residents.world.spots().filter((q) => q.kind === 'kitchen').length,
+      seats: s.residents.world.seats().length,
+      doorClear: s.isFree('pouf', d.gx, d.gz, 0),
+      residents: s.residents.count, cat: !!s.pet,
+    };
+  });
+  // 38 Modern home pieces plus a fern, snake plant, monstera, vase and botanical print.
+  expect(room).toEqual({ count: 43, modern: 38, kitchen: 4, seats: 9, doorClear: true, residents: 2, cat: true });
+  expect(errors).toEqual([]);
+});

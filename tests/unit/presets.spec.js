@@ -3,6 +3,7 @@ import { createPlacement } from '../../src/game/placement.js';
 import { createRoomState } from '../../src/game/state.js';
 import { createCommands } from '../../src/game/commands.js';
 import { parseRoom, migrateRoom, SaveError, CURRENT_VERSION, LEGACY_ROOM } from '../../src/persistence/schema.js';
+import { createRequire } from 'node:module';
 import { ROOM_PRESETS, DEFAULT_PRESET, MIN_ROOM_SIZE, MAX_ROOM_SIZE, presetFixtures, presetWallRows } from '../../src/data/presets.js';
 
 // The real catalog's footprints and surfaces, without Three.js: only the fields the rules read.
@@ -17,18 +18,23 @@ const catalog = {
   worldMap: { w: 2, d: 1, layer: 'wall', wall: { w: 2, h: 3 } }, botanicalPrint: { w: 2, d: 1, layer: 'wall', wall: { w: 2, h: 3 } }, clock: { w: 1, d: 1, layer: 'wall', wall: { w: 1, h: 1 } },
   wallShelf: { w: 2, d: 1, layer: 'wall', wall: { w: 2, h: 1 }, surface: { y: 0.4, slots: [{ x: 0, z: 0 }, { x: 0, z: 0 }] } }, macrame: { w: 1, d: 1, layer: 'wall', wall: { w: 1, h: 3 } },
   mirror: { w: 1, d: 1, layer: 'wall', wall: { w: 1, h: 2 } },
+  vase: { w: 1, d: 1, layer: 'surface' },
   bed: { w: 2, d: 3 }, nightstand: { w: 1, d: 1, surface: { y: 0.6, slots: [{ x: 0, z: 0 }] } }, wardrobe: { w: 2, d: 1 }, planter: { w: 2, d: 1 }, bench: { w: 2, d: 1 },
 };
+// The Modern home entries straight from the importer's data (footprints, layers, surfaces).
+for (const e of createRequire(import.meta.url)('../../src/data/kenney-catalog.json')) {
+  catalog[e.key] = { w: e.w, d: e.d, ...(e.layer && { layer: e.layer }), ...(e.wall && { wall: e.wall }), ...(e.surface && { surface: e.surface }), ...(e.surfaceKind && { surfaceKind: e.surfaceKind }) };
+}
 const placementFor = (room) => createPlacement({ catalog, width: room.width, depth: room.depth, wallRows: presetWallRows(ROOM_PRESETS[room.preset] ?? {}) });
 const wallBlockedFor = (room) => placementFor(room).blockedWallCells(presetFixtures({ ...ROOM_PRESETS[room.preset], width: room.width, depth: room.depth }));
 let n = 0;
 const opts = { catalog, placementFor, wallBlockedFor, presets: ROOM_PRESETS, maxItems: 200, newId: () => 'n' + n++, sizeRange: [MIN_ROOM_SIZE, MAX_ROOM_SIZE] };
 
 /** Turns a preset's starter list into saved-room items the way main.js does. */
-function layoutOf(presetId) {
+function layoutOf(presetId, list = 'items') {
   const preset = ROOM_PRESETS[presetId];
   const byKey = new Map();
-  const items = preset.items.map((it, i) => {
+  const items = preset[list].map((it, i) => {
     const id = 'p' + i;
     if (it.key) byKey.set(it.key, id);
     return { id, type: it.type, rot: it.wall ? 0 : it.rot ?? 0, color: it.color ?? null, gx: it.on || it.wall ? null : it.gx, gz: it.on || it.wall ? null : it.gz, parent: it.on ? byKey.get(it.on) : null, slot: it.on ? it.slot : null, wall: it.wall ?? null, col: it.wall ? it.col : null, row: it.wall ? it.row : null };
@@ -63,6 +69,7 @@ test('every preset is well formed and its starter layout validates in its own ro
     expect(parsed.items.length, id + ' items').toBe(preset.items.length);
     expect(parsed.room).toEqual({ preset: id, width: preset.width, depth: preset.depth });
     expect(preset.items.filter((it) => it.select).length, id + ' has exactly one selected starter item').toBe(1);
+    if (preset.classicItems) expect(parseRoom(layoutOf(id, 'classicItems'), opts).items.length, id + ' classic items').toBe(preset.classicItems.length);
   }
   expect(Object.keys(ROOM_PRESETS).length).toBeGreaterThanOrEqual(5);
 });

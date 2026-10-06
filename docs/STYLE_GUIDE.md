@@ -56,7 +56,7 @@ Selectable finishes can vary within the established warm/soft palette. Baseline 
 - Small-screen search text is 16px to avoid input zoom in common mobile browsers.
 - Keep control labels readable, normally 12–13px on compact screens. Footprint metadata is secondary.
 - Use thin warm-brown line icons with consistent strokes. Do not mix emoji, filled clip-art, and line icons as controls.
-- Buttons use 12–13px corners and a shallow bottom edge; furniture tiles use 18px corners, and floating panels use 20–26px corners. Use warm outlines, soft shadows, and inset highlights to feel like tactile game pieces. Furniture thumbnails sit on subtle oval plinths.
+- Buttons use 12–13px corners and a shallow bottom edge; furniture tiles use 18px corners, and floating panels use 20–26px corners. Use warm outlines, soft shadows, and inset highlights to feel like tactile game pieces. Furniture thumbnails sit directly on the card, with no plinth or shadow.
 - Use consistent spacing from existing 4/8/12/16/24px families.
 - On compact screens, primary touch actions, camera controls, selection controls, category chips, and Clear have targets at least 44 × 44px. Desktop pointer controls are deliberately smaller and calmer: 38px icon buttons in the top-right capsule, tool tray, and camera tray; 36px selection actions; 30px category chips; 34px colour swatches.
 - Keep focus indicators, accessible button names, active/pressed states, and reduced-motion support.

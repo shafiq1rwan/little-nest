@@ -28,7 +28,7 @@ button.icon-button[aria-pressed="true"]:not(.active):not(.primary) { background:
 .catalog-card:hover { background: var(--card-hover); }
 .catalog-card.active { border-color: var(--sage); background: var(--card-active); box-shadow: 0 3px 0 var(--sage-bottom); }
 .catalog-card.active::after { content: '+'; position: absolute; top: 7px; right: 7px; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: var(--cream); background: var(--sage-deep); font-size: 17px; font-weight: 600; }
-.catalog-card img { width: 100%; height: clamp(68px, 6.4vw, 90px); object-fit: contain; background: radial-gradient(ellipse 45% 9% at 50% 83%, var(--plinth) 0 95%, transparent 100%); }
+.catalog-card img { width: 100%; height: clamp(68px, 6.4vw, 90px); object-fit: contain; }
 .catalog-card strong { font-size: 12px; font-weight: 600; margin: 3px 0 5px; }
 .catalog-card small { font-size: 10px; color: var(--muted); }
 

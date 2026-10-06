@@ -16,10 +16,11 @@ test('every catalog entry belongs to a known collection and the selector combine
   for (const r of report) byCollection[r.collection] = (byCollection[r.collection] || 0) + 1;
   expect(byCollection.japandi).toBe(4);
   expect(byCollection.cottage).toBe(4);
-  expect(byCollection.cozy).toBe(report.length - 8);
+  expect(byCollection.modern).toBe(118);   // Kenney's Furniture Kit, without its walls, floors, doorways, stairs and ceiling pieces
+  expect(byCollection.cozy).toBe(report.length - 8 - 118);
 
   const select = page.locator('#collection');
-  await expect(select.locator('option')).toHaveCount(4);
+  await expect(select.locator('option')).toHaveCount(5);
   const all = await visible();
   await select.selectOption('japandi');
   expect(await visible()).toBe(4);

@@ -5,6 +5,7 @@ import { sharedMaterial, ownMaterial, recolorModel } from './scene/geometry.js';
 import { artTexture } from './room.js';
 import { DEFAULT_COLLECTION } from './data/collections.js';
 import { modelInstance, artImage } from './scene/models.js';
+import { kenneyCatalog } from './kenney.js';
 
 const C = { cream: 0xf3e4d2, wood: 0xb87946, dark: 0x694b35, sage: 0x81936a, green: 0x4d7639, pot: 0xeee0ca, black: 0x393932, brass: 0xbb9451 };
 const material = (color) => sharedMaterial(color, .85);
@@ -469,6 +470,7 @@ export const CATALOG = {
   ...WALL_CATALOG,
   ...JAPANDI_CATALOG,
   ...COTTAGE_CATALOG,
+  ...kenneyCatalog({ withLight, withGlow }),
 };
 // Entries that name no collection belong to the default Nest classics set.
 for (const def of Object.values(CATALOG)) def.collection ??= DEFAULT_COLLECTION;

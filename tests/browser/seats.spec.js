@@ -20,7 +20,7 @@ test('pillows and throws sit on seats only, follow the seat, recolour, and survi
 
   // The Soft chip lists the two items; a pillow refuses tables and accepts the free sofa seat.
   await page.locator('[data-category="soft"]').click();
-  expect(await page.locator('.catalog-card:visible').count()).toBe(2);
+  expect(await page.locator('.catalog-card:visible').count()).toBe(7);   // two classics and five Modern home cushions and toys
   await page.locator('.catalog-card[data-type="pillow"]').click();
   await expect(page.locator('#mode-label')).toContainText('on a seat');
   expect(await page.evaluate(() => { const s = window.__sim; const t = s.items.find((i) => i.type === 'coffeeTable'); return s.state.canPlaceOn('pillow', t.id, 1); })).toBe(false);

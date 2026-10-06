@@ -22,7 +22,7 @@ test('wall decorations snap to walls, avoid windows, drag between walls, refuse 
 
   // Choose the clock; the floor refuses it, the window refuses it, a clear wall spot takes it.
   await page.locator('[data-category="wall"]').click();
-  expect(await page.locator('.catalog-card:visible').count()).toBe(7);   // six decorations and the curtains
+  expect(await page.locator('.catalog-card:visible').count()).toBe(18);   // six decorations, the curtains, and 11 Modern home wall pieces
   await page.locator('.catalog-card[data-type="clock"]').click();
   await expect(page.locator('#mode-label')).toContainText('on a wall');
   const floorPoint = await screenOf(page, 3, 0, 3);

@@ -7,4 +7,5 @@ export const COLLECTIONS = {
   cozy: { name: 'Nest classics', blurb: 'Warm wood, cream seating, and plenty of plants.' },
   japandi: { name: 'Japandi', blurb: 'Low lines, pale ash, charcoal, and paper light.' },
   cottage: { name: 'Cottage', blurb: 'Painted wood, rose and sage, and a teapot on every table.' },
+  modern: { name: 'Modern home', blurb: 'Kitchen, bath, office, and lounge basics from Kenney’s Furniture Kit.' },
 };

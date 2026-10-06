@@ -10,4 +10,6 @@ Everything here serves the prop pipeline in [docs/PROP_BRIEFS.md](../../docs/PRO
 | `build-sofa-v2.py`, `build-plants-v2.py`, `build-cactus-v2.py` | Rebuild the authored models in `art-source/models-v2` from scratch. |
 | `check-plants-v2.mjs`, `check-cactus-v2.mjs` | Re-import the authored exports with the game's Three.js and check triangles, materials, recolour flags and sizes. |
 
+`import-kenney.py` imports Kenney's Furniture Kit (art-source/packs, ignored) as the Modern home collection; see its docstring.
+
 Framed-art images come from `tools/comfy/generate-prints.py` (ComfyUI), not Blender. After changing any file in `public/models`, bump `MODELS_VERSION` in `src/config/game.js`.

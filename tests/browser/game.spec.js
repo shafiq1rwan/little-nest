@@ -28,12 +28,12 @@ test('desktop decorating flow: rotate, recolor, save/load, search, finishes, cam
   expect(await roomState(page)).toEqual(saved);
 
   await page.locator('#search').fill('plant');
-  expect(await page.locator('.catalog-card:visible').count()).toBe(12);   // seven plants, the succulent, the hanging plant, the planter, the bonsai, and the botanical print
+  expect(await page.locator('.catalog-card:visible').count()).toBe(16);   // plus the Modern home potted plant and three little plants; was: seven plants, the succulent, the hanging plant, the planter, the bonsai, and the botanical print
   await page.locator('#search').fill('rug');
-  expect(await page.locator('.catalog-card:visible').count()).toBe(1);
+  expect(await page.locator('.catalog-card:visible').count()).toBe(6);   // the classic rug and five Modern home rugs
   await page.locator('#search').fill('');
   await page.locator('[data-category="seating"]').click();
-  expect(await page.locator('.catalog-card:visible').count()).toBe(10);
+  expect(await page.locator('.catalog-card:visible').count()).toBe(33);   // ten classics and 23 Modern home seats
   await page.locator('[data-category="all"]').click();
 
   await page.locator('#tab-walls').click();

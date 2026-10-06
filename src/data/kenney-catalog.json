@@ -1,0 +1,2630 @@
+[
+ {
+  "key": "kitBench",
+  "source": "bench",
+  "label": "Wooden bench",
+  "category": "seating",
+  "tags": [
+   "wood"
+  ],
+  "size": [
+   0.8,
+   0.4,
+   0.94
+  ],
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitBenchCushion",
+  "source": "benchCushion",
+  "label": "Cushioned bench",
+  "category": "seating",
+  "tags": [],
+  "size": [
+   0.8,
+   0.4,
+   0.92
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 0.48,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": -0.048
+    }
+   ],
+   "kind": "seat"
+  },
+  "defaultColor": 15983826
+ },
+ {
+  "key": "kitBenchCushionLow",
+  "source": "benchCushionLow",
+  "label": "Low bench",
+  "category": "seating",
+  "tags": [],
+  "size": [
+   0.84,
+   0.44,
+   0.4
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 0.4,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": -0.053
+    }
+   ],
+   "kind": "seat"
+  },
+  "defaultColor": 15983826
+ },
+ {
+  "key": "kitChair",
+  "source": "chair",
+  "label": "Wooden chair",
+  "category": "seating",
+  "tags": [
+   "dining"
+  ],
+  "size": [
+   0.4,
+   0.4,
+   0.94
+  ],
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitChairCushion",
+  "source": "chairCushion",
+  "label": "Cushioned chair",
+  "category": "seating",
+  "tags": [
+   "dining"
+  ],
+  "size": [
+   0.4,
+   0.4,
+   0.92
+  ],
+  "w": 1,
+  "d": 1,
+  "defaultColor": 15983826
+ },
+ {
+  "key": "kitChairDesk",
+  "source": "chairDesk",
+  "label": "Desk chair",
+  "category": "seating",
+  "tags": [
+   "office"
+  ],
+  "size": [
+   0.67,
+   0.629,
+   1.215
+  ],
+  "w": 1,
+  "d": 1,
+  "defaultColor": 15983826
+ },
+ {
+  "key": "kitChairModernCushion",
+  "source": "chairModernCushion",
+  "label": "Modern chair",
+  "category": "seating",
+  "tags": [
+   "dining"
+  ],
+  "size": [
+   0.4,
+   0.4,
+   0.92
+  ],
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitChairModernFrameCushion",
+  "source": "chairModernFrameCushion",
+  "label": "Frame chair",
+  "category": "seating",
+  "tags": [
+   "dining"
+  ],
+  "size": [
+   0.4,
+   0.4,
+   0.92
+  ],
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitChairRounded",
+  "source": "chairRounded",
+  "label": "Rounded chair",
+  "category": "seating",
+  "tags": [
+   "dining"
+  ],
+  "size": [
+   0.4,
+   0.4,
+   0.91
+  ],
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitLoungeChair",
+  "source": "loungeChair",
+  "label": "Lounge chair",
+  "category": "seating",
+  "tags": [
+   "armchair"
+  ],
+  "size": [
+   0.98,
+   0.82,
+   0.92
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 0.46,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": -0.098
+    }
+   ],
+   "kind": "seat"
+  },
+  "defaultColor": 15983826
+ },
+ {
+  "key": "kitLoungeChairRelax",
+  "source": "loungeChairRelax",
+  "label": "Recliner",
+  "category": "seating",
+  "tags": [
+   "armchair"
+  ],
+  "size": [
+   0.98,
+   1.349,
+   1.26
+  ],
+  "w": 1,
+  "d": 2,
+  "surface": {
+   "y": 0.46,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": -0.337
+    },
+    {
+     "x": 0.0,
+     "z": 0.337,
+     "y": 0.276
+    }
+   ],
+   "kind": "seat"
+  },
+  "defaultColor": 15983826
+ },
+ {
+  "key": "kitLoungeDesignChair",
+  "source": "loungeDesignChair",
+  "label": "Design armchair",
+  "category": "seating",
+  "tags": [
+   "armchair"
+  ],
+  "size": [
+   1.459,
+   0.82,
+   0.8
+  ],
+  "w": 2,
+  "d": 1,
+  "surface": {
+   "y": 0.46,
+   "slots": [
+    {
+     "x": -0.365,
+     "z": -0.098
+    },
+    {
+     "x": 0.365,
+     "z": -0.098
+    }
+   ],
+   "kind": "seat"
+  }
+ },
+ {
+  "key": "kitLoungeDesignSofa",
+  "source": "loungeDesignSofa",
+  "label": "Design sofa",
+  "category": "seating",
+  "tags": [
+   "couch"
+  ],
+  "size": [
+   1.96,
+   0.718,
+   0.7
+  ],
+  "w": 2,
+  "d": 1,
+  "surface": {
+   "y": 0.403,
+   "slots": [
+    {
+     "x": -0.49,
+     "z": -0.086
+    },
+    {
+     "x": 0.49,
+     "z": -0.086
+    }
+   ],
+   "kind": "seat"
+  }
+ },
+ {
+  "key": "kitLoungeDesignSofaCorner",
+  "source": "loungeDesignSofaCorner",
+  "label": "Corner design sofa",
+  "category": "seating",
+  "tags": [
+   "couch"
+  ],
+  "size": [
+   2.7,
+   2.7,
+   0.8
+  ],
+  "w": 3,
+  "d": 3,
+  "surface": {
+   "y": 0.46,
+   "slots": [
+    {
+     "x": -0.9,
+     "z": -0.9
+    },
+    {
+     "x": 0.0,
+     "z": -0.9
+    },
+    {
+     "x": 0.9,
+     "z": -0.9
+    },
+    {
+     "x": 0.9,
+     "z": 0.0
+    },
+    {
+     "x": 0.9,
+     "z": 0.9
+    }
+   ],
+   "kind": "seat"
+  }
+ },
+ {
+  "key": "kitLoungeSofa",
+  "source": "loungeSofa",
+  "label": "Lounge sofa",
+  "category": "seating",
+  "tags": [
+   "couch"
+  ],
+  "size": [
+   1.96,
+   0.82,
+   0.92
+  ],
+  "w": 2,
+  "d": 1,
+  "surface": {
+   "y": 0.46,
+   "slots": [
+    {
+     "x": -0.49,
+     "z": -0.098
+    },
+    {
+     "x": 0.49,
+     "z": -0.098
+    }
+   ],
+   "kind": "seat"
+  },
+  "defaultColor": 15983826
+ },
+ {
+  "key": "kitLoungeSofaCorner",
+  "source": "loungeSofaCorner",
+  "label": "Corner sofa",
+  "category": "seating",
+  "tags": [
+   "couch"
+  ],
+  "size": [
+   1.96,
+   1.96,
+   0.92
+  ],
+  "w": 2,
+  "d": 2,
+  "surface": {
+   "y": 0.46,
+   "slots": [
+    {
+     "x": -0.49,
+     "z": -0.49
+    },
+    {
+     "x": 0.49,
+     "z": -0.49
+    },
+    {
+     "x": 0.49,
+     "z": 0.49
+    }
+   ],
+   "kind": "seat"
+  },
+  "defaultColor": 15983826
+ },
+ {
+  "key": "kitLoungeSofaLong",
+  "source": "loungeSofaLong",
+  "label": "Chaise sofa",
+  "category": "seating",
+  "tags": [
+   "couch"
+  ],
+  "size": [
+   1.96,
+   1.64,
+   0.92
+  ],
+  "w": 2,
+  "d": 2,
+  "surface": {
+   "y": 0.46,
+   "slots": [
+    {
+     "x": -0.49,
+     "z": -0.41
+    },
+    {
+     "x": 0.49,
+     "z": -0.41
+    },
+    {
+     "x": 0.49,
+     "z": 0.41
+    }
+   ],
+   "kind": "seat"
+  },
+  "defaultColor": 15983826
+ },
+ {
+  "key": "kitLoungeSofaOttoman",
+  "source": "loungeSofaOttoman",
+  "label": "Sofa ottoman",
+  "category": "seating",
+  "tags": [
+   "footstool"
+  ],
+  "size": [
+   0.88,
+   0.9,
+   0.46
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 0.46,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": -0.108
+    }
+   ],
+   "kind": "seat"
+  },
+  "defaultColor": 15983826
+ },
+ {
+  "key": "kitStoolBar",
+  "source": "stoolBar",
+  "label": "Bar stool",
+  "category": "seating",
+  "tags": [
+   "kitchen"
+  ],
+  "size": [
+   0.531,
+   0.46,
+   0.87
+  ],
+  "w": 1,
+  "d": 1,
+  "defaultColor": 15983826
+ },
+ {
+  "key": "kitStoolBarSquare",
+  "source": "stoolBarSquare",
+  "label": "Square bar stool",
+  "category": "seating",
+  "tags": [
+   "kitchen"
+  ],
+  "size": [
+   0.307,
+   0.295,
+   0.81
+  ],
+  "w": 1,
+  "d": 1,
+  "defaultColor": 15983826
+ },
+ {
+  "key": "kitBedBunk",
+  "source": "bedBunk",
+  "label": "Bunk bed",
+  "category": "seating",
+  "tags": [
+   "bedroom",
+   "kids"
+  ],
+  "size": [
+   0.96,
+   1.841,
+   1.429
+  ],
+  "w": 1,
+  "d": 2,
+  "defaultColor": 15983826
+ },
+ {
+  "key": "kitBedDouble",
+  "source": "bedDouble",
+  "label": "Double bed",
+  "category": "seating",
+  "tags": [
+   "bedroom"
+  ],
+  "size": [
+   1.666,
+   1.96,
+   0.653
+  ],
+  "w": 2,
+  "d": 2,
+  "surface": {
+   "y": 0.451,
+   "slots": [
+    {
+     "x": -0.416,
+     "z": -0.49
+    },
+    {
+     "x": 0.416,
+     "z": -0.49
+    },
+    {
+     "x": -0.416,
+     "z": 0.49
+    },
+    {
+     "x": 0.416,
+     "z": 0.49
+    }
+   ],
+   "kind": "seat"
+  },
+  "defaultColor": 15983826
+ },
+ {
+  "key": "kitBedSingle",
+  "source": "bedSingle",
+  "label": "Single bed",
+  "category": "seating",
+  "tags": [
+   "bedroom"
+  ],
+  "size": [
+   0.96,
+   1.891,
+   0.63
+  ],
+  "w": 1,
+  "d": 2,
+  "surface": {
+   "y": 0.435,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": -0.473
+    },
+    {
+     "x": 0.0,
+     "z": 0.473
+    }
+   ],
+   "kind": "seat"
+  },
+  "defaultColor": 15983826
+ },
+ {
+  "key": "kitDesk",
+  "source": "desk",
+  "label": "Writing desk",
+  "category": "tables",
+  "tags": [
+   "office"
+  ],
+  "size": [
+   1.469,
+   0.785,
+   0.769
+  ],
+  "w": 2,
+  "d": 1,
+  "surface": {
+   "y": 0.769,
+   "slots": [
+    {
+     "x": -0.367,
+     "z": 0.0
+    },
+    {
+     "x": 0.367,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitDeskCorner",
+  "source": "deskCorner",
+  "label": "Corner desk",
+  "category": "tables",
+  "tags": [
+   "office"
+  ],
+  "size": [
+   1.949,
+   1.949,
+   0.769
+  ],
+  "w": 2,
+  "d": 2,
+  "surface": {
+   "y": 0.769,
+   "slots": [
+    {
+     "x": -0.487,
+     "z": -0.487
+    },
+    {
+     "x": 0.487,
+     "z": -0.487
+    },
+    {
+     "x": 0.487,
+     "z": 0.487
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitTable",
+  "source": "table",
+  "label": "Dining table",
+  "category": "tables",
+  "tags": [
+   "dining"
+  ],
+  "size": [
+   1.683,
+   0.895,
+   0.653
+  ],
+  "w": 2,
+  "d": 1,
+  "surface": {
+   "y": 0.653,
+   "slots": [
+    {
+     "x": -0.421,
+     "z": 0.0
+    },
+    {
+     "x": 0.421,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitTableCloth",
+  "source": "tableCloth",
+  "label": "Table with cloth",
+  "category": "tables",
+  "tags": [
+   "dining"
+  ],
+  "size": [
+   1.683,
+   0.895,
+   0.653
+  ],
+  "w": 2,
+  "d": 1,
+  "surface": {
+   "y": 0.653,
+   "slots": [
+    {
+     "x": -0.421,
+     "z": 0.0
+    },
+    {
+     "x": 0.421,
+     "z": 0.0
+    }
+   ]
+  },
+  "defaultColor": 15983826
+ },
+ {
+  "key": "kitTableCross",
+  "source": "tableCross",
+  "label": "Cross-leg table",
+  "category": "tables",
+  "tags": [
+   "dining"
+  ],
+  "size": [
+   1.704,
+   0.895,
+   0.695
+  ],
+  "w": 2,
+  "d": 1,
+  "surface": {
+   "y": 0.695,
+   "slots": [
+    {
+     "x": -0.426,
+     "z": 0.0
+    },
+    {
+     "x": 0.426,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitTableCrossCloth",
+  "source": "tableCrossCloth",
+  "label": "Cross-leg table with cloth",
+  "category": "tables",
+  "tags": [
+   "dining"
+  ],
+  "size": [
+   1.704,
+   0.895,
+   0.695
+  ],
+  "w": 2,
+  "d": 1,
+  "surface": {
+   "y": 0.695,
+   "slots": [
+    {
+     "x": -0.426,
+     "z": 0.0
+    },
+    {
+     "x": 0.426,
+     "z": 0.0
+    }
+   ]
+  },
+  "defaultColor": 15983826
+ },
+ {
+  "key": "kitTableGlass",
+  "source": "tableGlass",
+  "label": "Glass table",
+  "category": "tables",
+  "tags": [
+   "dining"
+  ],
+  "size": [
+   1.683,
+   0.895,
+   0.653
+  ],
+  "w": 2,
+  "d": 1,
+  "surface": {
+   "y": 0.653,
+   "slots": [
+    {
+     "x": -0.421,
+     "z": 0.0
+    },
+    {
+     "x": 0.421,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitTableRound",
+  "source": "tableRound",
+  "label": "Round table",
+  "category": "tables",
+  "tags": [
+   "dining"
+  ],
+  "size": [
+   1.386,
+   1.6,
+   0.733
+  ],
+  "w": 2,
+  "d": 2,
+  "surface": {
+   "y": 0.733,
+   "slots": [
+    {
+     "x": -0.346,
+     "z": -0.4
+    },
+    {
+     "x": 0.346,
+     "z": -0.4
+    },
+    {
+     "x": -0.346,
+     "z": 0.4
+    },
+    {
+     "x": 0.346,
+     "z": 0.4
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitTableCoffee",
+  "source": "tableCoffee",
+  "label": "Low coffee table",
+  "category": "tables",
+  "tags": [
+   "living"
+  ],
+  "size": [
+   1.322,
+   0.8,
+   0.46
+  ],
+  "w": 2,
+  "d": 1,
+  "surface": {
+   "y": 0.46,
+   "slots": [
+    {
+     "x": -0.33,
+     "z": 0.0
+    },
+    {
+     "x": 0.33,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitTableCoffeeGlass",
+  "source": "tableCoffeeGlass",
+  "label": "Glass coffee table",
+  "category": "tables",
+  "tags": [
+   "living"
+  ],
+  "size": [
+   1.322,
+   0.8,
+   0.46
+  ],
+  "w": 2,
+  "d": 1,
+  "surface": {
+   "y": 0.46,
+   "slots": [
+    {
+     "x": -0.33,
+     "z": 0.0
+    },
+    {
+     "x": 0.33,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitTableCoffeeGlassSquare",
+  "source": "tableCoffeeGlassSquare",
+  "label": "Square glass coffee table",
+  "category": "tables",
+  "tags": [
+   "living"
+  ],
+  "size": [
+   0.8,
+   0.8,
+   0.46
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 0.46,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitTableCoffeeSquare",
+  "source": "tableCoffeeSquare",
+  "label": "Square coffee table",
+  "category": "tables",
+  "tags": [
+   "living"
+  ],
+  "size": [
+   0.8,
+   0.8,
+   0.46
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 0.46,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitSideTable",
+  "source": "sideTable",
+  "label": "Console table",
+  "category": "tables",
+  "tags": [],
+  "size": [
+   0.96,
+   0.395,
+   0.69
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 0.69,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitSideTableDrawers",
+  "source": "sideTableDrawers",
+  "label": "Console with drawers",
+  "category": "tables",
+  "tags": [
+   "storage"
+  ],
+  "size": [
+   0.96,
+   0.399,
+   0.69
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 0.69,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitCabinetBed",
+  "source": "cabinetBed",
+  "label": "Bedside cabinet",
+  "category": "tables",
+  "tags": [
+   "bedroom"
+  ],
+  "size": [
+   0.532,
+   0.43,
+   0.466
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 0.466,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitCabinetBedDrawer",
+  "source": "cabinetBedDrawer",
+  "label": "Bedside drawer",
+  "category": "tables",
+  "tags": [
+   "bedroom"
+  ],
+  "size": [
+   0.532,
+   0.435,
+   0.526
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 0.526,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitCabinetBedDrawerTable",
+  "source": "cabinetBedDrawerTable",
+  "label": "Bedside table",
+  "category": "tables",
+  "tags": [
+   "bedroom"
+  ],
+  "size": [
+   0.532,
+   0.435,
+   0.526
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 0.526,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitCabinetTelevision",
+  "source": "cabinetTelevision",
+  "label": "Media console",
+  "category": "tables",
+  "tags": [
+   "tv"
+  ],
+  "size": [
+   1.6,
+   0.5,
+   0.62
+  ],
+  "w": 2,
+  "d": 1,
+  "surface": {
+   "y": 0.62,
+   "slots": [
+    {
+     "x": -0.4,
+     "z": 0.0
+    },
+    {
+     "x": 0.4,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitCabinetTelevisionDoors",
+  "source": "cabinetTelevisionDoors",
+  "label": "Media cabinet",
+  "category": "tables",
+  "tags": [
+   "tv",
+   "storage"
+  ],
+  "size": [
+   1.6,
+   0.52,
+   0.62
+  ],
+  "w": 2,
+  "d": 1,
+  "surface": {
+   "y": 0.62,
+   "slots": [
+    {
+     "x": -0.4,
+     "z": 0.0
+    },
+    {
+     "x": 0.4,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitKitchenCabinet",
+  "source": "kitchenCabinet",
+  "label": "Kitchen cabinet",
+  "category": "tables",
+  "tags": [
+   "kitchen"
+  ],
+  "size": [
+   0.86,
+   0.9,
+   0.9
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 0.84,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitKitchenCabinetDrawer",
+  "source": "kitchenCabinetDrawer",
+  "label": "Kitchen drawers",
+  "category": "tables",
+  "tags": [
+   "kitchen"
+  ],
+  "size": [
+   0.86,
+   0.9,
+   0.9
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 0.84,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitKitchenCabinetCornerInner",
+  "source": "kitchenCabinetCornerInner",
+  "label": "Kitchen corner",
+  "category": "tables",
+  "tags": [
+   "kitchen"
+  ],
+  "size": [
+   0.92,
+   0.92,
+   0.9
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 0.84,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitKitchenCabinetCornerRound",
+  "source": "kitchenCabinetCornerRound",
+  "label": "Rounded kitchen corner",
+  "category": "tables",
+  "tags": [
+   "kitchen"
+  ],
+  "size": [
+   0.9,
+   0.9,
+   0.9
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 0.84,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitKitchenBar",
+  "source": "kitchenBar",
+  "label": "Kitchen bar",
+  "category": "tables",
+  "tags": [
+   "kitchen"
+  ],
+  "size": [
+   0.86,
+   0.42,
+   0.84
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 0.84,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitKitchenBarEnd",
+  "source": "kitchenBarEnd",
+  "label": "Bar end",
+  "category": "tables",
+  "tags": [
+   "kitchen"
+  ],
+  "size": [
+   0.203,
+   0.42,
+   0.84
+  ],
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitKitchenSink",
+  "source": "kitchenSink",
+  "label": "Kitchen sink",
+  "category": "tables",
+  "tags": [
+   "kitchen"
+  ],
+  "size": [
+   0.86,
+   0.9,
+   0.98
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 0.64,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitKitchenStove",
+  "source": "kitchenStove",
+  "label": "Gas stove",
+  "category": "tables",
+  "tags": [
+   "kitchen",
+   "cooking"
+  ],
+  "size": [
+   0.86,
+   0.9,
+   0.9
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 0.88,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitKitchenStoveElectric",
+  "source": "kitchenStoveElectric",
+  "label": "Electric stove",
+  "category": "tables",
+  "tags": [
+   "kitchen",
+   "cooking"
+  ],
+  "size": [
+   0.86,
+   0.9,
+   0.9
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 0.85,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitBathroomSinkSquare",
+  "source": "bathroomSinkSquare",
+  "label": "Vanity sink",
+  "category": "tables",
+  "tags": [
+   "bathroom"
+  ],
+  "size": [
+   0.86,
+   0.6,
+   1.16
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 1.13,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitBathroomCabinetDrawer",
+  "source": "bathroomCabinetDrawer",
+  "label": "Bathroom drawers",
+  "category": "tables",
+  "tags": [
+   "bathroom",
+   "storage"
+  ],
+  "size": [
+   0.86,
+   0.64,
+   0.944
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 0.684,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitWasher",
+  "source": "washer",
+  "label": "Washing machine",
+  "category": "tables",
+  "tags": [
+   "laundry"
+  ],
+  "size": [
+   0.78,
+   0.78,
+   0.94
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 0.94,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitDryer",
+  "source": "dryer",
+  "label": "Dryer",
+  "category": "tables",
+  "tags": [
+   "laundry"
+  ],
+  "size": [
+   0.78,
+   0.76,
+   0.94
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 0.94,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitBookcaseClosed",
+  "source": "bookcaseClosed",
+  "label": "Bookcase",
+  "category": "decor",
+  "tags": [
+   "storage",
+   "books"
+  ],
+  "size": [
+   0.8,
+   0.5,
+   1.7
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 1.7,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitBookcaseClosedDoors",
+  "source": "bookcaseClosedDoors",
+  "label": "Bookcase with doors",
+  "category": "decor",
+  "tags": [
+   "storage",
+   "books"
+  ],
+  "size": [
+   0.8,
+   0.5,
+   1.7
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 1.7,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitBookcaseClosedWide",
+  "source": "bookcaseClosedWide",
+  "label": "Wide bookcase",
+  "category": "decor",
+  "tags": [
+   "storage",
+   "books"
+  ],
+  "size": [
+   1.6,
+   0.5,
+   1.58
+  ],
+  "w": 2,
+  "d": 1,
+  "surface": {
+   "y": 1.58,
+   "slots": [
+    {
+     "x": -0.4,
+     "z": 0.0
+    },
+    {
+     "x": 0.4,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitBookcaseOpen",
+  "source": "bookcaseOpen",
+  "label": "Open bookcase",
+  "category": "decor",
+  "tags": [
+   "storage",
+   "books"
+  ],
+  "size": [
+   0.8,
+   0.5,
+   1.76
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 1.7,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitBookcaseOpenLow",
+  "source": "bookcaseOpenLow",
+  "label": "Low open shelf",
+  "category": "decor",
+  "tags": [
+   "storage",
+   "books"
+  ],
+  "size": [
+   0.8,
+   0.5,
+   0.8
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 0.74,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitCardboardBoxClosed",
+  "source": "cardboardBoxClosed",
+  "label": "Cardboard box",
+  "category": "decor",
+  "tags": [
+   "storage",
+   "moving"
+  ],
+  "size": [
+   0.425,
+   0.425,
+   0.562
+  ],
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitCardboardBoxOpen",
+  "source": "cardboardBoxOpen",
+  "label": "Open box",
+  "category": "decor",
+  "tags": [
+   "storage",
+   "moving"
+  ],
+  "size": [
+   0.744,
+   0.425,
+   0.562
+  ],
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitCoatRackStanding",
+  "source": "coatRackStanding",
+  "label": "Coat stand",
+  "category": "decor",
+  "tags": [
+   "hallway"
+  ],
+  "size": [
+   0.546,
+   0.546,
+   1.54
+  ],
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitKitchenFridge",
+  "source": "kitchenFridge",
+  "label": "Fridge",
+  "category": "decor",
+  "tags": [
+   "kitchen"
+  ],
+  "size": [
+   0.86,
+   0.584,
+   1.84
+  ],
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitKitchenFridgeBuiltIn",
+  "source": "kitchenFridgeBuiltIn",
+  "label": "Built-in fridge",
+  "category": "decor",
+  "tags": [
+   "kitchen"
+  ],
+  "size": [
+   0.86,
+   0.9,
+   1.737
+  ],
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitKitchenFridgeLarge",
+  "source": "kitchenFridgeLarge",
+  "label": "Double fridge",
+  "category": "decor",
+  "tags": [
+   "kitchen"
+  ],
+  "size": [
+   0.96,
+   0.749,
+   1.698
+  ],
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitKitchenFridgeSmall",
+  "source": "kitchenFridgeSmall",
+  "label": "Small fridge",
+  "category": "decor",
+  "tags": [
+   "kitchen"
+  ],
+  "size": [
+   0.86,
+   0.584,
+   1.2
+  ],
+  "w": 1,
+  "d": 1,
+  "surface": {
+   "y": 1.2,
+   "slots": [
+    {
+     "x": 0.0,
+     "z": 0.0
+    }
+   ]
+  }
+ },
+ {
+  "key": "kitLampRoundFloor",
+  "source": "lampRoundFloor",
+  "label": "Round floor lamp",
+  "category": "decor",
+  "tags": [
+   "light"
+  ],
+  "size": [
+   0.304,
+   0.351,
+   1.72
+  ],
+  "w": 1,
+  "d": 1,
+  "lamp": "lamp"
+ },
+ {
+  "key": "kitLampSquareFloor",
+  "source": "lampSquareFloor",
+  "label": "Square floor lamp",
+  "category": "decor",
+  "tags": [
+   "light"
+  ],
+  "size": [
+   0.24,
+   0.24,
+   1.72
+  ],
+  "w": 1,
+  "d": 1,
+  "lamp": "lamp"
+ },
+ {
+  "key": "kitPottedPlant",
+  "source": "pottedPlant",
+  "label": "Potted plant",
+  "category": "decor",
+  "tags": [
+   "plant",
+   "pot"
+  ],
+  "size": [
+   0.424,
+   0.483,
+   1.308
+  ],
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitRugDoormat",
+  "source": "rugDoormat",
+  "label": "Doormat",
+  "category": "decor",
+  "tags": [
+   "rug",
+   "hallway"
+  ],
+  "size": [
+   0.859,
+   0.474,
+   0.02
+  ],
+  "w": 1,
+  "d": 1,
+  "layer": "floor"
+ },
+ {
+  "key": "kitRugRectangle",
+  "source": "rugRectangle",
+  "label": "Rectangle rug",
+  "category": "decor",
+  "tags": [
+   "rug"
+  ],
+  "size": [
+   2.96,
+   1.735,
+   0.019
+  ],
+  "w": 3,
+  "d": 2,
+  "layer": "floor",
+  "defaultColor": 15983826
+ },
+ {
+  "key": "kitRugRound",
+  "source": "rugRound",
+  "label": "Round rug",
+  "category": "decor",
+  "tags": [
+   "rug"
+  ],
+  "size": [
+   1.84,
+   1.84,
+   0.02
+  ],
+  "w": 2,
+  "d": 2,
+  "layer": "floor",
+  "defaultColor": 15983826
+ },
+ {
+  "key": "kitRugRounded",
+  "source": "rugRounded",
+  "label": "Rounded rug",
+  "category": "decor",
+  "tags": [
+   "rug"
+  ],
+  "size": [
+   2.96,
+   1.735,
+   0.019
+  ],
+  "w": 3,
+  "d": 2,
+  "layer": "floor",
+  "defaultColor": 15983826
+ },
+ {
+  "key": "kitRugSquare",
+  "source": "rugSquare",
+  "label": "Square rug",
+  "category": "decor",
+  "tags": [
+   "rug"
+  ],
+  "size": [
+   1.809,
+   1.84,
+   0.02
+  ],
+  "w": 2,
+  "d": 2,
+  "layer": "floor",
+  "defaultColor": 15983826
+ },
+ {
+  "key": "kitShower",
+  "source": "shower",
+  "label": "Corner shower",
+  "category": "decor",
+  "tags": [
+   "bathroom"
+  ],
+  "size": [
+   0.96,
+   0.994,
+   1.87
+  ],
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitShowerRound",
+  "source": "showerRound",
+  "label": "Round shower",
+  "category": "decor",
+  "tags": [
+   "bathroom"
+  ],
+  "size": [
+   0.96,
+   0.96,
+   1.87
+  ],
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitBathtub",
+  "source": "bathtub",
+  "label": "Bathtub",
+  "category": "decor",
+  "tags": [
+   "bathroom",
+   "bath"
+  ],
+  "size": [
+   2.04,
+   0.96,
+   0.72
+  ],
+  "w": 2,
+  "d": 1
+ },
+ {
+  "key": "kitBathroomSink",
+  "source": "bathroomSink",
+  "label": "Pedestal sink",
+  "category": "decor",
+  "tags": [
+   "bathroom"
+  ],
+  "size": [
+   0.68,
+   0.58,
+   1.12
+  ],
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitToilet",
+  "source": "toilet",
+  "label": "Toilet",
+  "category": "decor",
+  "tags": [
+   "bathroom"
+  ],
+  "size": [
+   0.625,
+   0.954,
+   0.902
+  ],
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitToiletSquare",
+  "source": "toiletSquare",
+  "label": "Square toilet",
+  "category": "decor",
+  "tags": [
+   "bathroom"
+  ],
+  "size": [
+   0.607,
+   0.774,
+   0.902
+  ],
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitSpeaker",
+  "source": "speaker",
+  "label": "Floor speaker",
+  "category": "decor",
+  "tags": [
+   "music"
+  ],
+  "size": [
+   0.296,
+   0.296,
+   1.273
+  ],
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitTrashcan",
+  "source": "trashcan",
+  "label": "Bin",
+  "category": "decor",
+  "tags": [
+   "kitchen"
+  ],
+  "size": [
+   0.415,
+   0.468,
+   0.856
+  ],
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitTelevisionVintage",
+  "source": "televisionVintage",
+  "label": "Vintage TV",
+  "category": "decor",
+  "tags": [
+   "tv",
+   "retro"
+  ],
+  "size": [
+   0.82,
+   0.54,
+   0.54
+  ],
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitWasherDryerStacked",
+  "source": "washerDryerStacked",
+  "label": "Washer-dryer stack",
+  "category": "decor",
+  "tags": [
+   "laundry"
+  ],
+  "size": [
+   0.78,
+   0.78,
+   1.88
+  ],
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitBooks",
+  "source": "books",
+  "label": "Books",
+  "category": "small",
+  "tags": [
+   "books",
+   "reading"
+  ],
+  "size": [
+   0.301,
+   0.189,
+   0.208
+  ],
+  "layer": "surface",
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitComputerKeyboard",
+  "source": "computerKeyboard",
+  "label": "Keyboard",
+  "category": "small",
+  "tags": [
+   "office",
+   "computer"
+  ],
+  "size": [
+   0.34,
+   0.142,
+   0.033
+  ],
+  "layer": "surface",
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitComputerMouse",
+  "source": "computerMouse",
+  "label": "Mouse",
+  "category": "small",
+  "tags": [
+   "office",
+   "computer"
+  ],
+  "size": [
+   0.099,
+   0.17,
+   0.047
+  ],
+  "layer": "surface",
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitComputerScreen",
+  "source": "computerScreen",
+  "label": "Monitor",
+  "category": "small",
+  "tags": [
+   "office",
+   "computer"
+  ],
+  "size": [
+   0.34,
+   0.09,
+   0.255
+  ],
+  "layer": "surface",
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitLaptop",
+  "source": "laptop",
+  "label": "Laptop",
+  "category": "small",
+  "tags": [
+   "office",
+   "computer"
+  ],
+  "size": [
+   0.34,
+   0.309,
+   0.208
+  ],
+  "layer": "surface",
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitKitchenBlender",
+  "source": "kitchenBlender",
+  "label": "Blender",
+  "category": "small",
+  "tags": [
+   "kitchen"
+  ],
+  "size": [
+   0.239,
+   0.192,
+   0.4
+  ],
+  "layer": "surface",
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitKitchenCoffeeMachine",
+  "source": "kitchenCoffeeMachine",
+  "label": "Coffee machine",
+  "category": "small",
+  "tags": [
+   "kitchen",
+   "coffee"
+  ],
+  "size": [
+   0.268,
+   0.34,
+   0.251
+  ],
+  "layer": "surface",
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitKitchenMicrowave",
+  "source": "kitchenMicrowave",
+  "label": "Microwave",
+  "category": "small",
+  "tags": [
+   "kitchen"
+  ],
+  "size": [
+   0.34,
+   0.27,
+   0.211
+  ],
+  "layer": "surface",
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitToaster",
+  "source": "toaster",
+  "label": "Toaster",
+  "category": "small",
+  "tags": [
+   "kitchen"
+  ],
+  "size": [
+   0.34,
+   0.181,
+   0.235
+  ],
+  "layer": "surface",
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitPlantSmall1",
+  "source": "plantSmall1",
+  "label": "Little plant",
+  "category": "small",
+  "tags": [
+   "plant",
+   "pot"
+  ],
+  "size": [
+   0.189,
+   0.189,
+   0.28
+  ],
+  "layer": "surface",
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitPlantSmall2",
+  "source": "plantSmall2",
+  "label": "Little leafy plant",
+  "category": "small",
+  "tags": [
+   "plant",
+   "pot"
+  ],
+  "size": [
+   0.189,
+   0.189,
+   0.28
+  ],
+  "layer": "surface",
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitPlantSmall3",
+  "source": "plantSmall3",
+  "label": "Little spiky plant",
+  "category": "small",
+  "tags": [
+   "plant",
+   "pot"
+  ],
+  "size": [
+   0.196,
+   0.17,
+   0.29
+  ],
+  "layer": "surface",
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitRadio",
+  "source": "radio",
+  "label": "Radio",
+  "category": "small",
+  "tags": [
+   "music",
+   "retro"
+  ],
+  "size": [
+   0.34,
+   0.105,
+   0.246
+  ],
+  "layer": "surface",
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitLampRoundTable",
+  "source": "lampRoundTable",
+  "label": "Round table lamp",
+  "category": "small",
+  "tags": [
+   "light"
+  ],
+  "size": [
+   0.29,
+   0.335,
+   0.6
+  ],
+  "layer": "surface",
+  "w": 1,
+  "d": 1,
+  "lamp": "tablelamp"
+ },
+ {
+  "key": "kitLampSquareTable",
+  "source": "lampSquareTable",
+  "label": "Square table lamp",
+  "category": "small",
+  "tags": [
+   "light"
+  ],
+  "size": [
+   0.24,
+   0.24,
+   0.58
+  ],
+  "layer": "surface",
+  "w": 1,
+  "d": 1,
+  "lamp": "tablelamp"
+ },
+ {
+  "key": "kitTelevisionAntenna",
+  "source": "televisionAntenna",
+  "label": "TV antenna",
+  "category": "small",
+  "tags": [
+   "tv",
+   "retro"
+  ],
+  "size": [
+   0.34,
+   0.103,
+   0.132
+  ],
+  "layer": "surface",
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitSpeakerSmall",
+  "source": "speakerSmall",
+  "label": "Bookshelf speaker",
+  "category": "small",
+  "tags": [
+   "music"
+  ],
+  "size": [
+   0.199,
+   0.179,
+   0.4
+  ],
+  "layer": "surface",
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitPillow",
+  "source": "pillow",
+  "label": "Square cushion",
+  "category": "soft",
+  "tags": [
+   "cushion",
+   "pillow"
+  ],
+  "size": [
+   0.414,
+   0.159,
+   0.4
+  ],
+  "layer": "surface",
+  "surfaceKind": "seat",
+  "w": 1,
+  "d": 1,
+  "defaultColor": 15983826
+ },
+ {
+  "key": "kitPillowBlue",
+  "source": "pillowBlue",
+  "label": "Flat cushion",
+  "category": "soft",
+  "tags": [
+   "cushion",
+   "pillow"
+  ],
+  "size": [
+   0.46,
+   0.127,
+   0.257
+  ],
+  "layer": "surface",
+  "surfaceKind": "seat",
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitPillowLong",
+  "source": "pillowLong",
+  "label": "Long cushion",
+  "category": "soft",
+  "tags": [
+   "cushion",
+   "pillow"
+  ],
+  "size": [
+   0.5,
+   0.114,
+   0.287
+  ],
+  "layer": "surface",
+  "surfaceKind": "seat",
+  "w": 1,
+  "d": 1,
+  "defaultColor": 15983826
+ },
+ {
+  "key": "kitPillowBlueLong",
+  "source": "pillowBlueLong",
+  "label": "Long flat cushion",
+  "category": "soft",
+  "tags": [
+   "cushion",
+   "pillow"
+  ],
+  "size": [
+   0.5,
+   0.086,
+   0.215
+  ],
+  "layer": "surface",
+  "surfaceKind": "seat",
+  "w": 1,
+  "d": 1
+ },
+ {
+  "key": "kitBear",
+  "source": "bear",
+  "label": "Teddy bear",
+  "category": "soft",
+  "tags": [
+   "toy",
+   "kids"
+  ],
+  "size": [
+   0.346,
+   0.22,
+   0.4
+  ],
+  "layer": "surface",
+  "surfaceKind": "seat",
+  "w": 1,
+  "d": 1,
+  "defaultColor": 12815970
+ },
+ {
+  "key": "kitBathroomCabinet",
+  "source": "bathroomCabinet",
+  "label": "Bathroom cabinet",
+  "category": "wall",
+  "tags": [
+   "bathroom",
+   "storage"
+  ],
+  "size": [
+   0.46,
+   0.26,
+   0.78
+  ],
+  "layer": "wall",
+  "w": 1,
+  "d": 1,
+  "wall": {
+   "w": 1,
+   "h": 2
+  }
+ },
+ {
+  "key": "kitBathroomMirror",
+  "source": "bathroomMirror",
+  "label": "Bathroom mirror",
+  "category": "wall",
+  "tags": [
+   "bathroom",
+   "glass"
+  ],
+  "size": [
+   0.603,
+   0.289,
+   0.869
+  ],
+  "layer": "wall",
+  "w": 1,
+  "d": 1,
+  "wall": {
+   "w": 1,
+   "h": 2
+  }
+ },
+ {
+  "key": "kitKitchenCabinetUpper",
+  "source": "kitchenCabinetUpper",
+  "label": "Upper cabinet",
+  "category": "wall",
+  "tags": [
+   "kitchen",
+   "storage"
+  ],
+  "size": [
+   0.86,
+   0.44,
+   0.78
+  ],
+  "layer": "wall",
+  "w": 1,
+  "d": 1,
+  "wall": {
+   "w": 1,
+   "h": 2
+  }
+ },
+ {
+  "key": "kitKitchenCabinetUpperCorner",
+  "source": "kitchenCabinetUpperCorner",
+  "label": "Upper corner cabinet",
+  "category": "wall",
+  "tags": [
+   "kitchen",
+   "storage"
+  ],
+  "size": [
+   0.43,
+   0.42,
+   0.78
+  ],
+  "layer": "wall",
+  "w": 1,
+  "d": 1,
+  "wall": {
+   "w": 1,
+   "h": 2
+  }
+ },
+ {
+  "key": "kitKitchenCabinetUpperDouble",
+  "source": "kitchenCabinetUpperDouble",
+  "label": "Double upper cabinet",
+  "category": "wall",
+  "tags": [
+   "kitchen",
+   "storage"
+  ],
+  "size": [
+   0.86,
+   0.44,
+   0.78
+  ],
+  "layer": "wall",
+  "w": 1,
+  "d": 1,
+  "wall": {
+   "w": 1,
+   "h": 2
+  }
+ },
+ {
+  "key": "kitKitchenCabinetUpperLow",
+  "source": "kitchenCabinetUpperLow",
+  "label": "Low upper cabinet",
+  "category": "wall",
+  "tags": [
+   "kitchen",
+   "storage"
+  ],
+  "size": [
+   0.86,
+   0.44,
+   0.39
+  ],
+  "layer": "wall",
+  "w": 1,
+  "d": 1,
+  "wall": {
+   "w": 1,
+   "h": 1
+  }
+ },
+ {
+  "key": "kitHoodLarge",
+  "source": "hoodLarge",
+  "label": "Range hood",
+  "category": "wall",
+  "tags": [
+   "kitchen"
+  ],
+  "size": [
+   0.845,
+   0.56,
+   0.726
+  ],
+  "layer": "wall",
+  "w": 1,
+  "d": 1,
+  "wall": {
+   "w": 1,
+   "h": 2
+  }
+ },
+ {
+  "key": "kitHoodModern",
+  "source": "hoodModern",
+  "label": "Modern range hood",
+  "category": "wall",
+  "tags": [
+   "kitchen"
+  ],
+  "size": [
+   0.845,
+   0.56,
+   0.785
+  ],
+  "layer": "wall",
+  "w": 1,
+  "d": 1,
+  "wall": {
+   "w": 1,
+   "h": 2
+  }
+ },
+ {
+  "key": "kitCoatRack",
+  "source": "coatRack",
+  "label": "Wall coat rack",
+  "category": "wall",
+  "tags": [
+   "hallway"
+  ],
+  "size": [
+   0.896,
+   0.269,
+   0.56
+  ],
+  "layer": "wall",
+  "w": 1,
+  "d": 1,
+  "wall": {
+   "w": 1,
+   "h": 2
+  }
+ },
+ {
+  "key": "kitLampWall",
+  "source": "lampWall",
+  "label": "Wall lamp",
+  "category": "wall",
+  "tags": [
+   "light"
+  ],
+  "size": [
+   0.453,
+   0.301,
+   0.186
+  ],
+  "layer": "wall",
+  "w": 1,
+  "d": 1,
+  "wall": {
+   "w": 1,
+   "h": 1
+  },
+  "lamp": "walllamp"
+ },
+ {
+  "key": "kitTelevisionModern",
+  "source": "televisionModern",
+  "label": "Flat-screen TV",
+  "category": "wall",
+  "tags": [
+   "tv"
+  ],
+  "size": [
+   1.37,
+   0.257,
+   0.91
+  ],
+  "layer": "wall",
+  "w": 2,
+  "d": 1,
+  "wall": {
+   "w": 2,
+   "h": 2
+  }
+ }
+]

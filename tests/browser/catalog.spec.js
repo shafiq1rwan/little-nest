@@ -14,7 +14,8 @@ test('every catalog model builds, has a rendered thumbnail, and fits its footpri
       const wall = s.placement.wallSize(type);
       const footprint = def === 'floor' ? s.placement.footprint(type, 0) : null;
       const tags = s.catalogTags(type);
-      return { type, kind: def, size, thumb: !!card && card.complete && card.naturalWidth > 0, footprint, wall, foliage: tags.includes('plant') || type === 'plant', rug: def === 'floor' && !s.placement.occupies(type) };
+      return { type, kind: def, size, thumb: !!card && card.complete && card.naturalWidth > 0, footprint, wall, foliage: tags.includes('plant') || type === 'plant', rug: def === 'floor' && !s.placement.occupies(type),
+        seat: s.placement.surfaceKindOf(type) === 'seat', lamp: s.placement.isLamp(type) };
     });
   });
   expect(report.length).toBeGreaterThanOrEqual(36);
@@ -23,7 +24,7 @@ test('every catalog model builds, has a rendered thumbnail, and fits its footpri
   const f = (n) => n.toFixed(2);
   for (const r of report) {
     check(r.thumb, r.type + ': no thumbnail');
-    check(r.rug || r.size.h > 0.05, r.type + ': flat model');
+    check(r.rug || r.size.h > (r.kind === 'surface' ? 0.02 : 0.05), r.type + ': flat model');   // a keyboard is legitimately thin
     if (r.kind === 'floor') {
       // Foliage may spread past its tile above knee height; rug tassels overhang a little; everything else stays within a small margin.
       const slack = r.foliage ? 0.8 : r.rug ? 0.15 : 0.05;
@@ -31,8 +32,9 @@ test('every catalog model builds, has a rendered thumbnail, and fits its footpri
       check(r.size.d <= r.footprint.d + slack, r.type + ': depth ' + f(r.size.d) + ' for a ' + r.footprint.d + '-tile footprint');
       check(r.size.h <= 2.6, r.type + ': height ' + f(r.size.h));
     } else if (r.kind === 'surface') {
-      check(Math.max(r.size.w, r.size.d) <= 0.36, r.type + ': tabletop footprint ' + f(Math.max(r.size.w, r.size.d)));
-      check(r.size.h <= 0.4, r.type + ': tabletop height ' + f(r.size.h));
+      // Table items share ~0.6-wide slots; seat items (cushions, toys) sit alone on a cushion; lamps may be taller.
+      check(Math.max(r.size.w, r.size.d) <= (r.seat ? 0.52 : 0.36), r.type + ': tabletop footprint ' + f(Math.max(r.size.w, r.size.d)));
+      check(r.size.h <= (r.lamp ? 0.62 : 0.4) + 0.005, r.type + ': tabletop height ' + f(r.size.h));
     } else {
       check(r.size.w <= r.wall.w + 0.05, r.type + ': wall width ' + f(r.size.w) + ' for ' + r.wall.w + ' columns');
       check(r.size.h <= r.wall.h * 0.5 + 0.05, r.type + ': wall height ' + f(r.size.h) + ' for ' + r.wall.h + ' rows');

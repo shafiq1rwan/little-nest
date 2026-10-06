@@ -16,7 +16,7 @@ export function catalogSignature(catalog) {
     const text = key + ':' + String(def.build).length + ':' + (def.defaultColor ?? '') + ':' + (def.model ? def.model + '@' + MODELS_VERSION : '');
     for (let i = 0; i < text.length; i++) hash = (hash * 31 + text.charCodeAt(i)) | 0;
   }
-  return 'v4:' + (hash >>> 0).toString(36);
+  return 'v5:' + (hash >>> 0).toString(36);
 }
 
 export function createThumbnails(catalog, { width = 240, height = 200, cache = true } = {}) {
@@ -58,7 +58,7 @@ export function createThumbnails(catalog, { width = 240, height = 200, cache = t
     camera.left = -extent * 1.2; camera.right = extent * 1.2; camera.top = extent; camera.bottom = -extent;
     camera.updateProjectionMatrix();
     r.render(s, camera);
-    thumbnails[key] = r.domElement.toDataURL('image/png');
+    thumbnails[key] = r.domElement.toDataURL('image/webp', 0.85);   // WebP keeps 160+ thumbnails inside the storage quota
     s.remove(model);
     disposeModel(model);
   }

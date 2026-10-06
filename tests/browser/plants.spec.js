@@ -9,7 +9,7 @@ test('plant species fit one tile, render thumbnails, and survive place/rotate/re
   const errors = await openGame(page);
   await page.locator('#deselect').click();
   await page.locator('#search').fill('plant');
-  expect(await page.locator('.catalog-card:visible').count()).toBe(12);   // seven plants, the succulent, the hanging plant, the planter, the bonsai, and the botanical print
+  expect(await page.locator('.catalog-card:visible').count()).toBe(16);   // plus the Modern home potted plant and three little plants; was: seven plants, the succulent, the hanging plant, the planter, the bonsai, and the botanical print
   expect(await page.locator('.catalog-card:visible img').evaluateAll((imgs) => imgs.every((i) => i.complete && i.naturalWidth > 0))).toBe(true);
 
   const bounds = await page.evaluate((types) => window.__sim.items.filter((i) => types.includes(i.type)).map((i) => ({ type: i.type, ...window.__sim.measure(i.mesh) })), PLANTS);

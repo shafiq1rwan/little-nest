@@ -10,7 +10,9 @@ art-source/prop-crops/
 # Generated Blender libraries and image-generation scratch (see docs/PROP_BRIEFS.md)
 art-source/generated/*.glb
 art-source/generated/*.obj
-output/models-preview/
+
+# Screenshots, previews and mockups from review scripts (files committed before this rule stay tracked)
+output/
 
 # Staged Blender sources: keep glb, blend, previews, reports; drop backups, raw generator dumps and archives
 *.blend1

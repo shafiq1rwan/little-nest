@@ -40,6 +40,7 @@ export const PET_COLORS = [
   { key: 'black', name: 'Black', fur: 0x3b3634, belly: 0x5a5350 },
 ];
 export const DEFAULT_PET_COLOR = 'ginger';
+export const CAT_FACE = { nose: 0xb7796c, innerEar: 0xdca18e, eye: 0x2c2622 };
 
 // Colors offered for upholstery, rugs, and plant pots.
 export const ITEM_COLORS = [

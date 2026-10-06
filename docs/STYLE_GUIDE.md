@@ -101,7 +101,7 @@ Motion is small and optional. Hover shows a soft cream outline (desktop mouse on
 
 ## The cat
 
-A chunky low-poly cat in the furniture's rounded style: big head, short body, cream muzzle and paws, four fur colours (ginger, grey, cream, black). It walks, sits, curls on rugs and seats, and turns its head toward the cursor. It is about half a cell long and never stands inside furniture.
+A compact cat matching Kenney's Furniture Kit: bevelled box forms, a broad squared head, triangular prism ears, block eyes, paired cream cheeks and paws, and a segmented tail with a pale tip. Four fur colours (ginger, grey, cream, black) remain available. It walks, sits, rests in a sleeping loaf with closed eyes, hops onto rugs and seats, and turns its head toward the cursor. The body is about half a cell long; the complete posed silhouette, including its tail, fits within a floor cell. It never stands inside furniture.
 
 ## Finish options
 

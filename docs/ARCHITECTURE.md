@@ -41,6 +41,7 @@ It is not yet a fully separated foundation for a larger game. src/main.js is app
 | src/game/residents.js | The residents' brain (up to three people): seats, kitchen and window spots, claims, the door; pure and unit-tested |
 | src/scene/people.js | Residents' bodies: Kenney Mini Characters (public/models/people) with crossfaded animation clips |
 | src/scene/motion.js | Ambient idle motion clock: lamp breathing, flicker, twinkle, plant sway |
+| src/scene/outline.js | Ink outlines: an edge pass (normals and depth) and a multiply overlay; `outlines.render()` replaces `renderer.render` for the main view and photos |
 | src/ui/sfx.js | Sound effects through Web Audio |
 | src/scene/models.js | Preloads public/models/*.glb and hands out instances with shared materials and the recolor flag |
 | src/plants.js | Four additional plant models, pot materials, plant catalog entries |

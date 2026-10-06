@@ -22,6 +22,7 @@ Run `npm run build` and `npm test` before every commit that touches src/. Docume
 - `src/main.js` is composition. Game rules live in `src/game/` (placement, state, commands, input) and persistence in `src/persistence/` (schema, storage, gallery, transfer); those stay free of Three.js and DOM so `tests/unit` runs them in Node.
 - Every room mutation goes through `src/game/commands.js` so it is undoable. Never call `state` directly from the HUD or input.
 - Rendering is on demand. Any change to what the scene looks like that does not go through commands, input, or the camera must call `invalidate()` in main.js or it will not be drawn.
+- Frames are drawn with `outlines.render()` (src/scene/outline.js), not `renderer.render`, so ink outlines appear in the view and in photos. Transparent meshes, lines and `userData.noOutline` objects are skipped; a catalog entry with `outline: 'soft'` gets silhouettes only.
 - Models are merged per material by `compactModel()` when placed. Parts that must stay separate carry `userData.recolor` or an owned material.
 - Data lives in `src/data/` (presets, collections, lighting) and constants in `src/config/`.
 - Saved rooms are versioned (currently 10). Change the shape only by adding a version and a migration in `src/persistence/schema.js`, and keep catalog keys, surface slot order, and preset keys stable.

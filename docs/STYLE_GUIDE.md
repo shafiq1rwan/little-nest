@@ -123,6 +123,7 @@ The [48-prop concept sheet](../art-source/prop-sheet.png) is the target look for
 - Use small decorative details sparingly. Keep the room coherent and leave usable placement space.
 - Standard materials are rough rather than glossy; furniture casts and receives shadows. Preserve warm ambient and directional light.
 - Current renderer: ACES filmic tone mapping, exposure 1.25, pixel ratio capped at 2. The ground backdrop bypasses tone mapping to maintain the peach color.
+- Ink outlines (src/scene/outline.js, on by default, Settings > Outlines): soft warm-brown lines along silhouettes and creases, multiplied into the frame so each line is a darker shade of what it sits on, never black. Flat surfaces (floor, walls, rugs) stay clean. A model whose generated surface is bumpy enough to speckle gets `outline: 'soft'` in its catalog entry (silhouette only); the snake plant is the first. Tune `OUTLINE` (ink, strength, thresholds, width) rather than adding per-item colours. Catalog thumbnails are not outlined yet.
 - Keep thumbnails generated from the actual model with the existing light/camera treatment. Do not introduce unrelated stock thumbnails.
 
 No cold neon palette, hard black UI panels, realistic photographic textures beside simplified furniture, or unrelated decorative controls. A user-requested new theme can be added intentionally while keeping this baseline available.

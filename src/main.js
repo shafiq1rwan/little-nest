@@ -6,7 +6,7 @@ import { createThumbnails } from './scene/thumbnails.js';
 import { preloadModels, preloadArt, loadedModelKeys } from './scene/models.js';
 import { tintModel as tint, disposeModel, measureModel, compactModel } from './scene/geometry.js';
 import { installIcons } from './ui/icons.js';
-import { CELL, CAMERA, RENDER, MOTION, MUSIC, SAVE_KEY, ROOMS_KEY, MUSIC_KEY, SFX_KEY, SFX_VOLUME_KEY, AMBIENT_KEY, MAX_SAVED_ITEMS } from './config/game.js';
+import { CELL, CAMERA, RENDER, MOTION, MUSIC, SAVE_KEY, ROOMS_KEY, MUSIC_KEY, SFX_KEY, SFX_VOLUME_KEY, AMBIENT_KEY, OUTLINES_KEY, MAX_SAVED_ITEMS } from './config/game.js';
 import { BACKDROP, SELECTION_OUTLINE, HOVER_OUTLINE, GHOST_OK, GHOST_BLOCKED, WALL_FINISHES, FLOOR_FINISHES, FLOOR_STYLES, DEFAULT_FLOOR_STYLE, ITEM_COLORS, PET_COLORS, DEFAULT_PET_COLOR } from './config/theme.js';
 import { ROOM_PRESETS, DEFAULT_PRESET, WALL_HEIGHT, MIN_ROOM_SIZE, MAX_ROOM_SIZE, presetFixtures, presetWallRows, presetDoor } from './data/presets.js';
 import { COLLECTIONS, DEFAULT_COLLECTION } from './data/collections.js';
@@ -25,6 +25,7 @@ import { createMusic } from './ui/music.js';
 import { createSfx } from './ui/sfx.js';
 import { createMotion } from './scene/motion.js';
 import { createCat, disposeCat } from './scene/cat.js';
+import { createOutlines } from './scene/outline.js';
 import { createResidentsBrain, MAX_RESIDENTS } from './game/residents.js';
 import { preloadPeople, createPerson } from './scene/people.js';
 import { createPetBrain } from './game/pet.js';
@@ -167,6 +168,10 @@ let ambientOn = readString(AMBIENT_KEY) !== 'off';
 function syncAmbient() { motion.setEnabled(ambientOn && !window.matchMedia('(prefers-reduced-motion: reduce)').matches); invalidate(); }
 window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener?.('change', syncAmbient);
 const ambient = { isOn: () => ambientOn, setOn(on) { ambientOn = !!on; writeString(AMBIENT_KEY, ambientOn ? 'on' : 'off'); syncAmbient(); } };
+// Ink outlines along silhouettes and creases (src/scene/outline.js): on by default, remembered.
+const outlines = createOutlines(renderer, scene, camera);
+outlines.setEnabled(readString(OUTLINES_KEY) !== 'off');
+const outlineSetting = { isOn: () => outlines.enabled, setOn(on) { outlines.setEnabled(on); writeString(OUTLINES_KEY, on ? 'on' : 'off'); invalidate(); } };
 // ---------- the cat ----------
 // The brain (src/game/pet.js) reads the room through this view; the model (src/scene/cat.js) shows it.
 const petWorld = {
@@ -512,6 +517,7 @@ commands.subscribe((kind, p) => {
   invalidate();
   if (kind === 'add') {
     const mesh = compactModel(CATALOG[p.type].build());
+    if (CATALOG[p.type].outline === 'soft') mesh.traverse((o) => { o.userData.softOutline = true; });   // silhouette only (src/scene/outline.js)
     if (p.color !== null) recolor(mesh, p.color);
     mesh.userData.itemId = p.id;
     meshes.set(p.id, mesh);
@@ -1056,7 +1062,7 @@ function savePhoto() {
   try {
     renderer.setPixelRatio(scale);
     renderer.setSize(w, h, false);
-    renderer.render(scene, camera);
+    outlines.render();
     url = renderer.domElement.toDataURL('image/png');
   } catch {
     toast('The photo could not be captured.');
@@ -1099,7 +1105,7 @@ renderer.setAnimationLoop(() => {
   const hoverMesh = hoverId && hoverId !== selected?.id && editing && !photoMode ? meshes.get(hoverId) : null;
   hoverBox.visible = !!hoverMesh;
   if (hoverMesh) { hoverBox.box.setFromObject(hoverMesh); hoverBox.updateMatrixWorld(true); }
-  renderer.render(scene, camera);
+  outlines.render();
   perf.renders++;
 });
 
@@ -1120,7 +1126,7 @@ window.__sim = {
   catalogCollection: (type) => CATALOG[type].collection,
   collections: COLLECTIONS,
   get musicOn() { return music.isOn(); },
-  sfx, motion, ambient,
+  sfx, motion, ambient, outlines,
   get residents() { return { count: residents.count, poses: residents.poses(), cells: people.map((_, i) => residents.cellOf(i)), clips: people.map((b) => b.clip), bodies: people.map((b) => b.root), brain: residents, world: residentsWorld }; },
   get pet() { return pet ? { action: brain.action, cell: brain.cell(), onSeat: brain.onSeat, pose: brain.pose(), root: pet.root, view: pet, brain } : null; },
   get items() { return state.items.map(withMesh); },
@@ -1139,6 +1145,7 @@ return {
   music,
   sfx,
   ambient,
+  outlines: outlineSetting,
   openRooms: () => galleryDialog.open({ allowSave: false }),
   refresh: () => { resize(true); invalidate(); },
   setEditing(enabled) {

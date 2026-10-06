@@ -15,11 +15,11 @@
 import * as THREE from 'three';
 
 export const OUTLINE = {
-  ink: [0.42, 0.33, 0.27],   // multiplied into the frame: a warm brown, never black
-  strength: 0.85,            // 0..1 how far a full edge darkens toward the ink
+  ink: [0.5, 0.4, 0.33],     // multiplied into the frame: a warm brown, never black
+  strength: 0.6,             // 0..1 how far a full edge darkens toward the ink
   depthEdge: 0.12,           // world units of depth discontinuity that counts as a silhouette
   normalEdge: 0.35,          // 1 - cos(angle) between neighbouring normals that counts as a crease
-  width: 1,                  // line half-width in CSS pixels
+  width: 0.6,                // line width in CSS pixels (never under one device pixel)
 };
 
 const vertexShader = /* glsl */`
@@ -29,7 +29,7 @@ const vertexShader = /* glsl */`
 const fragmentShader = /* glsl */`
   uniform sampler2D tNormal;
   uniform sampler2D tDepth;
-  uniform vec2 texel;          // one texel times the line half-width
+  uniform vec2 texel;          // sampling offset: the line width in texels
   uniform float depthRange;    // far - near: turns depth samples into world units (orthographic)
   uniform float depthEdge;
   uniform float normalEdge;
@@ -45,13 +45,14 @@ const fragmentShader = /* glsl */`
     float c = depthAt(vUv);
     float l = depthAt(vUv - dx), r = depthAt(vUv + dx), d = depthAt(vUv - dy), u = depthAt(vUv + dy);
     // Second differences are zero across any flat surface whatever its slope, so floors and walls
-    // seen at a grazing angle stay clean; only real steps in depth (silhouettes) light up.
-    float step = max(abs(l + r - 2.0 * c), abs(d + u - 2.0 * c));
+    // seen at a grazing angle stay clean; only real steps in depth (silhouettes) light up. Keeping
+    // the positive side only marks the nearer object's pixels, so a line is one band, not two.
+    float step = max(l + r - 2.0 * c, d + u - 2.0 * c);
     float depthLine = smoothstep(depthEdge, depthEdge * 2.0, step);
 
     vec3 n = normalAt(vUv);
-    float turn = max(max(1.0 - dot(n, normalAt(vUv - dx)), 1.0 - dot(n, normalAt(vUv + dx))),
-                     max(1.0 - dot(n, normalAt(vUv - dy)), 1.0 - dot(n, normalAt(vUv + dy))));
+    // One neighbour per axis: a crease is marked on one side only, for the same single-band line.
+    float turn = max(1.0 - dot(n, normalAt(vUv + dx)), 1.0 - dot(n, normalAt(vUv + dy)));
     float normalLine = smoothstep(normalEdge, normalEdge * 1.6, turn);
 
     float edge = max(depthLine, normalLine) * strength;
@@ -99,7 +100,8 @@ export function createOutlines(renderer, scene, camera) {
     renderer.getDrawingBufferSize(size);
     if (target.width !== size.x || target.height !== size.y) target.setSize(size.x, size.y);
     const ratio = renderer.getPixelRatio();
-    material.uniforms.texel.value.set(OUTLINE.width * ratio / size.x, OUTLINE.width * ratio / size.y);
+    const px = Math.max(1, OUTLINE.width * ratio);
+    material.uniforms.texel.value.set(px / size.x, px / size.y);
     material.uniforms.depthRange.value = camera.far - camera.near;
 
     // Edge pass: normals and depth only, without shadows, helpers or transparent things.

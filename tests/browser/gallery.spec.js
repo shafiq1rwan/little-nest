@@ -24,7 +24,7 @@ for (const [width, height, label] of [[1440, 900, 'desktop'], [390, 844, 'phone'
       expect(await page.locator('#room-name').textContent()).toBe('Sunny corner');
       const store = await galleryStore(page);
       expect(store.rooms[0].room.items).toHaveLength(STARTER_ITEM_COUNT);
-      expect(store.rooms[0].room.version).toBe(9);
+      expect(store.rooms[0].room.version).toBe(10);
 
       // Change the room, save a second design, then load the first back.
       await page.locator('#gallery-close').click();

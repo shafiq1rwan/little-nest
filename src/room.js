@@ -169,6 +169,28 @@ export function createRoom(scene, preset, wallHeight = 4, { wallColor = 0x92725c
     for (let i = 0; i < 10; i++) block(w + .1, .065, .12, wood, 0, 1.09 - i * .073, .2, g);
     for (const xx of [-w * .32, w * .32]) block(.012, .73, .015, cord, xx, .78, .27, g);
   }
+  // The door: a frame, a dark doorway, and a leaf hinged on one side that swings into the room.
+  let door = null;
+  if (preset.doorway) {
+    const d = preset.doorway;
+    const g = new THREE.Group(); walls.add(g);
+    if (d.wall === 'back') { g.position.set(d.at, 0, -halfD + .05); } else { g.position.set(-halfW + .05, 0, d.at); g.rotation.y = Math.PI / 2; }
+    const hall = new THREE.MeshStandardMaterial({ color: 0x4a3426, roughness: 1 });
+    const leafMat = new THREE.MeshStandardMaterial({ color: 0xb98556, roughness: .8 });
+    const knob = new THREE.MeshStandardMaterial({ color: 0xbb9451, roughness: .4, metalness: .3 });
+    owned.push(hall, leafMat, knob);
+    block(d.width, d.height, .02, hall, 0, d.height / 2, .06, g);                       // the dark hallway beyond
+    block(d.width + .2, .14, .1, trim, 0, d.height + .07, .08, g);                      // lintel
+    for (const s of [-1, 1]) block(.1, d.height, .1, trim, s * (d.width / 2 + .05), d.height / 2, .08, g);   // jambs
+    const pivot = new THREE.Group(); pivot.position.set(-d.width / 2, 0, .1); g.add(pivot);
+    const leaf = block(d.width - .02, d.height - .04, .06, leafMat, d.width / 2, d.height / 2, 0, pivot);
+    for (const [y, h] of [[.55, .7], [1.45, .7]]) block(d.width - .25, h, .02, leafMat, d.width / 2, y, .04, pivot);   // panels
+    block(.05, .05, .08, knob, d.width - .12, 1.05, .06, pivot);
+    leaf.userData.door = true;
+    door = { group: g, pivot, wall: d.wall, at: d.at, width: d.width, height: d.height, open: 0,
+      /** Opening from 0 (shut) to 1 (wide open, swung into the room). */
+      setOpen(t) { this.open = t; pivot.rotation.y = -t * 1.45; } };
+  }
   for (const win of preset.windows) {
     if (win.wall === 'back') windowAt(win.at, -halfD + .05, 0, win.width);
     else windowAt(-halfW + .05, win.at, Math.PI / 2, win.width);
@@ -198,5 +220,5 @@ export function createRoom(scene, preset, wallHeight = 4, { wallColor = 0x92725c
     root.traverse((o) => { if (o.isMesh) o.geometry.dispose(); });
     for (const m of owned) m.dispose();
   }
-  return { root, bulbs, floorMat, wallMat, wallLeftMat, setFloorStyle, viewMat, groundMat, walls, wallPanels: { back: backPanel, left: leftPanel }, dispose };
+  return { root, door, bulbs, floorMat, wallMat, wallLeftMat, setFloorStyle, viewMat, groundMat, walls, wallPanels: { back: backPanel, left: leftPanel }, dispose };
 }

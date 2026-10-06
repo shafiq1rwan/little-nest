@@ -18,7 +18,7 @@ function defaultLit(placement, type) {
   return placement.hasSwitch(type) ? true : null;
 }
 
-export function createRoomState({ placement, wallBlocked = new Set(), wallWindows = new Set() }) {
+export function createRoomState({ placement, wallBlocked = new Set(), wallWindows = new Set(), wallDoors = new Set() }) {
   const items = [];
   const occupancy = new Set();          // floor cells in use
   const wallOccupancy = new Set();      // wall cells in use
@@ -79,9 +79,11 @@ export function createRoomState({ placement, wallBlocked = new Set(), wallWindow
     return !!occupant && occupant.id === ignoreId;
   }
   /** True when a wall item fits at wall/col/row, ignoring `ignoreId`'s own cells. */
-  function canMount(type, wall, col, row, ignoreId = null) {
+  /** Door cells refuse new decorations and moves; `allowDoors` lets a saved room that predates the door load intact. */
+  function canMount(type, wall, col, row, ignoreId = null, { allowDoors = false } = {}) {
     const own = ignoreId ? ownCells(byId.get(ignoreId)) : null;
-    return placement.wallFree(wallOccupancy, wallBlocked, type, wall, col, row, own, wallWindows);
+    const blocked = allowDoors || !wallDoors.size ? wallBlocked : { has: (c) => wallBlocked.has(c) || wallDoors.has(c) };
+    return placement.wallFree(wallOccupancy, blocked, type, wall, col, row, own, wallWindows);
   }
 
   /** Adds a record. Returns it, or null when the position is not free. */
@@ -92,7 +94,7 @@ export function createRoomState({ placement, wallBlocked = new Set(), wallWindow
       if (!canPlaceOn(type, parent, slot)) return null;
       record = { type, rot, color, lit: litValue, ...EMPTY, parent, slot };
     } else if (wall) {
-      if (!canMount(type, wall, col, row)) return null;
+      if (!canMount(type, wall, col, row, null, { allowDoors: true })) return null;
       record = { type, rot: 0, color, lit: litValue, ...EMPTY, wall, col, row };
     } else {
       if (!canPlace(type, gx, gz, rot)) return null;

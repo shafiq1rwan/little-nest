@@ -57,7 +57,7 @@ test('the starter room has a cat that keeps to free floor, hops off furniture, a
 
   // Saved with the room; an older save has no cat.
   await page.locator('#save').click();
-  expect((await galleryStore(page)).rooms[0].room).toMatchObject({ version: 9, pet: { present: true, color: 'grey' } });
+  expect((await galleryStore(page)).rooms[0].room).toMatchObject({ version: 10, pet: { present: true, color: 'grey' } });
   await page.locator('#clear').click();
   await loadCurrentRoom(page);
   await twoFrames(page);

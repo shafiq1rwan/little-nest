@@ -9,12 +9,14 @@
 //   7           { lighting } names the mood (default morning); items gain lit (true/false for lamps, null otherwise)
 //   8           { wallLeft } colors the left wall separately (default: wall); { floorStyle } names the floor pattern (default parquet)
 //   9           { pet: { present, color } } a visiting cat and its fur (default: none); its position is not saved
+//   10          { residents } how many people live in the room, 0 to 3 (default 0); where they are is not saved
 //
 // Older versions are migrated on read; the writer always emits the current version.
 
 import { WALLS } from '../game/placement.js';
 
-export const CURRENT_VERSION = 9;
+export const CURRENT_VERSION = 10;
+export const MAX_SAVED_RESIDENTS = 3;   // keep in step with MAX_RESIDENTS in src/game/residents.js
 export const PET_COLOR_KEYS = ['ginger', 'grey', 'cream', 'black'];   // keep in step with PET_COLORS in src/config/theme.js
 export const NO_PET = { present: false, color: 'ginger' };
 export const FLOOR_STYLE_KEYS = ['parquet', 'planks', 'tile'];   // stored in saves; keep in step with FLOOR_STYLES in src/config/theme.js
@@ -34,9 +36,9 @@ function record(it) {
   return out;
 }
 
-export function serializeRoom({ room = LEGACY_ROOM, wall, wallLeft = wall, floor, floorStyle = 'parquet', lighting = DEFAULT_LIGHTING_KEY, pet = NO_PET, items }) {
+export function serializeRoom({ room = LEGACY_ROOM, wall, wallLeft = wall, floor, floorStyle = 'parquet', lighting = DEFAULT_LIGHTING_KEY, pet = NO_PET, residents = 0, items }) {
   const ordered = [...items.filter((i) => !i.parent), ...items.filter((i) => i.parent)];
-  return { version: CURRENT_VERSION, room: { preset: room.preset, width: room.width, depth: room.depth }, wall, wallLeft, floor, floorStyle, lighting, pet: { present: !!pet.present, color: pet.color }, items: ordered.map(record) };
+  return { version: CURRENT_VERSION, room: { preset: room.preset, width: room.width, depth: room.depth }, wall, wallLeft, floor, floorStyle, lighting, pet: { present: !!pet.present, color: pet.color }, residents, items: ordered.map(record) };
 }
 
 function isColor(value) {
@@ -47,7 +49,7 @@ function isColor(value) {
 export function migrateRoom(data) {
   if (!data || typeof data !== 'object') fail('Not a saved room');
   const version = data.version ?? 2;
-  if (![2, 3, 4, 5, 6, 7, 8, 9].includes(version)) fail('Unsupported save version ' + version);
+  if (![2, 3, 4, 5, 6, 7, 8, 9, 10].includes(version)) fail('Unsupported save version ' + version);
   const items = Array.isArray(data.items)
     ? data.items.map((it) => {
       if (!it || typeof it !== 'object') return it;
@@ -65,7 +67,8 @@ export function migrateRoom(data) {
   const wallLeft = data.wallLeft ?? data.wall;
   const floorStyle = data.floorStyle ?? 'parquet';
   const pet = data.pet ?? { ...NO_PET };
-  return { ...data, version: CURRENT_VERSION, room, lighting, wallLeft, floorStyle, pet, items };
+  const residents = data.residents ?? 0;
+  return { ...data, version: CURRENT_VERSION, room, lighting, wallLeft, floorStyle, pet, residents, items };
 }
 
 /**
@@ -89,6 +92,7 @@ export function parseRoom(raw, { catalog, placement, placementFor, maxItems = 20
   if (!isColor(data.wall) || !isColor(data.floor) || !isColor(data.wallLeft)) fail('Invalid finishes');
   if (!FLOOR_STYLE_KEYS.includes(data.floorStyle)) fail('Unknown floor style ' + data.floorStyle);
   if (!data.pet || typeof data.pet !== 'object' || typeof data.pet.present !== 'boolean' || !PET_COLOR_KEYS.includes(data.pet.color)) fail('Invalid pet');
+  if (!Number.isInteger(data.residents) || data.residents < 0 || data.residents > MAX_SAVED_RESIDENTS) fail('Invalid residents');
 
   const room = data.room;
   if (!room || typeof room !== 'object' || typeof room.preset !== 'string') fail('Invalid room');
@@ -156,5 +160,5 @@ export function parseRoom(raw, { catalog, placement, placementFor, maxItems = 20
     }
     floorItems.push(record({ ...it, parent: null, slot: null, wall: null, col: null, row: null }));
   }
-  return { room: roomOut, wall: data.wall, wallLeft: data.wallLeft, floor: data.floor, floorStyle: data.floorStyle, lighting: data.lighting, pet: { present: data.pet.present, color: data.pet.color }, items: [...floorItems, ...surfaceItems] };
+  return { room: roomOut, wall: data.wall, wallLeft: data.wallLeft, floor: data.floor, floorStyle: data.floorStyle, lighting: data.lighting, pet: { present: data.pet.present, color: data.pet.color }, residents: data.residents, items: [...floorItems, ...surfaceItems] };
 }

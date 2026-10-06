@@ -8,7 +8,7 @@ import { tintModel as tint, disposeModel, measureModel, compactModel } from './s
 import { installIcons } from './ui/icons.js';
 import { CELL, CAMERA, RENDER, MOTION, MUSIC, SAVE_KEY, ROOMS_KEY, MUSIC_KEY, SFX_KEY, SFX_VOLUME_KEY, AMBIENT_KEY, MAX_SAVED_ITEMS } from './config/game.js';
 import { BACKDROP, SELECTION_OUTLINE, HOVER_OUTLINE, GHOST_OK, GHOST_BLOCKED, WALL_FINISHES, FLOOR_FINISHES, FLOOR_STYLES, DEFAULT_FLOOR_STYLE, ITEM_COLORS, PET_COLORS, DEFAULT_PET_COLOR } from './config/theme.js';
-import { ROOM_PRESETS, DEFAULT_PRESET, WALL_HEIGHT, MIN_ROOM_SIZE, MAX_ROOM_SIZE, presetFixtures, presetWallRows } from './data/presets.js';
+import { ROOM_PRESETS, DEFAULT_PRESET, WALL_HEIGHT, MIN_ROOM_SIZE, MAX_ROOM_SIZE, presetFixtures, presetWallRows, presetDoor } from './data/presets.js';
 import { COLLECTIONS, DEFAULT_COLLECTION } from './data/collections.js';
 import { LIGHTING, DEFAULT_LIGHTING } from './data/lighting.js';
 import { createPlacement } from './game/placement.js';
@@ -25,6 +25,8 @@ import { createMusic } from './ui/music.js';
 import { createSfx } from './ui/sfx.js';
 import { createMotion } from './scene/motion.js';
 import { createCat, disposeCat } from './scene/cat.js';
+import { createResidentsBrain, MAX_RESIDENTS } from './game/residents.js';
+import { preloadPeople, createPerson } from './scene/people.js';
 import { createPetBrain } from './game/pet.js';
 import { cellKey } from './game/placement.js';
 import { readString, writeString } from './persistence/storage.js';
@@ -33,7 +35,7 @@ export async function initializeGame({ onProgress = async () => {}, onOpenRoom =
 const $ = (id) => document.getElementById(id);
 let editing = false;
 await onProgress(25, 'Building your little nest…');
-await Promise.all([preloadModels(CATALOG), preloadArt(['worldMap', 'botanicalPrint', 'frame'])]);   // models and print images must be ready before the first build()
+await Promise.all([preloadModels(CATALOG), preloadArt(['worldMap', 'botanicalPrint', 'frame']), preloadPeople()]);   // models and print images must be ready before the first build()
 
 // ---------- renderer / scene ----------
 const canvas = $('scene');
@@ -43,12 +45,13 @@ const { renderer, scene, camera, controls, hemisphere, sun, resetView, zoomBy, o
 // The shell (floor, walls, windows, grid) is rebuilt whenever the room preset changes. `placement`
 // and `wallBlocked` are reconfigured in place so everything holding them keeps working.
 const roomConfig = { preset: DEFAULT_PRESET, width: ROOM_PRESETS[DEFAULT_PRESET].width, depth: ROOM_PRESETS[DEFAULT_PRESET].depth };
-const finishes = { wall: WALL_FINISHES[0].color, wallLeft: WALL_FINISHES[0].color, floor: FLOOR_FINISHES[0].color, floorStyle: DEFAULT_FLOOR_STYLE, lighting: DEFAULT_LIGHTING, petPresent: false, petColor: DEFAULT_PET_COLOR };
+const finishes = { wall: WALL_FINISHES[0].color, wallLeft: WALL_FINISHES[0].color, floor: FLOOR_FINISHES[0].color, floorStyle: DEFAULT_FLOOR_STYLE, lighting: DEFAULT_LIGHTING, petPresent: false, petColor: DEFAULT_PET_COLOR, residents: 0 };
 let wallTarget = 'both';   // which wall the Walls tab swatches paint
 const WALL_ROWS = WALL_HEIGHT / 0.5;
 const placement = createPlacement({ catalog: CATALOG, width: roomConfig.width, depth: roomConfig.depth, cell: CELL, wallRows: WALL_ROWS, wallRow: 0.5 });
 const wallBlocked = new Set();
-const wallWindows = new Set();   // the subset of blocked cells that are windows, where curtains hang
+const wallWindows = new Set();
+const wallDoors = new Set();     // wall cells covered by the door: no new decorations there   // the subset of blocked cells that are windows, where curtains hang
 let shell = null;      // { root, floorMat, wallMat, walls, wallPanels, dispose }
 let grid = null;
 let gridVisible = false;
@@ -66,7 +69,7 @@ function placementFor(room) {
   return createPlacement({ catalog: CATALOG, width: room.width, depth: room.depth, cell: CELL, wallRows: presetWallRows(presetFor(room)), wallRow: 0.5 });
 }
 function wallBlockedFor(room) {
-  return placementFor(room).blockedWallCells(presetFixtures(presetFor(room)));
+  return placementFor(room).blockedWallCells(presetFixtures(presetFor(room)).filter((f) => f.kind !== 'door'));   // doors never invalidate a save
 }
 function wallWindowsFor(room) {
   return placementFor(room).windowWallCells(presetFixtures(presetFor(room)));
@@ -85,12 +88,15 @@ function buildShell(room) {
   const preset = presetFor(room);
   if (shell) shell.dispose();
   if (grid) { scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); }
-  shell = createRoom(scene, preset, WALL_HEIGHT, { wallColor: finishes.wall, wallLeftColor: finishes.wallLeft, floorColor: finishes.floor, floorStyle: finishes.floorStyle });
+  shell = createRoom(scene, { ...preset, doorway: presetDoor(preset) }, WALL_HEIGHT, { wallColor: finishes.wall, wallLeftColor: finishes.wallLeft, floorColor: finishes.floor, floorStyle: finishes.floorStyle });
   shell.walls.visible = wallsVisible;
   motion.setBulbs(shell.bulbs);
   placement.configure({ width: room.width, depth: room.depth, wallRows: presetWallRows(preset) });
   wallBlocked.clear();
-  for (const c of placement.blockedWallCells(presetFixtures(preset))) wallBlocked.add(c);
+  const fixtures = presetFixtures(preset);
+  for (const c of placement.blockedWallCells(fixtures.filter((f) => f.kind !== 'door'))) wallBlocked.add(c);
+  wallDoors.clear();
+  for (const c of placement.blockedWallCells(fixtures.filter((f) => f.kind === 'door'))) wallDoors.add(c);
   wallWindows.clear();
   for (const c of placement.windowWallCells(presetFixtures(preset))) wallWindows.add(c);
   grid = makeGrid(room.width, room.depth);
@@ -172,7 +178,8 @@ const petWorld = {
       const surface = placement.surfaceOf(r.type);
       if (r.parent || surface?.kind !== 'seat' || !meshes.has(r.id)) continue;
       const used = state.slotsUsed.get(r.id);
-      surface.slots.forEach((_, slot) => { if (!used?.has(slot)) { const p = slotWorld(r.id, slot); out.push({ key: r.id + ':' + slot, x: p.x, y: p.y, z: p.z }); } });
+      const people = residents.claimedSeats();
+      surface.slots.forEach((_, slot) => { if (!used?.has(slot) && !people.has(r.id + ':' + slot)) { const p = slotWorld(r.id, slot); out.push({ key: r.id + ':' + slot, x: p.x, y: p.y, z: p.z }); } });
     }
     return out;
   },
@@ -195,6 +202,109 @@ const petWorld = {
   },
 };
 const brain = createPetBrain(petWorld);
+// ---------- the residents ----------
+// Up to three people (src/game/residents.js decides, src/scene/people.js shows) sit on seats, stand
+// at kitchen counters and windows, and come and go through the door. They are not catalog items and
+// cannot be picked; how many live here is the `residents` finish.
+const rotY = (r) => (r.rot * Math.PI) / 2;
+/** Seat height for seating with no seat slots (dining chairs, stools, the office chair). */
+function chairHeight(type) { const def = CATALOG[type]; return def.tags?.includes('kitchen') ? 0.72 : type === 'chair' || type === 'kitChairDesk' ? 0.5 : 0.46; }
+const residentsWorld = {
+  dims: petWorld.dims,
+  isFree: petWorld.isFree,
+  seats() {
+    const out = [];
+    for (const r of state.items) {
+      const def = CATALOG[r.type];
+      if (r.parent || r.gx === null || def.category !== 'seating' || /bed/i.test(r.type) || !meshes.has(r.id)) continue;
+      const surface = placement.surfaceOf(r.type);
+      if (surface?.kind === 'seat') {
+        const used = state.slotsUsed.get(r.id);
+        surface.slots.forEach((slot, i) => { if (!used?.has(i) && !(slot.y < surface.y)) { const p = slotWorld(r.id, i); out.push({ key: r.id + ':' + i, x: p.x, y: p.y, z: p.z, heading: rotY(r) }); } });
+      } else if (!surface && placement.occupies(r.type)) {
+        const p = worldPos(r.type, r.gx, r.gz, r.rot);
+        out.push({ key: r.id + ':0', x: p.x, y: chairHeight(r.type), z: p.z, heading: rotY(r) });
+      }
+    }
+    return out;
+  },
+  spots() {
+    const out = [];
+    for (const r of state.items) {
+      const def = CATALOG[r.type];
+      if (r.parent || r.gx === null || !def.tags?.includes('kitchen') || !placement.occupies(r.type) || r.type === 'kitTrashcan') continue;
+      const h = rotY(r), { w, d } = placement.footprint(r.type, r.rot);
+      const fx = Math.round(Math.sin(h)), fz = Math.round(Math.cos(h));
+      const gx = fx > 0 ? r.gx + w : fx < 0 ? r.gx - 1 : r.gx, gz = fz > 0 ? r.gz + d : fz < 0 ? r.gz - 1 : r.gz;
+      out.push({ key: 'spot:' + r.id, kind: 'kitchen', gx, gz, heading: h + Math.PI });
+    }
+    const half = { back: roomConfig.width / 2, left: roomConfig.depth / 2 };
+    for (const f of presetFixtures(presetFor(roomConfig)).filter((f) => f.kind === 'window')) {
+      const n = f.wall === 'back' ? roomConfig.width : roomConfig.depth;
+      for (let i = 0; i < n; i++) {
+        const mid = -half[f.wall] + i + 0.5;
+        if (mid > f.from + 0.4 && mid < f.to - 0.4) out.push(f.wall === 'back' ? { key: 'window:' + i + ',0', kind: 'window', gx: i, gz: 0, heading: Math.PI } : { key: 'window:0,' + i, kind: 'window', gx: 0, gz: i, heading: -Math.PI / 2 });
+      }
+    }
+    return out;
+  },
+  door() {
+    const d = presetDoor(presetFor(roomConfig));
+    if (!d) return null;
+    const hw = roomConfig.width / 2, hd = roomConfig.depth / 2;
+    return d.wall === 'left'
+      ? { gx: 0, gz: Math.floor(d.at + hd), x: -hw + 0.05, z: d.at, outX: -hw - 0.6, outZ: d.at }
+      : { gx: Math.floor(d.at + hw), gz: 0, x: d.at, z: -hd + 0.05, outX: d.at, outZ: -hd - 0.6 };
+  },
+};
+const residents = createResidentsBrain(residentsWorld);
+residents.setAvoid(() => (pet ? brain.onSeat : null));
+const people = [];       // bodies, one per resident that loaded
+let residentsClock = 0, residentsRestRender = 0, residentsByDoor = false;
+/** Matches the bodies to the `residents` finish. New arrivals walk in when the player invited them. */
+function syncResidents() {
+  if (!lampsReady) return;
+  const before = residents.count, viaDoor = residentsByDoor;
+  residentsByDoor = false;
+  residents.setCalm(!motion.isEnabled());
+  residents.setCount(finishes.residents, { viaDoor });
+  while (people.length > residents.count) people.pop().dispose();
+  for (let i = people.length; i < residents.count; i++) { const body = createPerson(i); if (!body) break; scene.add(body.root); people.push(body); }
+  if (residents.count > before && !viaDoor) placeResidentsSoon();
+  residentsClock = 0;
+  showResidents(1 / 60);
+  invalidate();
+}
+let residentsPlaceQueued = false;
+/** Re-seats everyone once the room has finished loading (items are restored after the finishes). */
+function placeResidentsSoon() {
+  if (residentsPlaceQueued) return;
+  residentsPlaceQueued = true;
+  queueMicrotask(() => { residentsPlaceQueued = false; residents.reset(); showResidents(1 / 60); invalidate(); });
+}
+function showResidents(dt) {
+  const animate = motion.isEnabled();
+  residents.poses().forEach((pose, i) => people[i]?.setPose(pose, dt, animate));
+}
+/** Advances the residents and the door. Returns true when a frame should be drawn. */
+function stepResidents(now) {
+  const door = shell.door;
+  if (!residents.count && !(door && door.open > 0)) return false;
+  const dt = residentsClock ? Math.min(0.1, (now - residentsClock) / 1000) : 1 / 60;
+  residentsClock = now;
+  residents.setCalm(!motion.isEnabled());
+  const poses = residents.update(dt);
+  const animate = motion.isEnabled();
+  let moving = false;
+  poses.forEach((pose, i) => { people[i]?.setPose(pose, dt, animate); if (pose.action === 'walk' || residents.person(i).transit) moving = true; });
+  if (door) {
+    const want = residents.doorWanted();
+    if (door.open !== want) { door.setOpen(animate ? Math.max(0, Math.min(1, door.open + Math.sign(want - door.open) * dt * 2.4)) : want); moving = true; }
+  }
+  if (moving) return true;
+  if (animate && poses.length && now - residentsRestRender > 66) { residentsRestRender = now; return true; }
+  return false;
+}
 let pet = null;          // { root, setPose, color } while a cat is visiting
 let petClock = 0, petRestRender = 0;
 function syncPet() {
@@ -255,10 +365,11 @@ buildShell(roomConfig);
 
 // ---------- placement state ----------
 // Committed state lives in `state` as serializable records; meshes are looked up by record id.
-const state = createRoomState({ placement, wallBlocked, wallWindows });
+const state = createRoomState({ placement, wallBlocked, wallWindows, wallDoors });
 lampsReady = true;
 syncAmbient();
 syncPet();
+syncResidents();
 const commands = createCommands({ state, finishes, room: roomConfig });   // every room mutation goes through here so it can be undone
 const meshes = new Map();             // record id -> THREE.Group
 let selectedType = null;              // catalog key while placing
@@ -436,10 +547,12 @@ commands.subscribe((kind, p) => {
     if (p.key === 'lighting') { applyLighting(p.color); syncLightingOptions(); }
     else if (p.key === 'floorStyle') { shell.setFloorStyle(p.color); syncFloorStyles(); }
     else if (p.key === 'petPresent' || p.key === 'petColor') { syncPet(); syncPetControls(); }
+    else if (p.key === 'residents') { syncResidents(); syncResidentControls(); }
     else { ({ wall: shell.wallMat, wallLeft: shell.wallLeftMat, floor: shell.floorMat })[p.key].color.setHex(p.color); syncFinishSwatches(); }
   } else if (kind === 'room') {
     buildShell(p);
     if (pet) placePetSoon();
+    if (residents.count) placeResidentsSoon();
   } else if (kind === 'history') {
     $('undo-tool').disabled = !p.canUndo;
     $('redo-tool').disabled = !p.canRedo;
@@ -731,6 +844,18 @@ function syncPetControls() {
   $('pet-colors').querySelectorAll('button').forEach((b) => { const on = finishes.petPresent && b.dataset.pet === finishes.petColor; b.classList.toggle('active', on); b.setAttribute('aria-pressed', String(on)); });
 }
 syncPetControls();
+// Light tab: how many people live here (none to three). Undoable; new arrivals come in through the door.
+for (let n = 0; n <= MAX_RESIDENTS; n++) {
+  const b = document.createElement('button');
+  b.dataset.residents = String(n); b.textContent = n ? String(n) : 'None';
+  b.setAttribute('aria-label', n ? n + (n === 1 ? ' person' : ' people') : 'Nobody home');
+  b.onclick = () => { residentsByDoor = n > finishes.residents; if (!commands.setFinish('residents', n)) residentsByDoor = false; };
+  $('resident-count').append(b);
+}
+function syncResidentControls() {
+  $('resident-count').querySelectorAll('button').forEach((b) => { const on = Number(b.dataset.residents) === finishes.residents; b.classList.toggle('active', on); b.setAttribute('aria-pressed', String(on)); });
+}
+syncResidentControls();
 const syncLightingOptions = buildLightingOptions({
   container: $('lighting-options'), moods: LIGHTING, icons: { morning: 'sun', sunset: 'sunset', evening: 'moon' },
   current: () => finishes.lighting, onPick: (key) => commands.setFinish('lighting', key),
@@ -790,7 +915,7 @@ function presetRoomData(presetId) {
     });
   }
   return {
-    data: { room: { preset: presetId, width: preset.width, depth: preset.depth }, wall: WALL_FINISHES[0].color, wallLeft: WALL_FINISHES[0].color, floor: FLOOR_FINISHES[0].color, floorStyle: DEFAULT_FLOOR_STYLE, lighting: DEFAULT_LIGHTING, pet: { present: !!preset.pet, color: preset.pet || DEFAULT_PET_COLOR }, items },
+    data: { room: { preset: presetId, width: preset.width, depth: preset.depth }, wall: WALL_FINISHES[0].color, wallLeft: WALL_FINISHES[0].color, floor: FLOOR_FINISHES[0].color, floorStyle: DEFAULT_FLOOR_STYLE, lighting: DEFAULT_LIGHTING, pet: { present: !!preset.pet, color: preset.pet || DEFAULT_PET_COLOR }, residents: preset.residents ?? 0, items },
     selectId,
   };
 }
@@ -811,7 +936,7 @@ function setCurrentRoom(summary) {
 }
 function currentRoomData() {
   finishDrag();
-  return serializeRoom({ room: roomConfig, wall: finishes.wall, wallLeft: finishes.wallLeft, floor: finishes.floor, floorStyle: finishes.floorStyle, lighting: finishes.lighting, pet: { present: finishes.petPresent, color: finishes.petColor }, items: state.items });
+  return serializeRoom({ room: roomConfig, wall: finishes.wall, wallLeft: finishes.wallLeft, floor: finishes.floor, floorStyle: finishes.floorStyle, lighting: finishes.lighting, pet: { present: finishes.petPresent, color: finishes.petColor }, residents: finishes.residents, items: state.items });
 }
 /** Saves into entry `id` (or a new entry when null). Returns the summary, or null when storage refused. */
 function saveRoom(id, name) {
@@ -965,6 +1090,7 @@ renderer.setAnimationLoop(() => {
   if (bounces.size) { stepBounces(performance.now()); dirty = true; }
   if (motion.step(performance.now())) dirty = true;
   if (stepPet(performance.now())) dirty = true;
+  if (stepResidents(performance.now())) dirty = true;
   if (!dirty) return;
   dirty = false;
   if (selected) { selectionBox.box.setFromObject(meshOf(selected)); selectionBox.updateMatrixWorld(true); }
@@ -993,6 +1119,7 @@ window.__sim = {
   collections: COLLECTIONS,
   get musicOn() { return music.isOn(); },
   sfx, motion, ambient,
+  get residents() { return { count: residents.count, poses: residents.poses(), cells: people.map((_, i) => residents.cellOf(i)), clips: people.map((b) => b.clip), bodies: people.map((b) => b.root), brain: residents, world: residentsWorld }; },
   get pet() { return pet ? { action: brain.action, cell: brain.cell(), onSeat: brain.onSeat, pose: brain.pose(), root: pet.root, view: pet, brain } : null; },
   get items() { return state.items.map(withMesh); },
   get ghost() { return ghost; },
@@ -1001,7 +1128,7 @@ window.__sim = {
   get tweening() { return tweens.size > 0; },
   get bouncing() { return bounces.size > 0; },
   get hoverId() { return hoverId; }, get hoverVisible() { return hoverBox.visible; }, get ghostShadowVisible() { return ghostShadow.visible; },
-  wallWindows,
+  wallWindows, wallDoors, get door() { return shell.door; },
   startPlacing, orbitBy,
   get selected() { return withMesh(selected); },
 };

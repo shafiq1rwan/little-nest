@@ -35,13 +35,14 @@ for (const [width, height, label] of [[1440, 900, 'desktop'], [390, 844, 'phone'
       // Bounds follow the new size: the far corner tile is 5,5, and 7,7 is outside the room.
       if (await page.locator('#deselect').isVisible()) await page.locator('#deselect').click();
       expect(await page.evaluate(() => window.__sim.isFree('plant', 7, 7, 0))).toBe(false);
-      expect(await page.evaluate(() => window.__sim.state.canMount('clock', 'left', 5, 0))).toBe(true);
+      expect(await page.evaluate(() => window.__sim.state.canMount('clock', 'left', 4, 0))).toBe(true);
+      expect(await page.evaluate(() => window.__sim.state.canMount('clock', 'left', 5, 0))).toBe(false);   // the studio's door
       expect(await page.evaluate(() => window.__sim.state.canMount('clock', 'left', 6, 0))).toBe(false);
 
       // Save: the store records the preset; the gallery row names it.
       await page.locator('#save').click();
       const store = await galleryStore(page);
-      expect(store.rooms[0].room.version).toBe(9);
+      expect(store.rooms[0].room.version).toBe(10);
       expect(store.rooms[0].room.room).toEqual({ preset: 'studio', width: 6, depth: 6 });
       await page.locator('#load').click();
       await expect(page.locator('#gallery .room-head p').first()).toContainText('Studio');
@@ -78,12 +79,12 @@ for (const [width, height, label] of [[1440, 900, 'desktop'], [390, 844, 'phone'
       expect(await page.evaluate(() => window.__sim.items.filter((i) => i.wall).length)).toBe(0);
       expect(await page.evaluate(() => window.__sim.wallPanels.back.geometry.parameters.height)).toBeLessThan(0.2);   // a rail, not a wall
 
-      // The bedroom's bed is a 2 x 3 footprint and its lantern sits on the nightstand.
+      // The bedroom's bed is a 2 x 3 footprint, one cell in from the door, and its lantern sits on the nightstand.
       await page.locator('#load').click();
       await page.getByRole('button', { name: 'Start a new bedroom', exact: true }).click();
       await twoFrames(page);
       expect(await roomInfo()).toMatchObject({ preset: 'bedroom', width: 7, depth: 7 });
-      expect(await page.evaluate(() => window.__sim.occupancy.has('1,2') && !window.__sim.occupancy.has('2,2'))).toBe(true);
+      expect(await page.evaluate(() => window.__sim.occupancy.has('2,2') && !window.__sim.occupancy.has('3,2') && !window.__sim.occupancy.has('0,0'))).toBe(true);
       expect(await page.evaluate(() => { const n = window.__sim.items.find((i) => i.type === 'nightstand'); return window.__sim.items.filter((i) => i.parent === n.id).map((i) => i.type); })).toEqual(['lantern']);
       expect(errors).toEqual([]);
     });

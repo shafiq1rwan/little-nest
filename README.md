@@ -47,7 +47,7 @@ Keep package-lock.json when moving computers. The runtime itself is browser-base
 
 ## Credits
 
-Little Nest is made by Saiss. Sound effects are from Kenney's CC0 audio packs (see public/audio/sfx/SOURCES.md), and the Modern home collection is Kenney's CC0 Furniture Kit, recoloured. Music: "Lofi Dreams" (lofi jazz music) from Pixabay under the Pixabay Content License. Fonts: Fredoka, Gelasio, and Source Sans 3 under the SIL Open Font License 1.1 (see public/fonts). Built with Three.js and Vite (MIT). The in-game Credits screen is reachable from the main menu.
+Little Nest is made by Saiss. Sound effects are from Kenney's CC0 audio packs (see public/audio/sfx/SOURCES.md), the Modern home collection is Kenney's CC0 Furniture Kit, recoloured, and the residents are Kenney's CC0 Mini Characters. Music: "Lofi Dreams" (lofi jazz music) from Pixabay under the Pixabay Content License. Fonts: Fredoka, Gelasio, and Source Sans 3 under the SIL Open Font License 1.1 (see public/fonts). Built with Three.js and Vite (MIT). The in-game Credits screen is reachable from the main menu.
 
 ## Design and assets
 

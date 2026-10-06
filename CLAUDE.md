@@ -24,7 +24,7 @@ Run `npm run build` and `npm test` before every commit that touches src/. Docume
 - Rendering is on demand. Any change to what the scene looks like that does not go through commands, input, or the camera must call `invalidate()` in main.js or it will not be drawn.
 - Models are merged per material by `compactModel()` when placed. Parts that must stay separate carry `userData.recolor` or an owned material.
 - Data lives in `src/data/` (presets, collections, lighting) and constants in `src/config/`.
-- Saved rooms are versioned (currently 9). Change the shape only by adding a version and a migration in `src/persistence/schema.js`, and keep catalog keys, surface slot order, and preset keys stable.
+- Saved rooms are versioned (currently 10). Change the shape only by adding a version and a migration in `src/persistence/schema.js`, and keep catalog keys, surface slot order, and preset keys stable.
 
 ## Working conventions learned here
 
@@ -40,6 +40,7 @@ Run `npm run build` and `npm test` before every commit that touches src/. Docume
 - Modelled props: `art-source/generated/<key>.glb` is raw image-to-3D output (ignored), `public/models/<key>.glb` is game-ready (tracked). `tools/blender/clean-generated.py` converts one to the other; the catalog entry gets `model:` plus a `modelInstance(key) || procedural` build. Bump `MODELS_VERSION` after re-exporting a file. Blender 5.2 is at `C:/Program Files/Blender Foundation/Blender 5.2/blender.exe` on this machine. Three.js strips dots from glTF node names, so part objects use underscores.
 - Sound effects: `src/ui/sfx.js` plays named sounds (`sfx.play('place')`); add a file under public/audio/sfx, an entry in `SFX` with a gain, and a line in SOURCES.md. Kenney packs are CC0; the full packs sit in art-source/sfx-packs (ignored). Browser tests run with reduced motion but sound is on; `window.__sim.sfx.log` lists what played.
 - The cat: brain in src/game/pet.js (pure, unit-tested), model in src/scene/cat.js, state as the `petPresent`/`petColor` finishes. The starter living room has a cat; it is not a catalog item and is not pickable. `window.__sim.pet` exposes action, cell and the brain; `brain.setCalm(true)` freezes it for deterministic checks.
+- Residents and doors: brain in src/game/residents.js (pure, unit-tested), bodies in src/scene/people.js (Kenney Mini Characters in public/models/people), count as the `residents` finish (0–3). Each walled preset has one door (`presetDoor()`); door wall cells refuse new decorations but restores allow them. Keep the floor cell inside a preset's door free of furniture. `window.__sim.residents.brain.send(i, goal)` drives a person in tests; `window.__sim.door.open` is the leaf's 0–1 opening.
 - Modern home collection: Kenney's Furniture Kit. Never hand-edit src/data/kenney-catalog.json or public/models/kit*.glb; change tools/blender/import-kenney.py (ITEMS, PALETTE, EXCLUDED) and re-run it. Adding catalog items shifts the count expectations listed above.
 - The author credit is "Saiss". The music is "Lofi Dreams" from Pixabay; fonts are OFL and bundled in `public/fonts` with their licences.
 
@@ -49,4 +50,4 @@ Small, verified increments on `main`, one feature or fix per commit, with a body
 
 ## What is next
 
-See the "Next recommended work" line at the end of HANDOFF's status section. Phases 7–12 are planned in docs/ROADMAP-2.md. Phase 7 is complete; Phase 8 has its last increment left (weather at the window). The Electron desktop release (Phase 11) can start any time.
+See the "Next recommended work" line at the end of HANDOFF's status section. Phases 7–12 are planned in docs/ROADMAP-2.md. Phase 7 is complete; Phase 8 has its last increment left (weather at the window); residents and doors (Phase 9 increment 1) are done. The Electron desktop release (Phase 11) can start any time.

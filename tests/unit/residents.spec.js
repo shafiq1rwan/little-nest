@@ -1,0 +1,143 @@
+import { test, expect } from '@playwright/test';
+import { createResidentsBrain, MAX_RESIDENTS } from '../../src/game/residents.js';
+import { presetDoor, presetFixtures, ROOM_PRESETS } from '../../src/data/presets.js';
+
+// A seeded random source so runs are repeatable.
+function seeded(seed) { let s = seed >>> 0; return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 2 ** 32; }; }
+/** An 8 x 8 room (cells centred at -3.5 .. 3.5) with a door on the left wall at the front. */
+function room({ blocked = [], seats = [], spots = [], door = true } = {}) {
+  const set = new Set(blocked.map(([x, z]) => x + ',' + z));
+  return {
+    blocked: set, seatList: seats, spotList: spots,
+    dims: () => ({ width: 8, depth: 8, cell: 1 }),
+    isFree: (gx, gz) => !set.has(gx + ',' + gz),
+    seats() { return this.seatList; },
+    spots() { return this.spotList; },
+    door: () => (door ? { gx: 0, gz: 7, x: -3.95, z: 3.5, outX: -4.6, outZ: 3.5 } : null),
+  };
+}
+const SOFA = [{ key: 's:0', x: -0.9, y: 0.54, z: -3.1, heading: 0 }, { key: 's:1', x: 0, y: 0.54, z: -3.1, heading: 0 }];
+const KITCHEN = [{ key: 'spot:k', kind: 'kitchen', gx: 6, gz: 2, heading: Math.PI / 2 }];
+const run = (brain, seconds, each = () => {}) => { for (let i = 0; i < seconds * 30; i++) { brain.update(1 / 30); each(i); } };
+
+test('everyone starts inside on their own seat, spot, or cell, and the count is capped at three', () => {
+  const brain = createResidentsBrain(room({ seats: SOFA.slice(0, 1), spots: KITCHEN }), { rng: seeded(3) });
+  brain.setCount(5);
+  expect(brain.count).toBe(MAX_RESIDENTS);
+  const poses = brain.poses();
+  expect(poses.every((p) => !p.outside && p.action !== 'away')).toBe(true);
+  expect(poses.filter((p) => p.seat === 's:0')).toHaveLength(1);   // one seat, one sitter
+  const cells = poses.filter((p) => !p.seat).map((p) => Math.floor(p.x + 4) + ',' + Math.floor(p.z + 4));
+  expect(new Set(cells).size).toBe(cells.length);                   // nobody shares a cell
+  brain.setCount(1);
+  expect(brain.count).toBe(1);
+});
+
+test('over five simulated minutes people sit, cook, wander, and never rest on furniture', () => {
+  const w = room({ blocked: [[2, 2], [2, 3], [5, 5], [6, 5], [7, 2]], seats: SOFA, spots: KITCHEN });
+  const brain = createResidentsBrain(w, { rng: seeded(11) });
+  brain.setCount(3);
+  const actions = new Set(), sittersPerSeat = [];
+  run(brain, 300, (i) => {
+    if (i % 900 === 450) {   // every 30 s someone gets furniture dropped on their cell
+      const c = brain.cellOf(i % 3);
+      if (c) w.blocked.add(c.gx + ',' + c.gz);
+      if (w.blocked.size > 12) w.blocked = new Set([...w.blocked].slice(-6));
+    }
+    const poses = brain.poses();
+    for (const p of poses) actions.add(p.action);
+    for (let k = 0; k < poses.length; k++) {
+      const p = poses[k], person = brain.person(k);
+      if (p.action !== 'walk' && !p.seat && !person.transit && !p.outside) {
+        const c = brain.cellOf(k);
+        if (c && i % 900 !== 450) expect(w.isFree(c.gx, c.gz), 'resting on furniture at ' + JSON.stringify(c)).toBe(true);
+      }
+    }
+    const seated = poses.filter((p) => p.seat).map((p) => p.seat);
+    sittersPerSeat.push(seated.length === new Set(seated).size);
+  });
+  expect(sittersPerSeat.every(Boolean)).toBe(true);
+  for (const a of ['walk', 'sit', 'interact', 'idle']) expect(actions.has(a), a).toBe(true);
+});
+
+test('people leave through the door, the door opens for them, and they come back', () => {
+  const brain = createResidentsBrain(room({ seats: SOFA }), { rng: seeded(5) });
+  brain.setCount(2);
+  expect(brain.send(1, { kind: 'leave' })).toBe(true);
+  let opened = false, gone = false;
+  for (let i = 0; i < 30 * 30 && !gone; i++) { brain.update(1 / 30); opened ||= brain.doorWanted() === 1; gone = brain.pose(1).action === 'away'; }
+  expect(opened).toBe(true);
+  expect(gone).toBe(true);
+  expect(brain.pose(1).outside).toBe(true);
+  brain.person(1).timer = 0;
+  let back = false;
+  for (let i = 0; i < 10 * 30 && !back; i++) { brain.update(1 / 30); back = !brain.pose(1).outside && brain.pose(1).action !== 'away'; }
+  expect(back).toBe(true);
+  expect(brain.cellOf(1)).toEqual({ gx: 0, gz: 7 });   // just inside the door
+});
+
+test('nobody leaves when the door is blocked, and the last person home stays', () => {
+  const w = room({ blocked: [[0, 7]] });
+  const brain = createResidentsBrain(w, { rng: seeded(9) });
+  brain.setCount(1);
+  expect(brain.send(0, { kind: 'leave' })).toBe(false);
+  run(brain, 120);
+  expect(brain.pose(0).action).not.toBe('away');
+});
+
+test('a seat that disappears stands its sitter up; reduced motion holds everyone still', () => {
+  const w = room({ seats: [...SOFA] });
+  const brain = createResidentsBrain(w, { rng: seeded(2) });
+  brain.setCount(1);
+  expect(brain.pose(0).seat).toBe('s:0');
+  // Standing up steps forward, not into the gap behind the sofa.
+  brain.person(0).timer = 0;
+  brain.update(1 / 30);
+  run(brain, 1);
+  expect(brain.cellOf(0) ?? brain.person(0).pos).not.toMatchObject({ gz: 0 });
+  expect(brain.person(0).pos.z).toBeGreaterThan(-3);
+  brain.send(0, { kind: 'seat', target: SOFA[0] });
+  run(brain, 8);
+  expect(brain.pose(0).seat).toBe('s:0');
+  w.seatList = [];
+  run(brain, 2);
+  expect(brain.pose(0).seat).toBeNull();
+  expect(brain.pose(0).y).toBe(0);
+  brain.setCalm(true);
+  const before = brain.pose(0);
+  run(brain, 60);
+  expect(brain.pose(0)).toEqual(before);
+});
+
+test('the cat\'s seat is left alone, and people tell the cat which seats are theirs', () => {
+  const brain = createResidentsBrain(room({ seats: SOFA }), { rng: seeded(4) });
+  brain.setAvoid(() => 's:0');
+  brain.setCount(1);
+  expect(brain.pose(0).seat).toBe('s:1');
+  expect([...brain.claimedSeats()]).toEqual(['s:1']);
+});
+
+test('presets put the door on a wall away from windows, never on the balcony', () => {
+  expect(presetDoor(ROOM_PRESETS.livingRoom)).toMatchObject({ wall: 'left', at: 3.5 });
+  expect(presetDoor(ROOM_PRESETS.balcony)).toBeNull();
+  for (const preset of Object.values(ROOM_PRESETS)) {
+    const fixtures = presetFixtures(preset);
+    const door = fixtures.find((f) => f.kind === 'door');
+    if (!door) continue;
+    for (const f of fixtures.filter((f) => f.wall === door.wall && f.kind === 'window')) expect(door.to <= f.from || door.from >= f.to).toBe(true);
+  }
+  // A studio shrunk to 4 deep has no room beside its window, so the door moves to the back wall.
+  expect(presetDoor({ ...ROOM_PRESETS.studio, depth: 4 })).toMatchObject({ wall: 'back', at: ROOM_PRESETS.studio.width / 2 - 0.5 });
+  expect(presetDoor({ ...ROOM_PRESETS.bedroom, depth: 6 })).toMatchObject({ wall: 'left', at: -2.5 });
+});
+
+test('version 10 saves how many people live here; older saves have nobody; bad counts are refused', async () => {
+  const { parseRoom, serializeRoom, migrateRoom, SaveError } = await import('../../src/persistence/schema.js');
+  const { createPlacement } = await import('../../src/game/placement.js');
+  const opts = { catalog: { chair: { w: 1, d: 1 } }, placement: createPlacement({ catalog: { chair: { w: 1, d: 1 } }, room: 8 }), newId: () => 'x' };
+  const saved = serializeRoom({ wall: 1, floor: 2, residents: 2, items: [] });
+  expect(saved).toMatchObject({ version: 10, residents: 2 });
+  expect(parseRoom(saved, opts).residents).toBe(2);
+  expect(migrateRoom({ version: 9, wall: 1, floor: 2, items: [] }).residents).toBe(0);
+  for (const bad of [-1, 4, 1.5, '2']) expect(() => parseRoom({ ...saved, residents: bad }, opts)).toThrow(SaveError);
+});

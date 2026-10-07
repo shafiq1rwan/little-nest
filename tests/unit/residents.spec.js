@@ -219,3 +219,32 @@ test('version 11 saves a name and a look for each resident slot; older saves get
     expect(() => parseRoom({ ...saved, people: bad }, opts)).toThrow(SaveError);
   }
 });
+
+test('people walk the last step onto a dining chair from beside it, never sliding across the table in a sitting pose', () => {
+  // A 2 x 1 table on cells 5,3 and 6,3 with four chairs facing it, like the living room's dining corner.
+  const blocked = [[5, 3], [6, 3], [5, 2], [6, 2], [5, 4], [6, 4]];
+  const at = (gx, gz) => ({ x: -4 + gx + 0.5, z: -4 + gz + 0.5 });
+  const chairs = [[5, 2, 0], [6, 2, 0], [5, 4, Math.PI], [6, 4, Math.PI]].map(([gx, gz, heading], i) => ({ key: 'chair:' + i, ...at(gx, gz), y: 0.46, heading }));
+  const brain = createResidentsBrain(room({ blocked, seats: chairs }), { rng: seeded(3) });
+  brain.setCount(3);
+  let longest = 0, sitting = 0;
+  run(brain, 300, () => {
+    for (let k = 0; k < 3; k++) {
+      const p = brain.person(k), pose = brain.pose(k);
+      if (p.transit?.walk) {
+        const t = p.transit;
+        longest = Math.max(longest, Math.hypot(t.to.x - t.from.x, t.to.z - t.from.z));
+        expect(Math.abs(t.to.x - t.from.x) < 1e-6 || Math.abs(t.to.z - t.from.z) < 1e-6, 'a straight step, not diagonal past a corner').toBe(true);
+        expect(pose.action, 'on foot while stepping').toBe('walk');
+        expect(pose.y).toBe(0);
+      }
+      if (pose.seat) {
+        sitting++;
+        const chair = chairs.find((c) => c.key === pose.seat);
+        expect(pose).toMatchObject({ action: 'sit', x: chair.x, z: chair.z, heading: chair.heading });
+      }
+    }
+  });
+  expect(sitting).toBeGreaterThan(0);
+  expect(longest).toBeLessThanOrEqual(1 + 1e-9);
+});

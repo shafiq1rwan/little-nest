@@ -104,25 +104,52 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
   function rest(p, action, time) {
     p.action = action; p.timer = time ?? between(3, 7); p.path = []; p.goal = null;
   }
-  /** A short straight move (stepping onto a seat, off it, or out of furniture's way). */
-  function slide(p, to, then, time = settleTime) {
-    p.transit = { from: { ...p.pos }, to: { ...to }, t: 0, time, then };
+  /** A short straight move: out of furniture's way (a quick hop), or with `walk` a step taken on foot. */
+  function slide(p, to, then, time = settleTime, walk = false) {
+    p.transit = { from: { ...p.pos }, to: { ...to }, t: 0, time, then, walk };
   }
-  /** Settles onto a seat, or into bed with `action` 'sleep'. */
+  /** A step on foot between a seat and the cell beside it: walking pose, facing the way, at walking pace. */
+  function stepTo(p, to, then) {
+    p.action = 'walk';
+    const d = Math.hypot(to.x - p.pos.x, to.z - p.pos.z);
+    slide(p, to, then, Math.max(0.25, d / speed), true);
+  }
+  /**
+   * The free cell right beside a seat (or bed) to step on from and off to: an orthogonal neighbour of the
+   * seat's own cell, the one nearest `front` first; a diagonal only when no side is open, and never past a
+   * blocked corner. Beds may reach two cells (`range` 2) because they are wide. Null when it is boxed in.
+   */
+  function besideCell(x, z, front, taken, range = 1) {
+    const c = cellOf(x, z);
+    let best = null, bestScore = Infinity;
+    for (let dx = -range; dx <= range; dx++) for (let dz = -range; dz <= range; dz++) {
+      if (!dx && !dz) continue;
+      const n = { gx: c.gx + dx, gz: c.gz + dz };
+      if (!free(n.gx, n.gz) || taken.has(cellKey(n))) continue;
+      const diagonal = dx !== 0 && dz !== 0;
+      if (diagonal && Math.abs(dx) === 1 && Math.abs(dz) === 1 && !free(c.gx + dx, c.gz) && !free(c.gx, c.gz + dz)) continue;
+      const q = center(n.gx, n.gz);
+      const score = Math.hypot(q.x - front.x, q.z - front.z) + (diagonal ? 1.5 : 0) + (Math.max(Math.abs(dx), Math.abs(dz)) - 1) * 3;
+      if (score < bestScore) { bestScore = score; best = n; }
+    }
+    return best;
+  }
+  const frontPoint = (x, z, heading) => ({ x: x + Math.sin(heading) * 0.75, z: z + Math.cos(heading) * 0.75 });
+  /** Settles onto a seat, or into bed with `action` 'sleep': walks the last step, then turns and sits or lies down. */
   function sitDown(p, s, action = 'sit') {
-    p.claim = s.key; p.action = action; p.bed = action === 'sleep';
-    p.heading = s.heading;
-    slide(p, { x: s.x, y: s.y, z: s.z }, () => { p.seat = s.key; rest(p, action, p.bed ? between(40, 80) : between(8, 18)); p.claim = s.key; });
+    p.claim = s.key; p.bed = action === 'sleep';
+    stepTo(p, { x: s.x, y: s.y, z: s.z }, () => { p.heading = s.heading; p.seat = s.key; rest(p, action, p.bed ? between(40, 80) : between(8, 18)); p.claim = s.key; });
   }
-  /** The free cell to step onto from a seat: in front of it, never the gap behind a sofa. */
-  const frontOf = (p, taken) => nearestFree(p.pos.x + Math.sin(p.heading) * 0.75, p.pos.z + Math.cos(p.heading) * 0.75, taken);
+  /** The cell to step off a seat onto: beside it, toward its front (never across a table or behind a sofa). */
+  const stepOffCell = (p, taken) => besideCell(p.pos.x, p.pos.z, frontPoint(p.pos.x, p.pos.z, p.heading), taken, p.bed ? 2 : 1)
+    ?? nearestFree(p.pos.x, p.pos.z, taken);   // boxed in by later furniture: out by the nearest way
   function standUp(p, then = () => rest(p, 'idle', between(0.6, 1.4))) {
-    const to = frontOf(p, claimedBy(p));
+    const to = stepOffCell(p, claimedBy(p));
     p.seat = null; p.claim = null; p.bed = false;
     if (!to) { p.pos.y = 0; then(); return; }
     const c = center(to.gx, to.gz);
-    p.action = 'idle';
-    slide(p, { x: c.x, y: 0, z: c.z }, then);
+    p.pos.y = 0;   // up on their feet first
+    stepTo(p, { x: c.x, y: 0, z: c.z }, then);
   }
   /** Walks along `cells`, then calls `then`. Appends world points (the doorway) when given. */
   function walk(p, cells, goal, extra = []) {
@@ -170,8 +197,8 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
     if (goal.kind === 'seat' || goal.kind === 'bed') {
       const s = (goal.kind === 'bed' ? beds() : world.seats()).find((q) => q.key === goal.target.key);
       if (!s || taken.has(s.key)) return false;
-      const reach = goal.kind === 'bed' ? 0 : 0.75;   // a bed is climbed into from the nearest side
-      const approach = nearestFree(s.x + Math.sin(s.heading) * reach, s.z + Math.cos(s.heading) * reach, taken);
+      // Arrive on a cell right beside the seat (a bed: beside the near side), so the last step is a short one.
+      const approach = besideCell(s.x, s.z, goal.kind === 'bed' ? { x: s.x, z: s.z } : frontPoint(s.x, s.z, s.heading), taken, goal.kind === 'bed' ? 2 : 1);
       const path = approach && findPath(here, approach);
       if (!path) return false;
       p.claim = s.key; walk(p, path, { ...goal, target: s });
@@ -261,8 +288,15 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
     if (p.transit) {
       const t = p.transit;
       t.t = Math.min(1, t.t + dt / t.time);
-      const k = t.t * t.t * (3 - 2 * t.t);
-      p.pos = { x: t.from.x + (t.to.x - t.from.x) * k, y: t.from.y + (t.to.y - t.from.y) * k, z: t.from.z + (t.to.z - t.from.z) * k };
+      if (t.walk) {
+        // On foot: an even pace on the floor, facing the way; the seat height is taken on arrival.
+        const dx = t.to.x - t.from.x, dz = t.to.z - t.from.z;
+        if (Math.hypot(dx, dz) > 1e-4) p.heading += wrap(Math.atan2(dx, dz) - p.heading) * Math.min(1, dt * 12);
+        p.pos = { x: t.from.x + dx * t.t, y: 0, z: t.from.z + dz * t.t };
+      } else {
+        const k = t.t * t.t * (3 - 2 * t.t);
+        p.pos = { x: t.from.x + (t.to.x - t.from.x) * k, y: t.from.y + (t.to.y - t.from.y) * k, z: t.from.z + (t.to.z - t.from.z) * k };
+      }
       if (t.t >= 1) { p.pos = { ...t.to }; p.transit = null; t.then(); }
       return;
     }
@@ -383,7 +417,7 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
       const p = residentsOf()[i];
       if (!p || p.away) return false;
       if (p.seat || p.transit) {
-        const to = frontOf(p, claimedBy(p));
+        const to = stepOffCell(p, claimedBy(p));
         if (!to) return false;
         const c = center(to.gx, to.gz);
         p.pos = { x: c.x, y: 0, z: c.z }; p.seat = null; p.transit = null;

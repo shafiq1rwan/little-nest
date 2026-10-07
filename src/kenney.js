@@ -8,6 +8,8 @@ import data from './data/kenney-catalog.json';
 import { sharedMaterial } from './scene/geometry.js';
 import { modelInstance } from './scene/models.js';
 
+const RADIO_TOGGLE = { on: 'Playing', off: 'Off', labelOn: 'Radio playing. Switch off', labelOff: 'Radio off. Switch on', titleOn: 'Switch the radio off', titleOff: 'Switch the radio on' };
+
 /** A plain box of the item's size, used only if its model file failed to load. */
 function placeholder({ size: [w, d, h], layer }) {
   const g = new THREE.Group();
@@ -31,6 +33,7 @@ export function kenneyCatalog({ withLight, withGlow }) {
     if (e.surfaceKind) def.surfaceKind = e.surfaceKind;
     if (e.defaultColor !== undefined) def.defaultColor = e.defaultColor;
     if (e.lamp) def.lamp = true;
+    if (e.key === 'kitRadio') def.toggle = RADIO_TOGGLE;   // switching it on plays the music (main.js)
     const h = e.size[2];
     def.build = () => {
       let g = modelInstance(e.key);

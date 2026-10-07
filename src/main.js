@@ -131,17 +131,20 @@ function applyLighting(key) {
   if (lampsReady) for (const record of state.items) applyLamp(record);
 }
 /** Sets a lamp's point lights and glowing parts from its lit flag and the mood's lamp strength. */
+/** Curtains are the toggles that hang over a window; radios are toggles too but never touch the light. */
+const isCurtain = (type) => !!(CATALOG[type].toggle && CATALOG[type].overWindow);
+const isRadio = (type) => type === 'kitRadio';
 /** Closed curtains dim the sun: 12% each, never below half. */
 function curtainFactor() {
   if (!lampsReady) return 1;
-  const closed = state.items.filter((r) => CATALOG[r.type].toggle && r.lit === false).length;
+  const closed = state.items.filter((r) => isCurtain(r.type) && r.lit === false).length;
   return Math.max(.5, 1 - .12 * closed);
 }
 // Curtain panels tween between poses; the loop keeps rendering while any tween is live.
 const tweens = new Map();   // record id -> { group, from, to, start, duration }
 const CURTAIN_TWEEN_MS = 450;
 function applyCurtain(record, animate) {
-  if (!CATALOG[record.type].toggle) return;
+  if (!isCurtain(record.type)) return;
   const group = meshOf(record);
   if (!group) return;
   const to = record.lit ? 1 : 0;
@@ -282,6 +285,17 @@ function appliancesInRoom() {
   }
   return out;
 }
+let radioRender = 0;
+/** Music notes drift from radios that are on while the music plays. Returns true about 20 times a second while they do. */
+function stepRadios(now) {
+  const playing = music.isOn();
+  const radios = [];
+  for (const r of state.items) if (isRadio(r.type) && meshes.has(r.id)) radios.push({ id: r.id, mesh: meshes.get(r.id), playing: playing && r.lit === true });
+  const busy = activityView.updateRadios(radios, now / 1000, motion.isEnabled());
+  if (!busy || now - radioRender < 50) return false;
+  radioRender = now;
+  return true;
+}
 /** Lights appliances in use and pops bubbles for people who just settled. Returns true while anything animates. */
 function stepActivities(poses, dt, now, animate) {
   const appliances = appliancesInRoom();
@@ -299,7 +313,8 @@ function stepActivities(poses, dt, now, animate) {
     const place = spotItem ? (APPLIANCE_KINDS[spotItem.type] === 'stove' ? 'stove' : 'kitchen')
       : pose.action === 'sit' ? activeAppliances([pose], appliances.filter((a) => a.kind !== 'stove')).size ? 'tv' : null : null;
     const cat = pet ? brain.pose() : null;
-    const icon = bubbleFor({ action: pose.action, place, evening: finishes.lighting === 'evening', catNear: !!cat && Math.hypot(cat.x - pose.x, cat.z - pose.z) < 1.6 });
+    const radioNear = music.isOn() && state.items.some((r) => { if (!isRadio(r.type) || !r.lit || !meshes.has(r.id)) return false; meshes.get(r.id).getWorldPosition(worldAt); return Math.hypot(worldAt.x - pose.x, worldAt.z - pose.z) < 2.5; });
+    const icon = bubbleFor({ action: pose.action, place, evening: finishes.lighting === 'evening', catNear: !!cat && Math.hypot(cat.x - pose.x, cat.z - pose.z) < 1.6, radioNear });
     if (icon) { activityView.showBubble(body.root, icon); busy = true; }
   });
   if (activityView.stepBubbles(dt, heights, animate)) busy = true;
@@ -565,7 +580,7 @@ commands.subscribe((kind, p) => {
     applyTransform(p);   // also attaches the mesh to the scene or to its supporter
     applyLamp(p);
     applyCurtain(p, false);
-    if (CATALOG[p.type].toggle) applyLighting(finishes.lighting);
+    if (isCurtain(p.type)) applyLighting(finishes.lighting);
     motion.track(p.id, mesh, motionKind(p.type), { isLit: () => state.get(p.id)?.lit === true });
     updateCount();
   } else if (kind === 'remove') {
@@ -588,7 +603,7 @@ commands.subscribe((kind, p) => {
     if (selected === p) updateSelection();
   } else if (kind === 'lit') {
     applyLamp(p);
-    if (CATALOG[p.type].toggle) { applyCurtain(p, true); applyLighting(finishes.lighting); }
+    if (isCurtain(p.type)) { applyCurtain(p, true); applyLighting(finishes.lighting); }
     if (selected === p) updateSelection();
   } else if (kind === 'finish') {
     if (p.key === 'lighting') { applyLighting(p.color); syncLightingOptions(); }
@@ -844,7 +859,13 @@ function updateSelection() {
     colors: ITEM_COLORS,
     activeColor: selected && (selected.color ?? def.defaultColor ?? ITEM_COLORS[0].color),
     onColor: (color) => { if (commands.recolor(selected.id, color)) sfx.play('recolor'); },
-    onLight: (on) => { if (commands.setLit(selected.id, on)) sfx.play(CATALOG[selected.type].toggle ? 'curtain' : 'lamp'); },
+    onLight: (on) => {
+      const record = selected;
+      if (!commands.setLit(record.id, on)) return;
+      sfx.play(isCurtain(record.type) ? 'curtain' : 'lamp');
+      // A radio is the room's music source: on starts the music, the last one off stops it.
+      if (isRadio(record.type) && (on || !state.items.some((r) => isRadio(r.type) && r.lit))) music.setOn(on);
+    },
   });
 }
 
@@ -1140,6 +1161,7 @@ renderer.setAnimationLoop(() => {
   if (motion.step(performance.now())) dirty = true;
   if (stepPet(performance.now())) dirty = true;
   if (stepResidents(performance.now())) dirty = true;
+  if (stepRadios(performance.now())) dirty = true;
   if (!dirty) return;
   dirty = false;
   if (selected) { selectionBox.box.setFromObject(meshOf(selected)); selectionBox.updateMatrixWorld(true); }

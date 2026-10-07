@@ -38,6 +38,8 @@ test('bubbles: hearts near the cat, humming at the stove, coffee at counters, sl
   expect(bubbleFor({ action: 'sit' }, always)).toBe('heart');
   expect(bubbleFor({ action: 'sit', place: 'tv' }, always)).toBe('note');
   expect(bubbleFor({ action: 'walk', catNear: true }, always)).toBeNull();
+  expect(bubbleFor({ action: 'gaze', radioNear: true }, always)).toBe('note');      // humming along to the radio
+  expect(bubbleFor({ action: 'walk', radioNear: true }, always)).toBeNull();
 });
 
 test('a resident busy at a spot reports it in their pose, and settling is flagged while stepping onto a seat', () => {

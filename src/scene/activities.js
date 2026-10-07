@@ -22,7 +22,14 @@ function canvasTexture(size, draw) {
   draw(c.getContext('2d'), size);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 }
-let puffTexture = null, bubbleTextures = null;
+let puffTexture = null, bubbleTextures = null, noteTexture = null;
+function note() {
+  return noteTexture ??= canvasTexture(64, (g) => {
+    g.fillStyle = '#6b4a35'; g.strokeStyle = '#6b4a35'; g.lineWidth = 5;
+    g.beginPath(); g.ellipse(24, 48, 9, 7, -0.4, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.moveTo(31, 46); g.lineTo(31, 10); g.quadraticCurveTo(44, 16, 50, 26); g.stroke();
+  });
+}
 function puff() {
   return puffTexture ??= canvasTexture(64, (g, s) => {
     const grad = g.createRadialGradient(s / 2, s / 2, 2, s / 2, s / 2, s / 2);
@@ -55,6 +62,7 @@ export function createActivityView(scene) {
   const lit = new Map();     // item id -> { parts: [{ mesh, spec }], level, mesh, type }
   const steams = new Map();  // item id -> { group, puffs: [{ sprite, phase }] }
   const shown = new Map();   // resident body root -> { sprite, t }
+  const tunes = new Map();   // radio id -> { group, notes: [{ sprite, phase }] }
   const v = new THREE.Vector3();
 
   function glowFor(id, type, mesh) {
@@ -126,6 +134,31 @@ export function createActivityView(scene) {
       }
       return busy;
     },
+    /** Music notes over radios that are playing (`radios`: [{ id, mesh, playing }]). Returns true while notes float. */
+    updateRadios(radios, time, animate) {
+      let busy = false;
+      const playing = new Map(radios.filter((r) => r.playing && animate).map((r) => [r.id, r]));
+      for (const [id, t] of tunes) if (!playing.has(id)) { for (const n of t.notes) n.sprite.material.dispose(); t.group.removeFromParent(); tunes.delete(id); }
+      for (const [id, r] of playing) {
+        let t = tunes.get(id);
+        if (!t) {
+          const group = new THREE.Group(); scene.add(group);
+          t = { group, notes: [0, 0.34, 0.67].map((phase) => { const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: note(), transparent: true, depthWrite: false, opacity: 0 })); group.add(sprite); return { sprite, phase }; }) };
+          tunes.set(id, t);
+        }
+        r.mesh.localToWorld(v.set(0, 0.3, 0));
+        t.group.position.copy(v);
+        for (const n of t.notes) {
+          const k = (time * 0.35 + n.phase) % 1;
+          n.sprite.position.set(Math.sin((k + n.phase) * 7) * 0.12, k * 0.8, Math.cos((k + n.phase) * 5) * 0.06);
+          n.sprite.scale.setScalar(0.13 + k * 0.05);
+          n.sprite.material.opacity = Math.sin(k * Math.PI) * 0.9;
+        }
+        busy = true;
+      }
+      return busy;
+    },
+    hasNotes(id) { return tunes.has(id); },
     /** Pops a mood bubble over a resident's head for a few seconds. */
     showBubble(root, icon) {
       let b = shown.get(root);

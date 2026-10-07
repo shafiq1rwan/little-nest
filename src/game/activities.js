@@ -33,10 +33,11 @@ export function activeAppliances(people, appliances) {
 /**
  * The bubble a person shows on settling into `action`, or null. `place` is what they settled at:
  * 'stove', 'kitchen' (any other counter), 'tv', 'screen', or null. Evenings make sitters sleepy; a cat
- * close by always earns a heart.
+ * close by always earns a heart; a radio playing nearby often gets a hum.
  */
-export function bubbleFor({ action, place = null, evening = false, catNear = false }, rng = Math.random) {
+export function bubbleFor({ action, place = null, evening = false, catNear = false, radioNear = false }, rng = Math.random) {
   if (catNear && (action === 'sit' || action === 'idle' || action === 'gaze')) return 'heart';
+  if (radioNear && action !== 'walk' && rng() < 0.6) return 'note';
   if (action === 'interact') return place === 'stove' ? 'note' : rng() < 0.7 ? 'cup' : null;
   if (action === 'sit') {
     if (place === 'tv' || place === 'screen') return rng() < 0.3 ? 'note' : null;

@@ -1112,10 +1112,10 @@ function setHudHidden(hidden) {
   document.body.classList.toggle('hud-hidden', hidden);
   $('show-hud').hidden = !hidden;
   if (hidden) { setViewOpen(false); $('show-hud').focus({ preventScroll: true }); }
-  else $('hud-toggle').focus({ preventScroll: true });
+  else $('more-toggle').focus({ preventScroll: true });
   invalidate();
 }
-$('hud-toggle').onclick = $('hud-hide-menu').onclick = () => setHudHidden(true);
+$('hud-hide-menu').onclick = () => setHudHidden(true);
 $('show-hud').onclick = () => setHudHidden(false);
 document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && document.body.classList.contains('hud-hidden')) setHudHidden(false); });
 // The filter button shows or hides the collection and category filters.

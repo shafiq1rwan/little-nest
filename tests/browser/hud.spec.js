@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openGame, tilePoint, selectedInfo, noHorizontalOverflow, twoFrames } from './helpers.js';
+import { openGame, menu, tilePoint, selectedInfo, noHorizontalOverflow, twoFrames } from './helpers.js';
 
 // Baseline viewports from docs/HANDOFF.md. Compact HUD applies at width <= 900 or height <= 600.
 const VIEWPORTS = [
@@ -153,13 +153,13 @@ test('the More menu, the View tools, Hide HUD and the filters open, close and co
   await expect(page.locator('#view-menu')).toBeHidden();
 
   // Hide HUD leaves only the room and a way back.
-  await page.locator('#hud-toggle').click();
+  await menu(page, 'hud-hide-menu');
   for (const sel of ['.save-actions', '#panel', '.dock']) await expect(page.locator(sel)).toBeHidden();
   await expect(page.locator('#show-hud')).toBeVisible();
   await page.locator('#show-hud').click();
   await expect(page.locator('.dock')).toBeVisible();
   await expect(page.locator('#show-hud')).toBeHidden();
-  await page.locator('#hud-toggle').click();
+  await menu(page, 'hud-hide-menu');
   await page.keyboard.press('Escape');
   await expect(page.locator('.dock')).toBeVisible();
 
@@ -170,7 +170,7 @@ test('the More menu, the View tools, Hide HUD and the filters open, close and co
   await expect(page.locator('#selection-name')).toBeVisible();
   await page.locator('#selection-collapse').click();
   await expect(page.locator('#move-selected')).toBeVisible();
-  await page.locator('#hud-toggle').click();
+  await menu(page, 'hud-hide-menu');
   expect(await page.evaluate(() => window.__sim.selected)).toBeNull();
   await page.locator('#show-hud').click();
 

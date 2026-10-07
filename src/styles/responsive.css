@@ -7,13 +7,8 @@
   .brand { max-width: 100%; gap: 3px; }
   .brand h1 { font-size: 23px; letter-spacing: 0; overflow: hidden; text-overflow: ellipsis; }
   .room-name { font-size: 10px; letter-spacing: 1px; }
-  .save-actions { gap: 2px; flex-shrink: 0; padding: 3px; border-radius: 15px; }
+  .save-actions { align-self: center; flex-shrink: 0; border-radius: 15px; }
   .save-actions .icon-button { width: 44px; height: 44px; }
-  .save-actions #save { width: 44px; min-width: 44px; height: 44px; min-height: 44px; padding: 0; margin: 0; }
-  .save-actions #save [data-icon] { display: inline-flex; }
-  .save-label { display: none; }
-  #hud-toggle { display: none; }
-  #hud-hide-menu { display: flex; }
   .menu { width: min(240px, calc(100vw - 24px)); }
   .menu button { min-height: 44px; font-size: 14px; }
   .workspace { flex-direction: column; }

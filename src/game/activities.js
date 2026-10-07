@@ -37,7 +37,7 @@ export function activeAppliances(people, appliances) {
  */
 export function bubbleFor({ action, place = null, evening = false, catNear = false, radioNear = false }, rng = Math.random) {
   if (catNear && (action === 'sit' || action === 'idle' || action === 'gaze' || action === 'pet')) return 'heart';
-  if (radioNear && action !== 'walk' && action !== 'sleep' && rng() < 0.6) return 'note';
+  if (radioNear && action !== 'walk' && action !== 'sleep' && action !== 'close' && rng() < 0.6) return 'note';
   if (action === 'interact') return place === 'stove' ? 'note' : place === 'bath' ? null : rng() < 0.7 ? 'cup' : null;
   if (action === 'sit') {
     if (place === 'tv' || place === 'screen') return rng() < 0.3 ? 'note' : null;

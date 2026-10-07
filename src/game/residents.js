@@ -21,10 +21,11 @@
 //
 // pose(i) returns { x, y, z, heading, action, outside, seat, spot, settling } (spot: the claimed spot key while
 // busy at it; settling: stepping onto or off a seat). action: 'walk' | 'idle' | 'sit' |
-// 'interact' | 'gaze' | 'sleep' (lying in bed; seat is the bed key) | 'pet' (stroking the cat) | 'away'. People never rest on a cell that is not free: when furniture lands on
+// 'interact' | 'gaze' | 'sleep' (lying in bed; seat is the bed key) | 'pet' (stroking the cat) | 'close' (just in, turned to
+// shut the door behind them) | 'away'. People never rest on a cell that is not free: when furniture lands on
 // them they step to the nearest free cell, and they stand up when their seat is moved or removed.
 
-export const RESIDENT_ACTIONS = ['walk', 'idle', 'sit', 'interact', 'gaze', 'sleep', 'pet', 'away'];
+export const RESIDENT_ACTIONS = ['walk', 'idle', 'sit', 'interact', 'gaze', 'sleep', 'pet', 'close', 'away'];
 export const MAX_RESIDENTS = 3;
 
 export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, settleTime = 0.45 } = {}) {
@@ -251,6 +252,13 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
       p.claim = cellKey(cellOf(p.pos.x, p.pos.z));
       return;
     }
+    if (g?.kind === 'enter') {   // just in: turn round and push the door shut
+      const door = world.door();
+      if (door) p.heading = Math.atan2(door.x - p.pos.x, door.z - p.pos.z);
+      rest(p, door ? 'close' : 'idle', between(1, 1.4));
+      p.claim = cellKey(cellOf(p.pos.x, p.pos.z));
+      return;
+    }
     if (g?.kind === 'leave' && p.guest) { p.gone = true; p.away = true; p.outside = true; p.claim = null; return; }
     if (g?.kind === 'leave') { p.away = true; p.outside = true; p.claim = null; rest(p, 'away', between(10, 24)); return; }
     if (g?.kind === 'spot') {
@@ -262,15 +270,36 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
     rest(p, 'idle', between(1.5, 4));
     p.claim = cellKey(cellOf(p.pos.x, p.pos.z));
   }
-  /** Comes home through the door: appears beyond it and walks in. */
+  /**
+   * Where someone coming in stops: out of the door's swing, so it can close behind them. A step straight in from
+   * the doorway cell when that is free, else the nearest free cell at least a step from the threshold that can be
+   * reached from the doorway. Null when there is nowhere (they stop in the doorway and the door waits).
+   */
+  function clearOfDoor(door, taken) {
+    const from = { gx: door.gx, gz: door.gz };
+    const ok = (c) => free(c.gx, c.gz) && !taken.has(cellKey(c)) && !(c.gx === from.gx && c.gz === from.gz);
+    const straight = { gx: door.gx + Math.sign(Math.round(door.x - door.outX)), gz: door.gz + Math.sign(Math.round(door.z - door.outZ)) };
+    if (ok(straight) && canStep(from, straight)) return [straight];
+    const { width, depth } = dims();
+    const near = [];
+    for (let gx = 0; gx < width; gx++) for (let gz = 0; gz < depth; gz++) {
+      const c = { gx, gz }, q = center(gx, gz), d = Math.hypot(q.x - door.x, q.z - door.z);
+      if (ok(c) && d >= 1.2) near.push({ c, d });
+    }
+    near.sort((a, b) => a.d - b.d);
+    for (const { c } of near.slice(0, 12)) { const path = findPath(from, c); if (path) return path; }
+    return null;
+  }
+  /** Comes home (or visits) through the door: appears beyond it, walks in, steps clear and turns to shut it. */
   function enter(p) {
     const door = world.door();
     if (!door || !free(door.gx, door.gz)) { p.timer = 3; return; }
     const inside = center(door.gx, door.gz);
     p.away = false; p.seat = null; p.claim = null;
     p.pos = { x: door.outX, y: 0, z: door.outZ };
-    p.path = [{ x: door.x, z: door.z }, { ...inside, cell: { gx: door.gx, gz: door.gz } }];
-    p.goal = { kind: 'cell', target: { gx: door.gx, gz: door.gz } };
+    const clear = clearOfDoor(door, claimedBy(p)) ?? [];
+    p.path = [{ x: door.x, z: door.z }, { ...inside, cell: { gx: door.gx, gz: door.gz } }, ...points(clear)];
+    p.goal = { kind: 'enter', target: clear.at(-1) ?? { gx: door.gx, gz: door.gz } };
     p.action = 'walk';
   }
   /** Puts a person straight into the room: a free seat for the first, then spots and free cells. */
@@ -417,11 +446,22 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
     setAvoid(fn) { avoid = fn; },
     /** Seat keys people sit on or are heading to, so the cat leaves them alone. */
     claimedSeats() { return new Set(people.map((p) => p.seat || p.claim).filter((k) => k && !k.startsWith('cell:'))); },
-    /** How far the door should be open, 0..1: open while someone is within a step of the threshold. */
+    /**
+     * How far the door should be open, 0..1: open while someone walks within a step of the threshold (a little
+     * further for someone heading out, so it is open before they reach it), and never shut on anyone standing
+     * in the doorway cell, where the leaf swings. Someone coming in keeps it open until they have stepped clear
+     * and turned round ('close'); it swings shut as they push it.
+     */
     doorWanted() {
       const door = world.door();
       if (!door) return 0;
-      return people.some((p) => !p.away && Math.hypot(p.pos.x - door.x, p.pos.z - door.z) < 1.25 && (p.action === 'walk' || p.outside)) ? 1 : 0;
+      return people.some((p) => {
+        if (p.away) return false;
+        const d = Math.hypot(p.pos.x - door.x, p.pos.z - door.z), here = cellOf(p.pos.x, p.pos.z);
+        if (here.gx === door.gx && here.gz === door.gz) return true;
+        if (p.goal?.kind === 'enter') return true;   // held open until they turn round to shut it
+        return (p.action === 'walk' || p.outside) && d < (p.goal?.kind === 'leave' ? 1.9 : 1.25);
+      }) ? 1 : 0;
     },
     /** Tests and debugging: sends person i somewhere now ({ kind: 'leave' } or { kind: 'seat'|'spot'|'cell', target }). */
     send(i, goal) {

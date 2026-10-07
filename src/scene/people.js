@@ -11,7 +11,7 @@ import { MODELS_VERSION } from '../config/game.js';
 import { sharedMaterial } from './geometry.js';
 
 const SCALE = 1.5;   // the characters are about 0.78 tall in the file; this makes them about 1.17
-const CLIPS = { walk: 'walk', idle: 'idle', gaze: 'idle', sit: 'sit', interact: 'interact-right', sleep: 'idle', pet: 'pick-up', away: 'idle' };
+const CLIPS = { walk: 'walk', idle: 'idle', gaze: 'idle', sit: 'sit', interact: 'interact-right', close: 'interact-left', sleep: 'idle', pet: 'pick-up', away: 'idle' };
 const LIE_LIFT = 0.2;    // lying on the back, the body's back is this far below the model's origin
 const SIT_DROP = 0.02;   // the sit clip lowers the hips to just above the origin; this rests the thighs on the cushion
 const NAME_HEIGHT = { sleep: 0.66, sit: 1.1, other: 1.38 };   // just above the head; mood bubbles float higher

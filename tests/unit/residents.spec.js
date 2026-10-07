@@ -204,6 +204,30 @@ test('a guest rings, walks in through the door, visits, leaves, and is never cou
   expect(calm.ringDoorbell()).toBe(false);
 });
 
+test('someone coming in steps clear of the door, turns to shut it, and the door never closes on anyone in the doorway', () => {
+  for (const blocked of [[], [[1, 7]]]) {   // a step straight in; and with that cell taken, the nearest clear cell
+    const w = room({ seats: SOFA, spots: KITCHEN, blocked });
+    const brain = createResidentsBrain(w, { rng: seeded(5) });
+    brain.setCount(1);
+    brain.ringDoorbell({ visit: 60 });
+    const doorway = (q) => Math.floor(q.x + 4) === 0 && Math.floor(q.z + 4) === 7;
+    let closing = null, smacked = false;
+    run(brain, 12, () => {
+      const g = brain.guestPose();
+      if (g && !g.outside && doorway(g) && brain.doorWanted() === 0) smacked = true;
+      if (!closing && g?.action === 'close') closing = { ...g, open: brain.doorWanted() };
+    });
+    expect(smacked).toBe(false);
+    expect(closing).not.toBeNull();
+    expect(doorway(closing)).toBe(false);
+    expect(Math.hypot(closing.x + 3.95, closing.z - 3.5)).toBeGreaterThan(1.2);   // out of the leaf's swing
+    expect(closing.open).toBe(0);                                                 // so the door can close
+    const facing = Math.atan2(-3.95 - closing.x, 3.5 - closing.z);
+    expect(Math.abs(Math.atan2(Math.sin(facing - closing.heading), Math.cos(facing - closing.heading)))).toBeLessThan(0.01);
+    if (blocked.length) expect([Math.floor(closing.x + 4), Math.floor(closing.z + 4)]).not.toEqual([1, 7]);
+  }
+});
+
 test('version 11 saves a name and a look for each resident slot; older saves get the defaults; bad ones are refused', async () => {
   const { parseRoom, serializeRoom, migrateRoom, SaveError } = await import('../../src/persistence/schema.js');
   const { DEFAULT_PEOPLE, RESIDENT_LOOKS } = await import('../../src/data/people.js');

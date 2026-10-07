@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { DEFAULT_PEOPLE } from '../../src/data/people.js';
 import { createPlacement } from '../../src/game/placement.js';
 import { exportRoom, parseImport, exportFilename, EXPORT_APP, EXPORT_FORMAT, MAX_IMPORT_BYTES } from '../../src/persistence/transfer.js';
 import { SaveError } from '../../src/persistence/schema.js';
@@ -22,7 +23,7 @@ test('export produces an envelope that imports back unchanged', () => {
   expect(parsed).toMatchObject({ app: EXPORT_APP, format: EXPORT_FORMAT, exportedAt: '2026-09-30T00:00:00Z', name: 'Sunny corner' });
   const imported = parseImport(text, opts);
   expect(imported.name).toBe('Sunny corner');
-  expect(imported.room).toEqual({ room: { preset: 'livingRoom', width: 8, depth: 8 }, wall: 1, wallLeft: 1, floor: 2, floorStyle: 'parquet', lighting: 'morning', pet: { present: false, color: 'ginger' }, residents: 0, items: room.items.map((i) => ({ ...i, parent: null, slot: null, wall: null, col: null, row: null, lit: null })) });
+  expect(imported.room).toEqual({ room: { preset: 'livingRoom', width: 8, depth: 8 }, wall: 1, wallLeft: 1, floor: 2, floorStyle: 'parquet', lighting: 'morning', pet: { present: false, color: 'ginger' }, residents: 0, people: DEFAULT_PEOPLE, items: room.items.map((i) => ({ ...i, parent: null, slot: null, wall: null, col: null, row: null, lit: null })) });
 });
 
 test('a bare room and a legacy version 2 room import with a fallback name', () => {

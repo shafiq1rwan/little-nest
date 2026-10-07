@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { openGame, tilePoint, twoFrames } from './helpers.js';
+import { SFX } from '../../src/ui/sfx.js';
+
+const SOUND_FILES = Object.values(SFX).reduce((n, s) => n + s.files.length, 0);   // every file in the table must load and decode
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -10,7 +13,7 @@ test('actions play their sounds, every file decodes, and the effects switch and 
   const warnings = [];
   page.on('console', (m) => { if (m.type() === 'warning' && /sound/.test(m.text())) warnings.push(m.text()); });
   const errors = await openGame(page);   // the menu click is the first gesture, which unlocks audio
-  await page.waitForFunction(() => window.__sim.sfx.loaded() === 13);
+  await page.waitForFunction((n) => window.__sim.sfx.loaded() === n, SOUND_FILES);
   expect(warnings).toEqual([]);
 
   // Place a pouf on a free tile, then try an occupied one.

@@ -73,6 +73,8 @@
   .finishes .swatch { width: 48px; height: 48px; }
   .finish-options { margin: -6px 0 12px; }
   .finish-options button { min-height: 44px; font-size: 12px; }
+  .resident-row input { height: 44px; }
+  .resident-row button { width: 44px; min-height: 44px; }
   #help-panel { top: 12px; right: 12px; width: min(300px, calc(100% - 24px)); max-height: calc(100% - 24px); overflow: auto; padding: 16px; }
   .touch-help { display: block; }
   .desktop-help { display: none; }

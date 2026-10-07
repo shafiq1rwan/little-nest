@@ -213,12 +213,12 @@ export function createCommands({ state, finishes, room = { preset: null, width: 
    * Replaces the shell (when `room` is given), items, and finishes as a single history entry,
    * for example from a loaded save or a fresh preset. The shell changes before items are restored.
    */
-  function replaceRoom({ room: nextRoom = null, wall, wallLeft = wall, floor, floorStyle = 'parquet', lighting = finishes.lighting, pet = { present: false, color: finishes.petColor ?? 'ginger' }, residents = 0, items }) {
-    const before = { room: { ...room }, wall: finishes.wall, wallLeft: finishes.wallLeft, floor: finishes.floor, floorStyle: finishes.floorStyle, lighting: finishes.lighting, petPresent: finishes.petPresent, petColor: finishes.petColor, residents: finishes.residents, items: state.serialize() };
+  function replaceRoom({ room: nextRoom = null, wall, wallLeft = wall, floor, floorStyle = 'parquet', lighting = finishes.lighting, pet = { present: false, color: finishes.petColor ?? 'ginger' }, residents = 0, people = finishes.people, items }) {
+    const before = { room: { ...room }, wall: finishes.wall, wallLeft: finishes.wallLeft, floor: finishes.floor, floorStyle: finishes.floorStyle, lighting: finishes.lighting, petPresent: finishes.petPresent, petColor: finishes.petColor, residents: finishes.residents, people: finishes.people, items: state.serialize() };
     const ordered = [...items.filter((i) => !i.parent), ...items.filter((i) => i.parent)];
-    const after = { room: nextRoom ? { ...nextRoom } : { ...room }, wall, wallLeft, floor, floorStyle, lighting, petPresent: !!pet.present, petColor: pet.color, residents, items: ordered.map(snapshotOf) };
+    const after = { room: nextRoom ? { ...nextRoom } : { ...room }, wall, wallLeft, floor, floorStyle, lighting, petPresent: !!pet.present, petColor: pet.color, residents, people, items: ordered.map(snapshotOf) };
     const sameRoom = (a, b) => a.preset === b.preset && a.width === b.width && a.depth === b.depth;
-    const apply = (r) => { opClear(); if (!sameRoom(r.room, room)) opRoom(r.room); opFinish('wall', r.wall); opFinish('floor', r.floor); for (const k of ['wallLeft', 'floorStyle', 'petColor', 'petPresent', 'residents']) if (k in finishes && r[k] !== undefined) opFinish(k, r[k]); if ('lighting' in finishes && r.lighting !== undefined) opFinish('lighting', r.lighting); opRestore(r.items); };
+    const apply = (r) => { opClear(); if (!sameRoom(r.room, room)) opRoom(r.room); opFinish('wall', r.wall); opFinish('floor', r.floor); for (const k of ['wallLeft', 'floorStyle', 'petColor', 'petPresent', 'residents', 'people']) if (k in finishes && r[k] !== undefined) opFinish(k, r[k]); if ('lighting' in finishes && r.lighting !== undefined) opFinish('lighting', r.lighting); opRestore(r.items); };
     apply(after);
     push({ undo: () => apply(before), redo: () => apply(after) });
   }

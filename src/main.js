@@ -27,7 +27,8 @@ import { createMotion } from './scene/motion.js';
 import { createCat, disposeCat } from './scene/cat.js';
 import { createOutlines } from './scene/outline.js';
 import { createResidentsBrain, MAX_RESIDENTS } from './game/residents.js';
-import { preloadPeople, createPerson, GUEST_INDEX } from './scene/people.js';
+import { preloadPeople, createPerson, loadLook, hasLook } from './scene/people.js';
+import { RESIDENT_LOOKS, DEFAULT_PEOPLE, GUEST_LOOKS, MAX_NAME_LENGTH } from './data/people.js';
 import { activeAppliances, bubbleFor, APPLIANCE_KINDS } from './game/activities.js';
 import { createActivityView } from './scene/activities.js';
 import { createPetBrain } from './game/pet.js';
@@ -38,7 +39,7 @@ export async function initializeGame({ onProgress = async () => {}, onOpenRoom =
 const $ = (id) => document.getElementById(id);
 let editing = false;
 await onProgress(25, 'Building your little nest…');
-await Promise.all([preloadModels(CATALOG), preloadArt(['worldMap', 'botanicalPrint', 'frame']), preloadPeople()]);   // models and print images must be ready before the first build()
+await Promise.all([preloadModels(CATALOG), preloadArt(['worldMap', 'botanicalPrint', 'frame']), preloadPeople([...DEFAULT_PEOPLE.map((p) => p.look), GUEST_LOOKS[0]])]);   // models and print images must be ready before the first build()
 
 // ---------- renderer / scene ----------
 const canvas = $('scene');
@@ -48,7 +49,7 @@ const { renderer, scene, camera, controls, hemisphere, sun, resetView, zoomBy, o
 // The shell (floor, walls, windows, grid) is rebuilt whenever the room preset changes. `placement`
 // and `wallBlocked` are reconfigured in place so everything holding them keeps working.
 const roomConfig = { preset: DEFAULT_PRESET, width: ROOM_PRESETS[DEFAULT_PRESET].width, depth: ROOM_PRESETS[DEFAULT_PRESET].depth };
-const finishes = { wall: WALL_FINISHES[0].color, wallLeft: WALL_FINISHES[0].color, floor: FLOOR_FINISHES[0].color, floorStyle: DEFAULT_FLOOR_STYLE, lighting: DEFAULT_LIGHTING, petPresent: false, petColor: DEFAULT_PET_COLOR, residents: 0 };
+const finishes = { wall: WALL_FINISHES[0].color, wallLeft: WALL_FINISHES[0].color, floor: FLOOR_FINISHES[0].color, floorStyle: DEFAULT_FLOOR_STYLE, lighting: DEFAULT_LIGHTING, petPresent: false, petColor: DEFAULT_PET_COLOR, residents: 0, people: DEFAULT_PEOPLE.map((p) => ({ ...p })) };
 let wallTarget = 'both';   // which wall the Walls tab swatches paint
 const WALL_ROWS = WALL_HEIGHT / 0.5;
 const placement = createPlacement({ catalog: CATALOG, width: roomConfig.width, depth: roomConfig.depth, cell: CELL, wallRows: WALL_ROWS, wallRow: 0.5 });
@@ -343,6 +344,14 @@ function stepActivities(pairs, dt, now, animate) {
   if (activityView.stepBubbles(dt, heights, animate)) busy = true;
   return busy;
 }
+/** Shows the name tag of the person under a mouse pointer, and hides the rest. */
+function hoverPerson(ev) {
+  const bodies = [...people, guestBody].filter((b) => b && b.root.visible);
+  const hit = ev && ev.pointerType === 'mouse' && !ghost && !dragging && bodies.length ? input.hitFirst(ev, bodies.map((b) => b.root)) : null;
+  let over = null;
+  if (hit) for (let o = hit.object; o && !over; o = o.parent) over = bodies.find((b) => b.root === o) ?? null;
+  for (const b of bodies) if (b.nameShown !== (b === over)) { b.showName(b === over); invalidate(); }
+}
 /** A visitor rings the bell and comes in. False (and nothing happens) when nobody can visit right now. */
 function ringDoorbell() {
   if (!residents.ringDoorbell()) return false;
@@ -358,8 +367,18 @@ function syncResidents() {
   residentsByDoor = false;
   residents.setCalm(!motion.isEnabled());
   residents.setCount(finishes.residents, { viaDoor });
-  while (people.length > residents.count) people.pop().dispose();
-  for (let i = people.length; i < residents.count; i++) { const body = createPerson(i); if (!body) break; scene.add(body.root); people.push(body); }
+  // One body per resident, wearing their look; a look that has not loaded yet loads, then this runs again.
+  while (people.length > residents.count) people.pop()?.dispose();
+  for (let i = 0; i < residents.count; i++) {
+    const { name, look } = finishes.people[i];
+    if (people[i] && people[i].look !== look) { people[i].dispose(); people[i] = undefined; }
+    if (!people[i]) {
+      if (!hasLook(look)) { loadLook(look).then((ok) => { if (ok && finishes.people[i]?.look === look) syncResidents(); }); continue; }
+      people[i] = createPerson(look, name);
+      scene.add(people[i].root);
+    }
+    people[i].setName(name);
+  }
   if (residents.count > before && !viaDoor) placeResidentsSoon();
   residentsClock = 0;
   showResidents(1 / 60);
@@ -390,7 +409,11 @@ function stepResidents(now) {
   const pairs = poses.map((pose, i) => [pose, people[i]]);
   // A guest has their own body, made when they ring and dropped when they have gone.
   const guest = residents.guestPose();
-  if (guest && !guestBody && (guestBody = createPerson(GUEST_INDEX))) scene.add(guestBody.root);
+  if (guest && !guestBody) {
+    const worn = new Set(finishes.people.slice(0, residents.count).map((p) => p.look));
+    const look = GUEST_LOOKS.find((l) => !worn.has(l)) ?? GUEST_LOOKS[0];
+    if (hasLook(look)) { guestBody = createPerson(look, 'Guest'); scene.add(guestBody.root); } else loadLook(look);
+  }
   if (!guest && guestBody) { guestBody.dispose(); guestBody = null; moving = true; }
   if (guest && guestBody) { guestBody.setPose(guest, dt, animate); pairs.push([guest, guestBody]); if (guest.action === 'walk' || guest.settling) moving = true; }
   if (now > nextGuestAt) { nextGuestAt = now + 150000 + Math.random() * 150000; if (residents.count && animate) ringDoorbell(); }
@@ -646,7 +669,7 @@ commands.subscribe((kind, p) => {
     if (p.key === 'lighting') { applyLighting(p.color); syncLightingOptions(); }
     else if (p.key === 'floorStyle') { shell.setFloorStyle(p.color); syncFloorStyles(); }
     else if (p.key === 'petPresent' || p.key === 'petColor') { syncPet(); syncPetControls(); }
-    else if (p.key === 'residents') { syncResidents(); syncResidentControls(); }
+    else if (p.key === 'residents' || p.key === 'people') { syncResidents(); syncResidentControls(); }
     else { ({ wall: shell.wallMat, wallLeft: shell.wallLeftMat, floor: shell.floorMat })[p.key].color.setHex(p.color); syncFinishSwatches(); }
   } else if (kind === 'room') {
     buildShell(p);
@@ -747,6 +770,7 @@ const input = createInput({
 }, {
   move(hit, ev) {
     invalidate();
+    hoverPerson(ev);
     if (!editing || photoMode) return;
     setHover(!ghost && !dragging && ev.pointerType === 'mouse' ? input.pickAt(ev) : null);
     if (pet) brain.lookAt(ev.pointerType === 'mouse' ? hit : null);
@@ -963,8 +987,31 @@ $('doorbell').onclick = () => {
   else if (!motion.isEnabled()) toast('Visitors come by while ambient motion is on.');
   else if (ringDoorbell()) toast('Ding-dong! Someone is at the door.');
 };
+/** Changes one resident's name or look as one undoable step. */
+function setPerson(i, change) {
+  const next = finishes.people.map((p, j) => (j === i ? { ...p, ...change } : { ...p }));
+  return commands.setFinish('people', next);
+}
 function syncResidentControls() {
   $('resident-count').querySelectorAll('button').forEach((b) => { const on = Number(b.dataset.residents) === finishes.residents; b.classList.toggle('active', on); b.setAttribute('aria-pressed', String(on)); });
+  // A row per resident: their picture, a name to edit, and buttons to try the other looks.
+  const rows = $('resident-people');
+  if (rows.contains(document.activeElement) && document.activeElement.tagName === 'INPUT') return;   // never rebuild under the caret
+  rows.replaceChildren();
+  for (let i = 0; i < finishes.residents; i++) {
+    const { name, look } = finishes.people[i];
+    const row = document.createElement('div'); row.className = 'resident-row'; row.dataset.person = String(i);
+    const img = document.createElement('img'); img.src = 'models/people/previews/' + look + '.png'; img.alt = ''; img.width = img.height = 40;
+    const input = document.createElement('input');
+    input.value = name; input.maxLength = MAX_NAME_LENGTH; input.setAttribute('aria-label', 'Name of person ' + (i + 1)); input.spellcheck = false;
+    input.onchange = () => { const v = input.value.trim(); if (v) setPerson(i, { name: v }); else input.value = finishes.people[i].name; };
+    input.onkeydown = (ev) => { if (ev.key === 'Enter') input.blur(); ev.stopPropagation(); };
+    const step = (dir) => { const k = RESIDENT_LOOKS.indexOf(finishes.people[i].look); setPerson(i, { look: RESIDENT_LOOKS[(k + dir + RESIDENT_LOOKS.length) % RESIDENT_LOOKS.length] }); };
+    const prev = document.createElement('button'); prev.textContent = '‹'; prev.setAttribute('aria-label', 'Previous look for ' + name); prev.onclick = () => step(-1);
+    const next = document.createElement('button'); next.textContent = '›'; next.setAttribute('aria-label', 'Next look for ' + name); next.onclick = () => step(1);
+    row.append(img, input, prev, next);
+    rows.append(row);
+  }
 }
 syncResidentControls();
 const syncLightingOptions = buildLightingOptions({
@@ -995,7 +1042,7 @@ document.addEventListener('click', (ev) => {
 }, true);
 const music = createMusic({ src: MUSIC.src, volume: MUSIC.volume, storageKey: MUSIC_KEY, button: $('music-toggle'), installIcons, onToggle: (on) => toast(on ? 'Music on.' : 'Music off.') });
 
-canvas.addEventListener('pointerleave', () => { setHover(null); if (pet) brain.lookAt(null); });
+canvas.addEventListener('pointerleave', () => { setHover(null); hoverPerson(null); if (pet) brain.lookAt(null); });
 $('keep-placing').onclick = () => { keepPlacing = !keepPlacing; $('keep-placing').setAttribute('aria-pressed', String(keepPlacing)); $('keep-placing').classList.toggle('active', keepPlacing); };
 $('cancel-placing').onclick = () => { cancelPlacing(); $('scene').focus({ preventScroll: true }); };
 $('orbit-left').onclick = () => { if (orbitBy(CAMERA.orbitStep)) invalidate(); };
@@ -1028,7 +1075,7 @@ function presetRoomData(presetId) {
     });
   }
   return {
-    data: { room: { preset: presetId, width: preset.width, depth: preset.depth }, wall: WALL_FINISHES[0].color, wallLeft: WALL_FINISHES[0].color, floor: FLOOR_FINISHES[0].color, floorStyle: DEFAULT_FLOOR_STYLE, lighting: DEFAULT_LIGHTING, pet: { present: !!preset.pet, color: preset.pet || DEFAULT_PET_COLOR }, residents: preset.residents ?? 0, items },
+    data: { room: { preset: presetId, width: preset.width, depth: preset.depth }, wall: WALL_FINISHES[0].color, wallLeft: WALL_FINISHES[0].color, floor: FLOOR_FINISHES[0].color, floorStyle: DEFAULT_FLOOR_STYLE, lighting: DEFAULT_LIGHTING, pet: { present: !!preset.pet, color: preset.pet || DEFAULT_PET_COLOR }, residents: preset.residents ?? 0, people: DEFAULT_PEOPLE.map((p) => ({ ...p })), items },
     selectId,
   };
 }
@@ -1049,7 +1096,7 @@ function setCurrentRoom(summary) {
 }
 function currentRoomData() {
   finishDrag();
-  return serializeRoom({ room: roomConfig, wall: finishes.wall, wallLeft: finishes.wallLeft, floor: finishes.floor, floorStyle: finishes.floorStyle, lighting: finishes.lighting, pet: { present: finishes.petPresent, color: finishes.petColor }, residents: finishes.residents, items: state.items });
+  return serializeRoom({ room: roomConfig, wall: finishes.wall, wallLeft: finishes.wallLeft, floor: finishes.floor, floorStyle: finishes.floorStyle, lighting: finishes.lighting, pet: { present: finishes.petPresent, color: finishes.petColor }, residents: finishes.residents, people: finishes.people, items: state.items });
 }
 /** Saves into entry `id` (or a new entry when null). Returns the summary, or null when storage refused. */
 function saveRoom(id, name) {
@@ -1235,7 +1282,8 @@ window.__sim = {
   sfx, motion, ambient, outlines,
   activities: activityView,
   ringDoorbell,
-  get residents() { return { guest: residents.guestPose(), guestBody: guestBody?.root ?? null, count: residents.count, poses: residents.poses(), cells: people.map((_, i) => residents.cellOf(i)), clips: people.map((b) => b.clip), bodies: people.map((b) => b.root), brain: residents, world: residentsWorld }; },
+  hoverPerson,
+  get residents() { return { names: people.map((b) => b?.name ?? null), looks: people.map((b) => b?.look ?? null), guest: residents.guestPose(), guestBody: guestBody?.root ?? null, count: residents.count, poses: residents.poses(), cells: people.map((_, i) => residents.cellOf(i)), clips: people.map((b) => b?.clip ?? null), bodies: people.map((b) => b?.root ?? null), brain: residents, world: residentsWorld }; },
   get pet() { return pet ? { action: brain.action, cell: brain.cell(), onSeat: brain.onSeat, pose: brain.pose(), root: pet.root, view: pet, brain } : null; },
   get items() { return state.items.map(withMesh); },
   get ghost() { return ghost; },

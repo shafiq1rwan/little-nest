@@ -80,7 +80,7 @@ test('the people picker is undoable and saved; the door refuses wall decorations
 
   await page.locator('#save').click();
   const store = await galleryStore(page);
-  expect(store.rooms[0].room).toMatchObject({ version: 10, residents: 3 });
+  expect(store.rooms[0].room).toMatchObject({ version: 11, residents: 3 });
 
   // An older (version 9) save with a mirror where the door now is loads intact, with nobody home.
   await page.evaluate(() => {
@@ -227,5 +227,47 @@ test('ringing the doorbell brings a guest in through the door, who leaves again;
   await page.evaluate(() => window.__sim.startPreset('balcony'));
   await page.locator('#doorbell').click();
   await expect(page.locator('#toast')).toContainText('no door');
+  expect(errors).toEqual([]);
+});
+
+test('residents can be renamed and dressed from the Light tab, undone, saved, and show their name on hover', async ({ page }) => {
+  const errors = await openGame(page, '/');
+  await page.locator('#deselect').click();
+  await page.locator('#tab-light').click();
+  await expect(page.locator('#resident-people .resident-row')).toHaveCount(2);
+  expect(await page.evaluate(() => window.__sim.residents.names)).toEqual(['Maya', 'Sam']);
+
+  // Rename the first person (one undo step on commit, not per key).
+  const name = page.locator('#resident-people [aria-label="Name of person 1"]');
+  await name.fill('Nadia');
+  await name.press('Enter');
+  await page.waitForFunction(() => window.__sim.residents.names[0] === 'Nadia');
+
+  // Next look for the second person: a look that was not preloaded loads, then the body changes.
+  await page.locator('#resident-people [aria-label="Next look for Sam"]').click();
+  await page.waitForFunction(() => window.__sim.residents.looks[1] === 'male-b', null, { timeout: 15000 });
+  await expect(page.locator('#resident-people .resident-row[data-person="1"] img')).toHaveAttribute('src', /male-b\.png$/);
+  await page.locator('#undo-tool').click();
+  await page.waitForFunction(() => window.__sim.residents.looks[1] === 'male-a');
+  await page.locator('#redo-tool').click();
+  await page.waitForFunction(() => window.__sim.residents.looks[1] === 'male-b');
+
+  // Saved with the room.
+  await page.locator('#save').click();
+  const saved = (await galleryStore(page)).rooms[0].room;
+  expect(saved.people.slice(0, 2)).toEqual([{ name: 'Nadia', look: 'female-b' }, { name: 'Sam', look: 'male-b' }]);
+
+  // Hovering a person shows their name tag; moving away hides it.
+  await page.evaluate(() => { const r = window.__sim.residents; for (let i = 0; i < r.count; i++) r.brain.person(i).timer = 999; });
+  const at = await page.evaluate(() => {
+    const s = window.__sim, body = s.residents.bodies[0];
+    const p = body.getWorldPosition(body.position.clone()); p.y += 0.6; p.project(s.camera);
+    const r = document.getElementById('scene').getBoundingClientRect();
+    return { x: r.x + (p.x + 1) * r.width / 2, y: r.y + (1 - p.y) * r.height / 2 };
+  });
+  await page.mouse.move(at.x, at.y);
+  await page.waitForFunction(() => window.__sim.residents.bodies[0].getObjectByName('name-tag').visible);
+  await page.mouse.move(5, 300);
+  await page.waitForFunction(() => !window.__sim.residents.bodies[0].getObjectByName('name-tag').visible);
   expect(errors).toEqual([]);
 });

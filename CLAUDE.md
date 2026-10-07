@@ -25,7 +25,7 @@ Run `npm run build` and `npm test` before every commit that touches src/. Docume
 - Frames are drawn with `outlines.render()` (src/scene/outline.js), not `renderer.render`, so ink outlines appear in the view and in photos. Transparent meshes, lines and `userData.noOutline` objects are skipped; a catalog entry with `outline: 'soft'` gets silhouettes only.
 - Models are merged per material by `compactModel()` when placed. Parts that must stay separate carry `userData.recolor` or an owned material.
 - Data lives in `src/data/` (presets, collections, lighting) and constants in `src/config/`.
-- Saved rooms are versioned (currently 10). Change the shape only by adding a version and a migration in `src/persistence/schema.js`, and keep catalog keys, surface slot order, and preset keys stable.
+- Saved rooms are versioned (currently 11). Change the shape only by adding a version and a migration in `src/persistence/schema.js`, and keep catalog keys, surface slot order, and preset keys stable.
 
 ## Working conventions learned here
 
@@ -45,6 +45,7 @@ Run `npm run build` and `npm test` before every commit that touches src/. Docume
 - Residents and doors: brain in src/game/residents.js (pure, unit-tested), bodies in src/scene/people.js (Kenney Mini Characters in public/models/people), count as the `residents` finish (0–3). Each walled preset has one door (`presetDoor()`); door wall cells refuse new decorations but restores allow them. Keep the floor cell inside a preset's door free of furniture. `window.__sim.residents.brain.send(i, goal)` drives a person in tests; `window.__sim.door.open` is the leaf's 0–1 opening.
 - Resident activities: src/game/activities.js decides what is in use (pure), src/scene/activities.js draws glows, steam and bubbles. A new appliance needs an `APPLIANCE_KINDS` entry and a `GLOWS` panel measured from its glb parts. `window.__sim.activities` exposes `isLit(id)`, `hasSteam(id)`, `hasNotes(id)`, `bubbleOf(root)` and `showBubble(root, icon)`.
 - Beds, the cat and guests: the residents brain takes optional `beds()`, `evening()` and `cat()` world hooks; sleepers use the bed key as their seat. A guest (`ringDoorbell()`, body `PEOPLE[GUEST_INDEX]`) lives inside the brain but is excluded from `count`, `poses()`, `person(i)` and `send(i)`; read it with `guestPose()` / `guest()`. Curtain logic keys off `isCurtain(type)` in main.js, not any toggle, because the radio is a toggle too.
+- Resident names and looks: the `people` finish holds `[{ name, look }]` for the three slots (src/data/people.js has the 12 look keys, stored in saves: never rename). Bodies are made per look by `createPerson(look, name)`; looks not preloaded load on demand through `loadLook`, so a body can be briefly missing (`people[i]` undefined in main.js). Previews are in public/models/people/previews.
 - Modern home collection: Kenney's Furniture Kit. Never hand-edit src/data/kenney-catalog.json or public/models/kit*.glb; change tools/blender/import-kenney.py (ITEMS, PALETTE, EXCLUDED) and re-run it. Adding catalog items shifts the count expectations listed above.
 - The author credit is "Saiss". The music is "Lofi Dreams" from Pixabay; fonts are OFL and bundled in `public/fonts` with their licences.
 

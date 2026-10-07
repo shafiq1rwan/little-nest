@@ -136,7 +136,7 @@ test('version 10 saves how many people live here; older saves have nobody; bad c
   const { createPlacement } = await import('../../src/game/placement.js');
   const opts = { catalog: { chair: { w: 1, d: 1 } }, placement: createPlacement({ catalog: { chair: { w: 1, d: 1 } }, room: 8 }), newId: () => 'x' };
   const saved = serializeRoom({ wall: 1, floor: 2, residents: 2, items: [] });
-  expect(saved).toMatchObject({ version: 10, residents: 2 });
+  expect(saved).toMatchObject({ version: 11, residents: 2 });
   expect(parseRoom(saved, opts).residents).toBe(2);
   expect(migrateRoom({ version: 9, wall: 1, floor: 2, items: [] }).residents).toBe(0);
   for (const bad of [-1, 4, 1.5, '2']) expect(() => parseRoom({ ...saved, residents: bad }, opts)).toThrow(SaveError);
@@ -202,4 +202,20 @@ test('a guest rings, walks in through the door, visits, leaves, and is never cou
   expect(createResidentsBrain(room({ door: false })).ringDoorbell()).toBe(false);
   const calm = createResidentsBrain(w); calm.setCalm(true);
   expect(calm.ringDoorbell()).toBe(false);
+});
+
+test('version 11 saves a name and a look for each resident slot; older saves get the defaults; bad ones are refused', async () => {
+  const { parseRoom, serializeRoom, migrateRoom, SaveError } = await import('../../src/persistence/schema.js');
+  const { DEFAULT_PEOPLE, RESIDENT_LOOKS } = await import('../../src/data/people.js');
+  const { createPlacement } = await import('../../src/game/placement.js');
+  const opts = { catalog: { chair: { w: 1, d: 1 } }, placement: createPlacement({ catalog: { chair: { w: 1, d: 1 } }, room: 8 }), newId: () => 'x' };
+  const people = [{ name: 'Nadia', look: 'female-d' }, { name: ' Omar ', look: 'male-c' }, { name: 'Lu', look: 'male-f' }];
+  const saved = serializeRoom({ wall: 1, floor: 2, residents: 2, people, items: [] });
+  expect(saved.version).toBe(11);
+  expect(parseRoom(saved, opts).people).toEqual([{ name: 'Nadia', look: 'female-d' }, { name: 'Omar', look: 'male-c' }, { name: 'Lu', look: 'male-f' }]);
+  expect(migrateRoom({ version: 10, wall: 1, floor: 2, residents: 1, items: [] }).people).toEqual(DEFAULT_PEOPLE);
+  expect(RESIDENT_LOOKS).toHaveLength(12);
+  for (const bad of [people.slice(0, 2), [...people.slice(0, 2), { name: '', look: 'male-a' }], [...people.slice(0, 2), { name: 'x'.repeat(21), look: 'male-a' }], [...people.slice(0, 2), { name: 'Pat', look: 'robot' }], 'Maya']) {
+    expect(() => parseRoom({ ...saved, people: bad }, opts)).toThrow(SaveError);
+  }
 });

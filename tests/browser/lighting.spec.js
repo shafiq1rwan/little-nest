@@ -51,7 +51,7 @@ for (const [width, height, label] of [[1440, 900, 'desktop'], [390, 844, 'phone'
       // Save and reload keep the mood and the switched-off lamp; undoing the load restores morning.
       await page.locator('#save').click();
       const store = await galleryStore(page);
-      expect(store.rooms[0].room.version).toBe(10);
+      expect(store.rooms[0].room.version).toBe(11);
       expect(store.rooms[0].room.lighting).toBe('evening');
       expect(store.rooms[0].room.items.find((i) => i.type === 'floorLamp').lit).toBe(false);
       await page.locator('#load').click();

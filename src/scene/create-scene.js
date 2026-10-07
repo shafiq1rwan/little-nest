@@ -51,7 +51,7 @@ export function createScene({ canvas, camera: cam, render, backdrop }) {
     camera.updateProjectionMatrix();
     controls.update();
   }
-  /** Turns the view around its target by `delta` radians, within the configured azimuth limits. */
+  /** Turns the view around its target by `delta` radians, within the configured azimuth limits (none by default: all the way round). */
   function orbitBy(delta) {
     const current = controls.getAzimuthalAngle();
     const next = THREE.MathUtils.clamp(current + delta, controls.minAzimuthAngle, controls.maxAzimuthAngle);

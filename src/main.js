@@ -92,6 +92,18 @@ let shell = null;      // { root, floorMat, wallMat, walls, wallPanels, dispose 
 let grid = null;
 let gridVisible = false;
 let wallsVisible = true;
+// Full orbit: an outer wall the camera has swung round behind drops to a knee-high stub (room.js setCutaway), and
+// the decorations hung on it are hidden and cannot be picked until the camera comes back round.
+let cutWalls = { back: false, left: false };
+function syncCutaway() {
+  const v = camera.position.clone().sub(controls.target);
+  const next = { back: v.z < 0, left: v.x < 0 };
+  if (next.back !== cutWalls.back || next.left !== cutWalls.left) { cutWalls = next; shell.setCutaway(next); }
+  for (const r of state.items) {
+    const m = r.wall ? meshes.get(r.id) : null;
+    if (m) { m.visible = !cutWalls[r.wall]; m.userData.cut = cutWalls[r.wall]; }
+  }
+}
 const motion = createMotion();
 let lampsReady = false;   // state is created after the first shell build; lamps are applied as they are added
 let dirty = true;         // true when the next animation frame must render
@@ -126,6 +138,7 @@ function buildShell(room) {
   if (grid) { scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); }
   shell = createRoom(scene, { ...preset, doorway: presetDoor(preset) }, WALL_HEIGHT, { wallColor: finishes.wall, wallLeftColor: finishes.wallLeft, floorColor: finishes.floor, floorStyle: finishes.floorStyle });
   shell.walls.visible = wallsVisible;
+  cutWalls = { back: false, left: false };   // a new shell starts uncut; the next frame cuts it for the view
   motion.setBulbs(shell.bulbs);
   placement.configure({ width: room.width, depth: room.depth, wallRows: presetWallRows(preset), edges: presetPartitionEdges(preset) });
   wallBlocked.clear();
@@ -633,8 +646,9 @@ function applyTransform(record) {
 /** Nearest wall spot under the pointer for a wall item: { wall, col, row, free } or null. */
 function wallUnder(ev, type, ignoreId = null) {
   // Furniture in front of the wall blocks the spot, so nothing can be hung where it cannot be seen.
-  const others = [...meshes.entries()].filter(([id]) => id !== ignoreId).map(([, m]) => m);
-  const hit = input.hitFirst(ev, [shell.wallPanels.back, shell.wallPanels.left, ...others]);
+  const others = [...meshes.entries()].filter(([id, m]) => id !== ignoreId && !m.userData.cut).map(([, m]) => m);
+  const panels = ['back', 'left'].filter((w) => !cutWalls[w]).map((w) => shell.wallPanels[w]);   // a cut wall takes nothing
+  const hit = input.hitFirst(ev, [...panels, ...others]);
   const wall = hit?.object.userData.wall;
   if (!wall) return null;
   const { col, row } = placement.wallSnap(type, wall, hit.point);
@@ -806,7 +820,7 @@ function finishDrag(showControls = true, allReleased = input.activePointers() ==
 const input = createInput({
   canvas,
   camera,
-  pickables: () => [...meshes.values()],
+  pickables: () => [...meshes.values()].filter((m) => !m.userData.cut),
   idOf: (o) => o.userData.itemId || null,
 }, {
   move(hit, ev) {
@@ -1347,6 +1361,7 @@ renderer.setAnimationLoop(() => {
   if (stepRadios(performance.now())) dirty = true;
   if (!dirty) return;
   dirty = false;
+  syncCutaway();
   if (selected) { selectionBox.box.setFromObject(meshOf(selected)); selectionBox.updateMatrixWorld(true); }
   const hoverMesh = hoverId && hoverId !== selected?.id && editing && !photoMode ? meshes.get(hoverId) : null;
   hoverBox.visible = !!hoverMesh;
@@ -1375,6 +1390,7 @@ window.__sim = {
   sfx, motion, ambient, outlines,
   activities: activityView,
   ringDoorbell,
+  get cutaway() { return { ...cutWalls }; },
   get rooms() { return { focus: focusRoom, preview: previewRoom, ghosted: shell.ghostedPieces(), roomAt: (x, z) => roomAt({ x, z }), ...houseRooms }; },
   setFocusRoom,
   hoverPerson,

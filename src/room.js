@@ -131,6 +131,11 @@ export function createRoom(scene, preset, wallHeight = 4, { wallColor = 0x92725c
   block(width, .15, .15, trim, 0, -.05, halfD + .07, root);
   block(.15, .15, depth, trim, halfW + .07, -.05, 0, root);
   let backPanel, leftPanel;
+  // Each outer wall keeps its panel, trim, windows, door and bulbs in its own group, beside a low stub of the same
+  // wall. When the camera swings round behind a wall, setCutaway() swaps the wall for its stub (main.js).
+  const outer = { back: new THREE.Group(), left: new THREE.Group() };
+  const stub = { back: new THREE.Group(), left: new THREE.Group() };
+  for (const k of ['back', 'left']) { walls.add(outer[k], stub[k]); stub[k].visible = false; }
   if (preset.walls === 'railing') {
     // Open air: low railings with posts every unit. The top rails stand in for the wall panels so
     // raycasts still resolve, but the wall grid has no rows, so nothing can be mounted on them.
@@ -148,19 +153,41 @@ export function createRoom(scene, preset, wallHeight = 4, { wallColor = 0x92725c
     leftPanel = railing(depth, 'left'); leftPanel.userData.wall = 'left';
   } else {
     // The two wall panels double as raycast targets for wall-mounted decorations.
-    backPanel = block(width, wallHeight, .2, wallMat, 0, wallHeight / 2, -halfD - .1); backPanel.userData.wall = 'back';
-    leftPanel = block(.2, wallHeight, depth + .2, wallLeftMat, -halfW - .1, wallHeight / 2, -.1); leftPanel.userData.wall = 'left';
-    block(width + .25, .1, .3, trim, 0, wallHeight, -halfD - .1);
-    block(.3, .1, depth + .25, trim, -halfW - .1, wallHeight, -.1);
-    block(width, .16, .09, wood, 0, .09, -halfD + .06);
-    block(.09, .16, depth, wood, -halfW + .06, .09, 0);
+    backPanel = block(width, wallHeight, .2, wallMat, 0, wallHeight / 2, -halfD - .1, outer.back); backPanel.userData.wall = 'back';
+    leftPanel = block(.2, wallHeight, depth + .2, wallLeftMat, -halfW - .1, wallHeight / 2, -.1, outer.left); leftPanel.userData.wall = 'left';
+    block(width + .25, .1, .3, trim, 0, wallHeight, -halfD - .1, outer.back);
+    block(.3, .1, depth + .25, trim, -halfW - .1, wallHeight, -.1, outer.left);
+    block(width, .16, .09, wood, 0, .09, -halfD + .06, outer.back);
+    block(.09, .16, depth, wood, -halfW + .06, .09, 0, outer.left);
+    // The stubs: knee-high wall with a trim cap, open where the door is.
+    const STUB = .45, doorway = preset.doorway;
+    for (const wall of ['back', 'left']) {
+      const from = wall === 'back' ? -halfW : -halfD - .2, to = wall === 'back' ? halfW : halfD;
+      const runs = doorway?.wall === wall ? [[from, doorway.at - doorway.width / 2 - .1], [doorway.at + doorway.width / 2 + .1, to]] : [[from, to]];
+      for (const [a, b] of runs) {
+        if (b - a < .01) continue;
+        const len = b - a, mid = (a + b) / 2;
+        if (wall === 'back') {
+          block(len, STUB, .2, wallMat, mid, STUB / 2, -halfD - .1, stub.back);
+          block(len + .05, .1, .3, trim, mid, STUB, -halfD - .1, stub.back);
+        } else {
+          block(.2, STUB, len, wallLeftMat, -halfW - .1, STUB / 2, mid, stub.left);
+          block(.3, .1, len + .05, trim, -halfW - .1, STUB, mid, stub.left);
+        }
+      }
+    }
+  }
+  /** Swaps an outer wall for its low stub while the camera is behind it: `cut` is { back, left }. */
+  function setCutaway(cut) {
+    if (preset.walls === 'railing') return;   // railings are low already
+    for (const k of ['back', 'left']) { outer[k].visible = !cut[k]; stub[k].visible = !!cut[k]; }
   }
 
   const viewMat = new THREE.MeshStandardMaterial({ map: tex.view, emissive: 0xc9d498, emissiveIntensity: .2, roughness: 1 });
   const cord = new THREE.MeshStandardMaterial({ color: 0xe6ccad });
   owned.push(viewMat, cord);
-  function windowAt(x, z, rotation, w) {
-    const g = new THREE.Group(); g.position.set(x, 2.22, z); g.rotation.y = rotation; walls.add(g);
+  function windowAt(x, z, rotation, w, parent) {
+    const g = new THREE.Group(); g.position.set(x, 2.22, z); g.rotation.y = rotation; parent.add(g);
     block(w + .18, 2.25, .13, wood, 0, 0, 0, g);
     block(w, 2.06, .025, viewMat, 0, 0, .08, g);
     for (const xx of [-w / 2, 0, w / 2]) block(.055, 2.15, .07, trim, xx, 0, .11, g);
@@ -173,7 +200,7 @@ export function createRoom(scene, preset, wallHeight = 4, { wallColor = 0x92725c
   let door = null;
   if (preset.doorway) {
     const d = preset.doorway;
-    const g = new THREE.Group(); walls.add(g);
+    const g = new THREE.Group(); outer[d.wall].add(g);
     if (d.wall === 'back') { g.position.set(d.at, 0, -halfD + .05); } else { g.position.set(-halfW + .05, 0, d.at); g.rotation.y = Math.PI / 2; }
     const hall = new THREE.MeshStandardMaterial({ color: 0x4a3426, roughness: 1 });
     const leafMat = new THREE.MeshStandardMaterial({ color: 0xb98556, roughness: .8 });
@@ -264,19 +291,19 @@ export function createRoom(scene, preset, wallHeight = 4, { wallColor = 0x92725c
     root.add(plane);
   }
   for (const win of preset.windows) {
-    if (win.wall === 'back') windowAt(win.at, -halfD + .05, 0, win.width);
-    else windowAt(-halfW + .05, win.at, Math.PI / 2, win.width);
+    if (win.wall === 'back') windowAt(win.at, -halfD + .05, 0, win.width, outer.back);
+    else windowAt(-halfW + .05, win.at, Math.PI / 2, win.width, outer.left);
   }
   if (preset.lights) {
     // A short string of warm bulbs high on the back wall, near its right end.
     const wireMat = new THREE.MeshStandardMaterial({ color: 0x5d4938 });
     owned.push(wireMat);
     const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(halfW - 1.1, 3.6, -halfD + .18), new THREE.Vector3(halfW - .65, 3.25, -halfD + .18), new THREE.Vector3(halfW - .2, 3.6, -halfD + .18)]);
-    walls.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 24, .008, 5, false), wireMat));
+    outer.back.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 24, .008, 5, false), wireMat));
     for (const t of [.12, .4, .7, .92]) {
       const bulbMat = new THREE.MeshStandardMaterial({ color: 0xffe2a4, emissive: 0xffc76b, emissiveIntensity: 2 });
       owned.push(bulbMat); bulbs.push(bulbMat);
-      const p = curve.getPoint(t), bulb = new THREE.Mesh(new THREE.SphereGeometry(.055, 10, 8), bulbMat); bulb.position.copy(p); walls.add(bulb);
+      const p = curve.getPoint(t), bulb = new THREE.Mesh(new THREE.SphereGeometry(.055, 10, 8), bulbMat); bulb.position.copy(p); outer.back.add(bulb);
     }
   }
   const groundMat = new THREE.MeshBasicMaterial({ color: 0xdf9d80, toneMapped: false });
@@ -292,5 +319,5 @@ export function createRoom(scene, preset, wallHeight = 4, { wallColor = 0x92725c
     root.traverse((o) => { if (o.isMesh) o.geometry.dispose(); });
     for (const m of owned) m.dispose();
   }
-  return { root, door, setGhost: setGhost ?? (() => 0), ghostedPieces: () => ghostable.filter((g) => g.mesh.material.transparent).length, bulbs, floorMat, wallMat, wallLeftMat, setFloorStyle, viewMat, groundMat, walls, wallPanels: { back: backPanel, left: leftPanel }, dispose };
+  return { root, door, setCutaway, setGhost: setGhost ?? (() => 0), ghostedPieces: () => ghostable.filter((g) => g.mesh.material.transparent).length, bulbs, floorMat, wallMat, wallLeftMat, setFloorStyle, viewMat, groundMat, walls, wallPanels: { back: backPanel, left: leftPanel }, dispose };
 }

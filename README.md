@@ -37,7 +37,7 @@ Keep package-lock.json when moving computers. The runtime itself is browser-base
 - Change colors on upholstery, rugs, and the marked parts of plant pots.
 - Use Walls and Floor tabs to choose finishes, and the Light tab to pick Morning, Sunset, or Evening. Lamps have an On/Off switch on their card and glow brighter as the light fades.
 - Toggle grid/walls with the left toolbar; use the camera buttons to zoom or reset. The camera button opens photo mode: the controls hide, you frame the view, and Save photo downloads a PNG.
-- Right-drag to orbit and scroll to zoom.
+- Right-drag to orbit all the way round and scroll to zoom.
 - The HUD is a few quiet pieces around the room: a top-right bar (Rooms, Save, a More menu, Hide HUD), a floating Decorate card, and a bottom dock (Decorate, Undo, Redo, grid, View with the camera tools). On phones the Decorate card is a bottom sheet with the dock along its foot; choosing furniture lowers it for placement and selecting an item shows its actions there. Landscape phones use a side drawer.
 - One finger moves furniture; two fingers orbit/pinch.
 - Save room keeps the open room in this browser (the first save is named "Living room"). Rooms also offers "Start fresh" presets: living room, studio, reading nook, bedroom, an open-air balcony, a 10 × 8 apartment with its own walled, tiled bathroom, and a 12 × 12 house with a bedroom, bathroom, reading room, entry hall, kitchen and living room, each with its own size, windows, and furniture; starting one is undoable. Rooms opens your saved designs to load, rename, duplicate, export, or delete them, to import a room file, and to save the current room under a new name. Clear removes furniture.

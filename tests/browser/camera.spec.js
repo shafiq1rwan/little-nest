@@ -41,3 +41,43 @@ test('Top view looks straight down at the whole house and comes back to the angl
   expect(await page.evaluate(() => window.__sim.controls.minPolarAngle)).toBeLessThan(0.1);
   expect(errors).toEqual([]);
 });
+
+test('Turning round behind the room drops the outer walls in front to stubs and hides what hangs on them', async ({ page }) => {
+  const errors = await openGame(page, '/');
+  const look = () => page.evaluate(() => {
+    const s = window.__sim, hung = s.items.filter((r) => r.wall);
+    return {
+      cut: s.cutaway,
+      back: s.wallPanels.back.parent.visible, left: s.wallPanels.left.parent.visible,
+      hung: Object.fromEntries(['back', 'left'].map((w) => [w, hung.filter((r) => r.wall === w).map((r) => r.mesh.visible)])),
+    };
+  });
+  const turn = (deg) => page.evaluate((d) => { window.__sim.orbitBy(d * Math.PI / 180); }, deg);
+  await twoFrames(page);
+  let v = await look();
+  expect(v.cut).toEqual({ back: false, left: false });
+  expect(v.hung.back.length && v.hung.left.length).toBeTruthy();
+
+  await turn(180);   // from the front-right corner round to the back-left one: both outer walls are between the camera and the room
+  await twoFrames(page);
+  v = await look();
+  expect(v.cut).toEqual({ back: true, left: true });
+  expect([v.back, v.left]).toEqual([false, false]);
+  expect([...v.hung.back, ...v.hung.left].every((on) => !on)).toBe(true);
+  // Hidden decorations cannot be picked or hung on.
+  expect(await page.evaluate(() => window.__sim.items.filter((r) => r.wall).every((r) => r.mesh.userData.cut))).toBe(true);
+
+  await turn(-90);   // round to the back-right corner: only the back wall is in front
+  await twoFrames(page);
+  v = await look();
+  expect(v.cut).toEqual({ back: true, left: false });
+  expect(v.hung.left.every(Boolean)).toBe(true);
+  expect(v.hung.back.every((on) => !on)).toBe(true);
+
+  await view(page, 'reset-view');
+  await twoFrames(page);
+  v = await look();
+  expect(v.cut).toEqual({ back: false, left: false });
+  expect([...v.hung.back, ...v.hung.left].every(Boolean)).toBe(true);
+  expect(errors).toEqual([]);
+});

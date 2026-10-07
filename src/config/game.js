@@ -12,8 +12,8 @@ export const CAMERA = {
   maxPolarAngle: 1.2,
   topPolarAngle: 0.04,
   tiltMs: 450,           // how long the Top view button takes to swing the camera
-  minAzimuthAngle: 0.3,
-  maxAzimuthAngle: Math.PI / 2 - 0.3,
+  minAzimuthAngle: -Infinity,   // turn all the way round; the outer wall in front drops to a stub (room.js setCutaway)
+  maxAzimuthAngle: Infinity,
   minZoom: 0.65,
   maxZoom: 2.2,
   zoomStep: 1.15,

@@ -41,18 +41,21 @@ for (const [width, height, label] of [[1440, 900, 'desktop'], [390, 844, 'phone'
       expect(errors).toEqual([]);
     });
 
-    test('the orbit buttons turn the room within the camera limits', async ({ page }) => {
+    test('the orbit buttons turn the room all the way round', async ({ page }) => {
       test.skip(width < 640, 'narrow phones orbit with two fingers');
       const errors = await openGame(page);
       const azimuth = () => page.evaluate(() => window.__sim.controls.getAzimuthalAngle());
-      const limits = await page.evaluate(() => ({ min: window.__sim.controls.minAzimuthAngle, max: window.__sim.controls.maxAzimuthAngle }));
       const start = await azimuth();
       await view(page, 'orbit-left');
       expect(await azimuth()).toBeGreaterThan(start);
+      // Twelve more presses swing the camera to the far side (195 degrees from the start), twelve after that bring it home.
       for (let i = 0; i < 12; i++) await view(page, 'orbit-left');
-      expect(await azimuth()).toBeLessThanOrEqual(limits.max + 1e-6);
-      for (let i = 0; i < 20; i++) await view(page, 'orbit-right');
-      expect(await azimuth()).toBeGreaterThanOrEqual(limits.min - 1e-6);
+      const far = await azimuth();
+      expect(Math.abs(Math.atan2(Math.sin(far - start), Math.cos(far - start)))).toBeGreaterThan(Math.PI * .9);
+      for (let i = 0; i < 11; i++) await view(page, 'orbit-left');
+      const round = await azimuth();
+      expect(Math.abs(Math.atan2(Math.sin(round - start), Math.cos(round - start)))).toBeLessThan(1e-6);
+      await view(page, 'orbit-right');
       await view(page, 'reset-view');
       expect(Math.abs((await azimuth()) - start)).toBeLessThan(1e-6);
       expect(errors).toEqual([]);

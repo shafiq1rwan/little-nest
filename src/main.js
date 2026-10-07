@@ -8,7 +8,7 @@ import { tintModel as tint, disposeModel, measureModel, compactModel } from './s
 import { installIcons } from './ui/icons.js';
 import { CELL, CAMERA, RENDER, MOTION, MUSIC, SAVE_KEY, ROOMS_KEY, MUSIC_KEY, SFX_KEY, SFX_VOLUME_KEY, AMBIENT_KEY, OUTLINES_KEY, MAX_SAVED_ITEMS } from './config/game.js';
 import { BACKDROP, SELECTION_OUTLINE, HOVER_OUTLINE, GHOST_OK, GHOST_BLOCKED, WALL_FINISHES, FLOOR_FINISHES, FLOOR_STYLES, DEFAULT_FLOOR_STYLE, ITEM_COLORS, PET_COLORS, DEFAULT_PET_COLOR } from './config/theme.js';
-import { ROOM_PRESETS, DEFAULT_PRESET, WALL_HEIGHT, MIN_ROOM_SIZE, MAX_ROOM_SIZE, presetFixtures, presetWallRows, presetDoor, presetPartitionEdges } from './data/presets.js';
+import { ROOM_PRESETS, DEFAULT_PRESET, WALL_HEIGHT, MIN_ROOM_SIZE, MAX_ROOM_SIZE, presetFixtures, presetWallRows, presetDoor, presetPartitionEdges, presetRooms } from './data/presets.js';
 import { COLLECTIONS, DEFAULT_COLLECTION } from './data/collections.js';
 import { LIGHTING, DEFAULT_LIGHTING } from './data/lighting.js';
 import { createPlacement } from './game/placement.js';
@@ -55,7 +55,39 @@ const WALL_ROWS = WALL_HEIGHT / 0.5;
 const placement = createPlacement({ catalog: CATALOG, width: roomConfig.width, depth: roomConfig.depth, cell: CELL, wallRows: WALL_ROWS, wallRow: 0.5 });
 const wallBlocked = new Set();
 const wallWindows = new Set();
-const wallDoors = new Set();     // wall cells covered by the door: no new decorations there   // the subset of blocked cells that are windows, where curtains hang
+const wallDoors = new Set();
+// Rooms walled off inside the shell (src/data/presets.js presetRooms). Clicking a room's floor, or the wall in front of
+// it, turns its walls see-through; clicking the open living area or outside turns them solid again. While placing or
+// moving furniture, the room under the pointer is see-through too.
+let houseRooms = { roomOf: () => null, cellsOf: () => [], open: null, count: 0 };
+let focusRoom = null, previewRoom = null;
+function roomAt(point) {
+  if (!point) return null;
+  const gx = Math.floor(point.x + roomConfig.width / 2), gz = Math.floor(point.z + roomConfig.depth / 2);
+  const id = houseRooms.roomOf(gx, gz);
+  return id === houseRooms.open ? null : id;
+}
+/**
+ * The walls round the focused (and previewed) room go see-through, and so does any wall piece standing between
+ * the camera and that room: in front of one of its cells along the view, within the reach of a wall's shadow on
+ * the floor (its height over the tangent of the camera's elevation), and no more than a cell to either side.
+ */
+function syncGhostRooms() {
+  const cells = new Set();
+  for (const id of [focusRoom, previewRoom]) if (id !== null) for (const c of houseRooms.cellsOf(id)) cells.add(c);
+  if (!cells.size) { shell.setGhost(() => false); invalidate(); return; }
+  const v = camera.position.clone().sub(controls.target);
+  const flat = Math.hypot(v.x, v.z) || 1, vx = v.x / flat, vz = v.z / flat;
+  const reach = 2.7 / Math.max(.2, v.y / flat) + .3;   // how far behind a wall it hides the floor
+  const centres = [...cells].map((k) => { const [gx, gz] = k.split(',').map(Number); return { x: gx - roomConfig.width / 2 + .5, z: gz - roomConfig.depth / 2 + .5 }; });
+  shell.setGhost((g) => cells.has(g.a) || cells.has(g.b) || centres.some((p) => {
+    const dx = g.cx - p.x, dz = g.cz - p.z, ahead = dx * vx + dz * vz, side = Math.abs(dx * vz - dz * vx);
+    return ahead > .2 && ahead < reach && side < 1;
+  }));
+  invalidate();
+}
+function setFocusRoom(id) { if (id !== focusRoom) { focusRoom = id; syncGhostRooms(); } }
+function setPreviewRoom(id) { if (id !== previewRoom) { previewRoom = id; syncGhostRooms(); } }     // wall cells covered by the door: no new decorations there   // the subset of blocked cells that are windows, where curtains hang
 let shell = null;      // { root, floorMat, wallMat, walls, wallPanels, dispose }
 let grid = null;
 let gridVisible = false;
@@ -64,7 +96,7 @@ const motion = createMotion();
 let lampsReady = false;   // state is created after the first shell build; lamps are applied as they are added
 let dirty = true;         // true when the next animation frame must render
 function invalidate() { dirty = true; }
-controls.addEventListener('change', invalidate);   // orbit, zoom, pinch, and programmatic camera moves
+controls.addEventListener('change', () => { invalidate(); if (focusRoom !== null || previewRoom !== null) syncGhostRooms(); });   // orbit, zoom, pinch, programmatic moves; see-through walls follow the view
 function presetFor(room) {
   return { ...ROOM_PRESETS[room.preset], width: room.width, depth: room.depth };
 }
@@ -103,10 +135,13 @@ function buildShell(room) {
   for (const c of placement.blockedWallCells(fixtures.filter((f) => f.kind === 'door'))) wallDoors.add(c);
   wallWindows.clear();
   for (const c of placement.windowWallCells(presetFixtures(preset))) wallWindows.add(c);
+  houseRooms = presetRooms(preset);
+  focusRoom = previewRoom = null;
   grid = makeGrid(room.width, room.depth);
   grid.visible = gridVisible;
   scene.add(grid);
   setFrame(Math.max(room.width, room.depth));
+  shell.setGhost(() => false);
   applyLighting(finishes.lighting);
 }
 
@@ -780,6 +815,7 @@ const input = createInput({
     if (!editing || photoMode) return;
     setHover(!ghost && !dragging && ev.pointerType === 'mouse' ? input.pickAt(ev) : null);
     if (pet) brain.lookAt(ev.pointerType === 'mouse' ? hit : null);
+    setPreviewRoom(ghost || dragging ? roomAt(hit) : null);   // see into the room you are placing or moving into
     if (ghost && placement.isWallItem(selectedType)) {
       ghostTarget = wallUnder(ev, selectedType);
       ghost.visible = !!ghostTarget;
@@ -859,6 +895,8 @@ const input = createInput({
     }
     const id = pick();
     const item = id ? state.get(id) : null;
+    // The clicked room (or the room of the clicked furniture) goes see-through; open floor turns walls solid again.
+    setFocusRoom(item && item.gx !== null ? roomAt(worldPos(item.type, item.gx, item.gz, item.rot)) : item ? focusRoom : roomAt(hit));
     // Keep the canvas size stable until the gesture finishes: the selection card can resize the drawer.
     setSelected(item, false);
     pendingSelection = true;
@@ -868,6 +906,7 @@ const input = createInput({
     if (!editing) return;
     invalidate();
     finishDrag(true, allReleased);
+    setPreviewRoom(null);
   },
   secondTouch() {
     if (!editing) return;
@@ -1330,6 +1369,8 @@ window.__sim = {
   sfx, motion, ambient, outlines,
   activities: activityView,
   ringDoorbell,
+  get rooms() { return { focus: focusRoom, preview: previewRoom, ghosted: shell.ghostedPieces(), roomAt: (x, z) => roomAt({ x, z }), ...houseRooms }; },
+  setFocusRoom,
   hoverPerson,
   get residents() { return { names: people.map((b) => b?.name ?? null), looks: people.map((b) => b?.look ?? null), guest: residents.guestPose(), guestBody: guestBody?.root ?? null, count: residents.count, poses: residents.poses(), cells: people.map((_, i) => residents.cellOf(i)), clips: people.map((b) => b?.clip ?? null), bodies: people.map((b) => b?.root ?? null), brain: residents, world: residentsWorld }; },
   get pet() { return pet ? { action: brain.action, cell: brain.cell(), onSeat: brain.onSeat, pose: brain.pose(), root: pet.root, view: pet, brain } : null; },

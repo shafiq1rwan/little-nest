@@ -319,3 +319,42 @@ test('the house has a bedroom, bathroom, reading room, hall, kitchen and living 
   expect(info).toEqual({ size: [12, 12], reach: { bedroom: true, bathroom: true, reading: true, hall: true, kitchen: true, living: true }, furnished: true, residents: 3, cat: true, throughWall: false });
   expect(errors).toEqual([]);
 });
+
+test('in the house, clicking a room turns its walls see-through; open floor turns them solid; placing previews the room', async ({ page }) => {
+  const errors = await openGame(page, '/');
+  await page.evaluate(() => { const s = window.__sim; s.startPreset('house'); s.commands.setFinish('residents', 0); s.commands.setFinish('petPresent', false); });
+  await page.locator('#panel-close').click();
+  const at = (gx, gz) => page.evaluate(([gx, gz]) => {
+    const s = window.__sim, p = new s.camera.position.constructor(gx - 6 + 0.5, 0, gz - 6 + 0.5);
+    p.project(s.camera);
+    const r = document.getElementById('scene').getBoundingClientRect();
+    return { x: r.x + (p.x + 1) * r.width / 2, y: r.y + (1 - p.y) * r.height / 2 };
+  }, [gx, gz]);
+  const rooms = () => page.evaluate(() => { const r = window.__sim.rooms; return { focus: r.focus, ghosted: r.ghosted, bathroom: r.roomOf(6, 1), bedroom: r.roomOf(3, 3) }; });
+  expect((await rooms()).ghosted).toBe(0);   // solid walls by default
+
+  let p = await at(6, 2);   // the bathroom floor, behind its wall
+  await page.mouse.click(p.x, p.y);
+  let r = await rooms();
+  expect(r.focus).toBe(r.bathroom);
+  expect(r.ghosted).toBeGreaterThan(0);
+
+  p = await at(9, 9);       // open living-room floor
+  await page.mouse.click(p.x, p.y);
+  expect(await rooms()).toMatchObject({ focus: null, ghosted: 0 });
+
+  // Placing a pouf: the room under the pointer goes see-through while aiming, and solid again after.
+  await page.locator('#dock-decorate').click();
+  await page.locator('#search').fill('pouf');
+  await page.locator('.catalog-card[data-type="pouf"]').click();
+  p = await at(3, 3);
+  await page.mouse.move(p.x, p.y);
+  r = await page.evaluate(() => ({ preview: window.__sim.rooms.preview, bedroom: window.__sim.rooms.roomOf(3, 3), ghosted: window.__sim.rooms.ghosted }));
+  expect(r.preview).toBe(r.bedroom);
+  expect(r.ghosted).toBeGreaterThan(0);
+  await page.keyboard.press('Escape');
+  p = await at(9, 9);
+  await page.mouse.move(p.x, p.y);
+  expect((await rooms()).ghosted).toBe(0);
+  expect(errors).toEqual([]);
+});

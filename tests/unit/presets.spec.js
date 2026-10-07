@@ -141,3 +141,18 @@ test('partitions close cell edges, refuse footprints that straddle them, and kee
   expect(p.isFree(occ, 'rug', 1, 1, 0)).toBe(false);           // rugs do not run under a wall either
   expect(p.isFree(occ, 'armchair', 3, 2, 0)).toBe(true);       // a single cell beside it is fine
 });
+
+test('presetRooms finds the walled rooms (doorways count as closed) and the open living area', async () => {
+  const { presetRooms } = await import('../../src/data/presets.js');
+  const house = presetRooms(ROOM_PRESETS.house);
+  const bedroom = house.roomOf(0, 0), bathroom = house.roomOf(6, 1), reading = house.roomOf(1, 6);
+  expect(new Set([bedroom, bathroom, reading, house.open]).size).toBe(4);
+  expect(house.cellsOf(bedroom)).toHaveLength(25);
+  expect(house.cellsOf(bathroom)).toHaveLength(12);
+  expect(house.cellsOf(reading)).toHaveLength(16);
+  expect([house.roomOf(10, 1), house.roomOf(1, 10), house.roomOf(8, 9)]).toEqual([house.open, house.open, house.open]);   // kitchen, hall, living
+  expect(house.roomOf(4, 4)).toBe(bedroom);     // the doorway cell inside stays with its room
+  expect(house.roomOf(4, 5)).toBe(house.open);
+  const plain = presetRooms(ROOM_PRESETS.livingRoom);
+  expect([plain.count, plain.open]).toEqual([1, 0]);
+});

@@ -115,7 +115,7 @@ People bring the room to life in small, quiet ways. A TV lights pale blue while 
 
 ## Interior walls
 
-Rooms can be divided by partitions (the apartment's bathroom). They are room-height walls (2.6 units, 0.12 thick) that face the camera, so they are drawn as a ghost: see-through pale plaster between a solid skirting board and a solid cream trim along the top, so the room behind always shows. Doorways get solid posts and a header at door height with a see-through door standing open. Ghost walls cast no shadow. A room behind a partition, or an open-plan area such as a kitchen, can have its own floor finish (cream tiles). Nothing hangs on a partition, and nothing straddles one.
+Rooms can be divided by partitions (the apartment's bathroom, the house's rooms). They are room-height plaster walls (2.6 units, 0.12 thick) on a skirting board under a cream trim, with door frames (posts, a header at door height, a wooden door standing open). They are solid by default, so a house reads as a house. Clicking a room's floor, or the wall in front of it, turns that room's walls see-through (pale plaster at 20% between the solid skirting and trim, no shadow), together with any other wall piece standing between the camera and that room; clicking the open living area or outside turns them solid again. While placing or moving furniture, the room under the pointer is see-through too. A room behind a partition, or an open-plan area such as a kitchen, can have its own floor finish (cream tiles). Nothing hangs on a partition, and nothing straddles one.
 
 ## Finish options
 

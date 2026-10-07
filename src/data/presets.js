@@ -476,16 +476,43 @@ export function presetWallRows(preset) {
 export function edgeKey(ax, az, bx, bz) {
   return ax < bx || (ax === bx && az < bz) ? ax + ',' + az + '|' + bx + ',' + bz : bx + ',' + bz + '|' + ax + ',' + az;
 }
-/** The cell edges a preset's partitions close (doorway gaps stay open). */
-export function presetPartitionEdges(preset) {
+/** The cell edges a preset's partitions close (doorway gaps stay open unless `withDoorways`). */
+export function presetPartitionEdges(preset, { withDoorways = false } = {}) {
   const out = new Set();
   for (const p of preset.partitions ?? []) {
     for (let i = p.from; i < p.to; i++) {
-      if (p.gaps?.includes(i)) continue;
+      if (!withDoorways && p.gaps?.includes(i)) continue;
       out.add(p.axis === 'z' ? edgeKey(p.line - 1, i, p.line, i) : edgeKey(i, p.line - 1, i, p.line));
     }
   }
   return out;
+}
+/**
+ * The rooms a preset's partitions enclose, counting doorways as closed: { roomOf(gx, gz), cellsOf(id), open }.
+ * Rooms are numbered from 0; `open` is the room that reaches the open front or right edge (the living area),
+ * or null when every cell is walled in. Cells are 'gx,gz' keys, like placement's cellKey.
+ */
+export function presetRooms(preset) {
+  const { width, depth } = preset;
+  const walls = presetPartitionEdges(preset, { withDoorways: true });
+  const ids = new Map(), cells = [];
+  for (let gx = 0; gx < width; gx++) for (let gz = 0; gz < depth; gz++) {
+    if (ids.has(gx + ',' + gz)) continue;
+    const id = cells.length, list = [], queue = [[gx, gz]];
+    ids.set(gx + ',' + gz, id);
+    while (queue.length) {
+      const [x, z] = queue.pop();
+      list.push(x + ',' + z);
+      for (const [nx, nz] of [[x + 1, z], [x - 1, z], [x, z + 1], [x, z - 1]]) {
+        if (nx < 0 || nz < 0 || nx >= width || nz >= depth || ids.has(nx + ',' + nz) || walls.has(edgeKey(x, z, nx, nz))) continue;
+        ids.set(nx + ',' + nz, id);
+        queue.push([nx, nz]);
+      }
+    }
+    cells.push(list);
+  }
+  const open = ids.get((width - 1) + ',' + (depth - 1)) ?? null;
+  return { roomOf: (gx, gz) => ids.get(gx + ',' + gz) ?? null, cellsOf: (id) => cells[id] ?? [], open, count: cells.length };
 }
 export const DOOR_WIDTH = 0.9, DOOR_HEIGHT = 2.3;
 /** The preset's door in world units along its wall, or null: { wall, at, width, height }. */

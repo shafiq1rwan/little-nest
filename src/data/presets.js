@@ -61,7 +61,7 @@ export const ROOM_PRESETS = {
       { type: 'snakePlant', gx: 7, gz: 4, rot: 0 },
       // Front: a desk, and a reading corner with a floor lamp.
       { type: 'kitDesk', gx: 2, gz: 7, rot: 2, key: 'desk' },
-      { type: 'kitLaptop', on: 'desk', slot: 0, rot: 2 },
+      { type: 'kitLaptop', on: 'desk', slot: 0, rot: 0 },
       { type: 'kitLampSquareTable', on: 'desk', slot: 1, rot: 0 },
       { type: 'kitChairDesk', gx: 2, gz: 6, rot: 0 },
       { type: 'monstera', gx: 4, gz: 7, rot: 0 },
@@ -107,7 +107,8 @@ export const ROOM_PRESETS = {
     lights: false,
     items: [
       // Back wall: TV corner, then a kitchenette.
-      { type: 'kitPottedPlant', gx: 0, gz: 0, rot: 0 },
+      { type: 'kitBookcaseOpen', gx: 0, gz: 0, rot: 1, key: 'shelf' },
+      { type: 'kitBooks', on: 'shelf', slot: 0, rot: 1 },
       { type: 'clock', wall: 'back', col: 0, row: 5 },
       { type: 'kitCabinetTelevision', gx: 1, gz: 0, rot: 0, key: 'tv' },
       { type: 'kitSpeakerSmall', on: 'tv', slot: 0, rot: 0 },
@@ -121,11 +122,10 @@ export const ROOM_PRESETS = {
       { type: 'kitHoodModern', wall: 'back', col: 4, row: 3 },
       // Desk under the side window.
       { type: 'kitDesk', gx: 0, gz: 2, rot: 1, key: 'desk' },
-      { type: 'kitComputerScreen', on: 'desk', slot: 0, rot: 1 },
+      { type: 'kitComputerScreen', on: 'desk', slot: 0, rot: 0 },
       { type: 'kitLampSquareTable', on: 'desk', slot: 1, rot: 0 },
       { type: 'kitChairDesk', gx: 1, gz: 2, rot: 3 },
-      { type: 'kitBookcaseOpen', gx: 5, gz: 2, rot: 3, key: 'shelf' },
-      { type: 'kitBooks', on: 'shelf', slot: 0, rot: 3 },
+      { type: 'kitPottedPlant', gx: 1, gz: 5, rot: 0 },
       // Lounge: the sofa faces the TV across a coffee table.
       { type: 'kitRugRectangle', gx: 2, gz: 3, rot: 0, color: 0xc38e62 },
       { type: 'kitTableCoffee', gx: 2, gz: 3, rot: 0, key: 'coffee' },

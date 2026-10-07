@@ -148,3 +148,45 @@ test('the shipped room presets are furnished from the Modern home collection', a
   });
   expect(errors).toEqual([]);
 });
+
+test('in the studio the TV, desk screen and stove come on for the people using them, with bubbles, and go off after', async ({ page }) => {
+  const errors = await openGame(page, '/');
+  await page.evaluate(() => { const s = window.__sim; s.startPreset('studio'); s.commands.setFinish('petPresent', false); s.commands.setFinish('residents', 3); });
+  const typeOf = (page, kind) => page.evaluate((kind) => window.__sim.items.find((i) => i.type === kind)?.id, kind);
+  const [tv, screen, stove] = [await typeOf(page, 'kitTelevisionModern'), await typeOf(page, 'kitComputerScreen'), await typeOf(page, 'kitKitchenStoveElectric')];
+
+  // Everyone stands up somewhere neutral first, then each goes to one thing and stays there.
+  const sent = await page.evaluate(([tv, screen, stove]) => {
+    const s = window.__sim, w = s.residents.world, b = s.residents.brain;
+    const owner = (key) => s.items.find((i) => key.startsWith(i.id + ':'))?.type;
+    const sofa = w.seats().find((q) => owner(q.key) === 'kitLoungeSofa');
+    const desk = w.seats().find((q) => owner(q.key) === 'kitChairDesk');
+    const cook = w.spots().find((q) => q.key === 'spot:' + stove);
+    for (let i = 0; i < 3; i++) b.person(i).claim = null;   // wherever they started, these three places are theirs now
+    return [b.send(0, { kind: 'seat', target: sofa }), b.send(1, { kind: 'seat', target: desk }), b.send(2, { kind: 'spot', target: cook })];
+  }, [tv, screen, stove]);
+  expect(sent).toEqual([true, true, true]);
+  // Pin each person the moment they reach their own place, so nobody wanders off while the others arrive.
+  const settled = await page.evaluate((stove) => new Promise((resolve) => {
+    const s = window.__sim, b = s.residents.brain, owner = (key) => s.items.find((i) => key?.startsWith(i.id + ':'))?.type;
+    const there = [(p) => owner(p.seat) === 'kitLoungeSofa', (p) => owner(p.seat) === 'kitChairDesk', (p) => p.action === 'interact' && p.spot === 'spot:' + stove];
+    const done = [false, false, false], started = performance.now();
+    (function check() {
+      s.residents.poses.forEach((p, i) => { if (!done[i] && !p.settling && there[i](p)) { done[i] = true; b.person(i).timer = 999; } });
+      if (done.every(Boolean) || performance.now() - started > 60000) resolve(done); else requestAnimationFrame(check);
+    })();
+  }), stove);
+  expect(settled).toEqual([true, true, true]);
+  await page.waitForFunction((ids) => ids.every((id) => window.__sim.activities.isLit(id)), [tv, screen, stove], { timeout: 10000 });
+  expect(await page.evaluate((id) => window.__sim.activities.hasSteam(id), stove)).toBe(true);
+
+  // A bubble pops over a head and goes away by itself.
+  await page.evaluate(() => { const s = window.__sim; s.activities.showBubble(s.residents.bodies[0], 'heart'); });
+  expect(await page.evaluate(() => window.__sim.activities.bubbleOf(window.__sim.residents.bodies[0]))).toBe('heart');
+  await page.waitForFunction(() => window.__sim.activities.bubbleOf(window.__sim.residents.bodies[0]) === null, null, { timeout: 15000 });
+
+  // Nobody home: every appliance fades off and the steam stops.
+  await page.evaluate(() => window.__sim.commands.setFinish('residents', 0));
+  await page.waitForFunction((ids) => ids.every((id) => !window.__sim.activities.isLit(id) && !window.__sim.activities.hasSteam(id)), [tv, screen, stove], { timeout: 10000 });
+  expect(errors).toEqual([]);
+});

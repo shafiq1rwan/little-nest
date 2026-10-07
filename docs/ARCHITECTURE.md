@@ -40,6 +40,8 @@ It is not yet a fully separated foundation for a larger game. src/main.js is app
 | src/scene/cat.js | Kenney-style bevelled cat geometry, facial sleep state, and joint pose blending from the brain's state; shared materials are never disposed |
 | src/game/residents.js | The residents' brain (up to three people): seats, kitchen and window spots, claims, the door; pure and unit-tested |
 | src/scene/people.js | Residents' bodies: Kenney Mini Characters (public/models/people) with crossfaded animation clips |
+| src/game/activities.js | Which appliances residents are using (TV, desk screen, stove) and which mood bubble a person shows; pure and unit-tested |
+| src/scene/activities.js | Screen and oven glow panels on appliance models, stove steam, mood-bubble sprites |
 | src/scene/motion.js | Ambient idle motion clock: lamp breathing, flicker, twinkle, plant sway |
 | src/scene/outline.js | Ink outlines: an edge pass (normals and depth) and a multiply overlay; `outlines.render()` replaces `renderer.render` for the main view and photos |
 | src/ui/sfx.js | Sound effects through Web Audio |

@@ -103,6 +103,10 @@ Motion is small and optional. Hover shows a soft cream outline (desktop mouse on
 
 A compact cat matching Kenney's Furniture Kit: bevelled box forms, a broad squared head, triangular prism ears, block eyes, paired cream cheeks and paws, and a segmented tail with a pale tip. Four fur colours (ginger, grey, cream, black) remain available. It walks, sits, rests in a sleeping loaf with closed eyes, hops onto rugs and seats, and turns its head toward the cursor. The body is about half a cell long; the complete posed silhouette, including its tail, fits within a floor cell. It never stands inside furniture.
 
+## Residents and the room
+
+People bring the room to life in small, quiet ways. A TV lights pale blue while someone sits facing it, a laptop or monitor glows for the person at its desk, and a stove's hob and oven window glow warm with a few soft steam puffs while someone cooks. Glows fade in and out over about half a second and never light the room. Mood bubbles are cream speech bubbles with a brown edge and a single drawn icon (heart, note, cup, sleepy z), shown for under three seconds when someone settles; never text, never emoji fonts. Under reduced motion glows switch without fading and steam is off.
+
 ## Finish options
 
 The Walls and Floor tabs put a row of option buttons above the swatches: the wall target (Both walls, Back, Left) and the floor pattern (Parquet, Planks, Tile). Active options use the sage primary style; 32px on desktop and 44px on compact.

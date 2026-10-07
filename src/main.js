@@ -28,6 +28,8 @@ import { createCat, disposeCat } from './scene/cat.js';
 import { createOutlines } from './scene/outline.js';
 import { createResidentsBrain, MAX_RESIDENTS } from './game/residents.js';
 import { preloadPeople, createPerson } from './scene/people.js';
+import { activeAppliances, bubbleFor, APPLIANCE_KINDS } from './game/activities.js';
+import { createActivityView } from './scene/activities.js';
 import { createPetBrain } from './game/pet.js';
 import { cellKey } from './game/placement.js';
 import { readString, writeString } from './persistence/storage.js';
@@ -265,6 +267,44 @@ const residentsWorld = {
 const residents = createResidentsBrain(residentsWorld);
 residents.setAvoid(() => (pet ? brain.onSeat : null));
 const people = [];       // bodies, one per resident that loaded
+// What residents do to the room: screens light up, stoves glow and steam, bubbles pop up (src/game/activities.js).
+const activityView = createActivityView(scene);
+const lastAction = [];   // per resident, to notice when someone settles
+const worldDir = new THREE.Vector3(), worldAt = new THREE.Vector3();
+function appliancesInRoom() {
+  const out = [];
+  for (const r of state.items) {
+    const kind = APPLIANCE_KINDS[r.type];
+    const mesh = kind && meshes.get(r.id);
+    if (!mesh) continue;
+    mesh.getWorldPosition(worldAt); mesh.getWorldDirection(worldDir);
+    out.push({ id: r.id, type: r.type, kind, mesh, x: worldAt.x, z: worldAt.z, facing: Math.atan2(worldDir.x, worldDir.z) });
+  }
+  return out;
+}
+/** Lights appliances in use and pops bubbles for people who just settled. Returns true while anything animates. */
+function stepActivities(poses, dt, now, animate) {
+  const appliances = appliancesInRoom();
+  const active = activeAppliances(poses, appliances);
+  let busy = activityView.update(appliances, active, dt, now / 1000, animate);
+  const heights = new Map();
+  poses.forEach((pose, i) => {
+    const body = people[i];
+    if (!body) return;
+    heights.set(body.root, pose.action === 'sit' ? 1.35 : 1.62);
+    const before = lastAction[i];
+    lastAction[i] = pose.settling ? 'walk' : pose.action;
+    if (before !== 'walk' || pose.settling || !['sit', 'interact', 'gaze', 'idle'].includes(pose.action)) return;
+    const spotItem = pose.spot?.startsWith('spot:') ? state.get(pose.spot.slice(5)) : null;
+    const place = spotItem ? (APPLIANCE_KINDS[spotItem.type] === 'stove' ? 'stove' : 'kitchen')
+      : pose.action === 'sit' ? activeAppliances([pose], appliances.filter((a) => a.kind !== 'stove')).size ? 'tv' : null : null;
+    const cat = pet ? brain.pose() : null;
+    const icon = bubbleFor({ action: pose.action, place, evening: finishes.lighting === 'evening', catNear: !!cat && Math.hypot(cat.x - pose.x, cat.z - pose.z) < 1.6 });
+    if (icon) { activityView.showBubble(body.root, icon); busy = true; }
+  });
+  if (activityView.stepBubbles(dt, heights, animate)) busy = true;
+  return busy;
+}
 let residentsClock = 0, residentsRestRender = 0, residentsByDoor = false;
 /** Matches the bodies to the `residents` finish. New arrivals walk in when the player invited them. */
 function syncResidents() {
@@ -294,7 +334,7 @@ function showResidents(dt) {
 /** Advances the residents and the door. Returns true when a frame should be drawn. */
 function stepResidents(now) {
   const door = shell.door;
-  if (!residents.count && !(door && door.open > 0)) return false;
+  if (!residents.count && !(door && door.open > 0) && !activityView.anyLit()) return false;
   const dt = residentsClock ? Math.min(0.1, (now - residentsClock) / 1000) : 1 / 60;
   residentsClock = now;
   residents.setCalm(!motion.isEnabled());
@@ -306,6 +346,7 @@ function stepResidents(now) {
     const want = residents.doorWanted();
     if (door.open !== want) { door.setOpen(animate ? Math.max(0, Math.min(1, door.open + Math.sign(want - door.open) * dt * 2.4)) : want); moving = true; }
   }
+  if (stepActivities(poses, dt, now, animate)) moving = true;
   if (moving) return true;
   if (animate && poses.length && now - residentsRestRender > 66) { residentsRestRender = now; return true; }
   return false;
@@ -1127,6 +1168,7 @@ window.__sim = {
   collections: COLLECTIONS,
   get musicOn() { return music.isOn(); },
   sfx, motion, ambient, outlines,
+  activities: activityView,
   get residents() { return { count: residents.count, poses: residents.poses(), cells: people.map((_, i) => residents.cellOf(i)), clips: people.map((b) => b.clip), bodies: people.map((b) => b.root), brain: residents, world: residentsWorld }; },
   get pet() { return pet ? { action: brain.action, cell: brain.cell(), onSeat: brain.onSeat, pose: brain.pose(), root: pet.root, view: pet, brain } : null; },
   get items() { return state.items.map(withMesh); },

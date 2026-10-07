@@ -12,7 +12,8 @@
 //   door()        -> { gx, gz, x, z, outX, outZ } | null      the floor cell inside the door, the
 //                                                             threshold point, and a point beyond it
 // }
-// pose(i) returns { x, y, z, heading, action, outside, seat }. action: 'walk' | 'idle' | 'sit' |
+// pose(i) returns { x, y, z, heading, action, outside, seat, spot, settling } (spot: the claimed spot key while
+// busy at it; settling: stepping onto or off a seat). action: 'walk' | 'idle' | 'sit' |
 // 'interact' | 'gaze' | 'away'. People never rest on a cell that is not free: when furniture lands on
 // them they step to the nearest free cell, and they stand up when their seat is moved or removed.
 
@@ -269,7 +270,8 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
   function pose(i) {
     const p = people[i];
     if (!p) return null;
-    return { x: p.pos.x, y: p.pos.y, z: p.pos.z, heading: p.heading, action: p.away ? 'away' : p.action, outside: p.away || p.outside, seat: p.seat };
+    const spot = !p.away && !p.transit && (p.action === 'interact' || p.action === 'gaze') ? p.claim : null;
+    return { x: p.pos.x, y: p.pos.y, z: p.pos.z, heading: p.heading, action: p.away ? 'away' : p.action, outside: p.away || p.outside, seat: p.seat, spot, settling: !!p.transit };
   }
 
   return {

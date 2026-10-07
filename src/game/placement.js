@@ -15,14 +15,30 @@ export function wallKey(wall, col, row) {
   return wall + ':' + col + ',' + row;
 }
 
-export function createPlacement({ catalog, room = 8, width = room, depth = room, cell = 1, wallRows = 8, wallRow = 0.5 }) {
-  const dims = { width, depth, wallRows };
+/** The same key as edgeKey in src/data/presets.js: the edge between two neighbouring cells. */
+const edge = (ax, az, bx, bz) => (ax < bx || (ax === bx && az < bz) ? ax + ',' + az + '|' + bx + ',' + bz : bx + ',' + bz + '|' + ax + ',' + az);
+
+export function createPlacement({ catalog, room = 8, width = room, depth = room, cell = 1, wallRows = 8, wallRow = 0.5, edges = new Set() }) {
+  const dims = { width, depth, wallRows, edges };
   const halfW = () => (dims.width * cell) / 2;
   const halfD = () => (dims.depth * cell) / 2;
 
   /** Changes the room size. Existing records are the caller's responsibility (clear first). */
-  function configure({ width: w = dims.width, depth: d = dims.depth, wallRows: r = dims.wallRows }) {
-    dims.width = w; dims.depth = d; dims.wallRows = r;
+  function configure({ width: w = dims.width, depth: d = dims.depth, wallRows: r = dims.wallRows, edges: e = dims.edges }) {
+    dims.width = w; dims.depth = d; dims.wallRows = r; dims.edges = e;
+  }
+  /** True when nothing walls off the step between two neighbouring cells (interior partitions). */
+  function passable(ax, az, bx, bz) {
+    return !dims.edges.has(edge(ax, az, bx, bz));
+  }
+  /** True when no partition runs through a footprint. */
+  function spansPartition(gx, gz, w, d) {
+    if (!dims.edges.size) return false;
+    for (let x = 0; x < w; x++) for (let z = 0; z < d; z++) {
+      if (x + 1 < w && !passable(gx + x, gz + z, gx + x + 1, gz + z)) return true;
+      if (z + 1 < d && !passable(gx + x, gz + z, gx + x, gz + z + 1)) return true;
+    }
+    return false;
   }
 
   function footprint(type, rot) {
@@ -103,6 +119,7 @@ export function createPlacement({ catalog, room = 8, width = room, depth = room,
   function isFree(occupancy, type, gx, gz, rot, ignore = null) {
     const { cells, w, d } = cellsOf(type, gx, gz, rot);
     if (!inBounds(gx, gz, w, d)) return false;
+    if (spansPartition(gx, gz, w, d)) return false;   // rugs too: nothing straddles an interior wall
     if (!occupies(type)) return true;
     return cells.every((c) => !occupancy.has(c) || (ignore && ignore.has(c)));
   }
@@ -193,6 +210,7 @@ export function createPlacement({ catalog, room = 8, width = room, depth = room,
   }
 
   return {
+    passable,
     get room() { return Math.max(dims.width, dims.depth); },
     get width() { return dims.width; },
     get depth() { return dims.depth; },

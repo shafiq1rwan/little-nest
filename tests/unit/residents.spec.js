@@ -248,3 +248,25 @@ test('people walk the last step onto a dining chair from beside it, never slidin
   expect(sitting).toBeGreaterThan(0);
   expect(longest).toBeLessThanOrEqual(1 + 1e-9);
 });
+
+test('people walk around interior walls and in through the doorway, never through a partition', async () => {
+  const { presetPartitionEdges, edgeKey } = await import('../../src/data/presets.js');
+  // An 8 x 8 room with a 3 x 3 bathroom in the back-left corner and its doorway at column 2.
+  const edges = presetPartitionEdges({ partitions: [{ axis: 'z', line: 3, from: 0, to: 3 }, { axis: 'x', line: 3, from: 0, to: 3, gaps: [2] }] });
+  const w = room();
+  w.passable = (ax, az, bx, bz) => !edges.has(edgeKey(ax, az, bx, bz));
+  const brain = createResidentsBrain(w, { rng: seeded(6) });
+  const path = brain.findPath({ gx: 5, gz: 1 }, { gx: 1, gz: 1 });
+  expect(path.some((c) => c.gx === 2 && c.gz === 2) && path.some((c) => c.gx === 2 && c.gz === 3), 'through the doorway').toBe(true);
+  let prev = { gx: 5, gz: 1 };
+  for (const c of path) {
+    const dx = c.gx - prev.gx, dz = c.gz - prev.gz;
+    const steps = dx && dz ? [[prev, { gx: prev.gx + dx, gz: prev.gz }], [{ gx: prev.gx + dx, gz: prev.gz }, c], [prev, { gx: prev.gx, gz: prev.gz + dz }], [{ gx: prev.gx, gz: prev.gz + dz }, c]] : [[prev, c]];
+    for (const [a, b] of steps) expect(w.passable(a.gx, a.gz, b.gx, b.gz), JSON.stringify([a, b])).toBe(true);
+    prev = c;
+  }
+  // The cat too.
+  const { createPetBrain } = await import('../../src/game/pet.js');
+  const cat = createPetBrain({ ...w, seats: () => [], favourites: () => ({ rug: [], sun: [] }) });
+  expect(cat.findPath({ gx: 3, gz: 0 }, { gx: 2, gz: 0 }).length).toBeGreaterThan(2);   // around, not through
+});

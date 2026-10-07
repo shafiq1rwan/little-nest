@@ -14,6 +14,7 @@
 //   beds()        -> [{ key, x, y, z, heading }]              optional: where to lie down (the hips' spot)
 //   evening()     -> boolean                                  optional: bedtime; sleepers wake when it ends
 //   cat()         -> { x, z } | null                          optional: the cat, while it rests on the floor
+//   passable(ax,az,bx,bz) -> boolean                          optional: false where an interior wall closes a step
 // }
 // A guest (ringDoorbell) is a visitor on top of the residents: they come in through the door after the bell,
 // do what residents do except sleep, and leave again after a while. Guests are never saved.
@@ -65,6 +66,14 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
     }
     return best;
   }
+  /** A step to a neighbouring cell that no interior wall closes; a diagonal needs both of its corners open. */
+  function canStep(a, b) {
+    const pass = (p, q) => world.passable?.(p.gx, p.gz, q.gx, q.gz) ?? true;
+    const dx = b.gx - a.gx, dz = b.gz - a.gz;
+    if (!dx || !dz) return pass(a, b);
+    const viaX = { gx: a.gx + dx, gz: a.gz }, viaZ = { gx: a.gx, gz: a.gz + dz };
+    return pass(a, viaX) && pass(viaX, b) && pass(a, viaZ) && pass(viaZ, b);
+  }
   /** A* over free cells with eight neighbours; diagonals may not cut a blocked corner. */
   function findPath(from, to) {
     if (!free(to.gx, to.gz)) return null;
@@ -87,6 +96,7 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
         const n = { gx: cur.gx + dx, gz: cur.gz + dz };
         if (!free(n.gx, n.gz)) continue;
         if (dx && dz && (!free(cur.gx + dx, cur.gz) || !free(cur.gx, cur.gz + dz))) continue;
+        if (!canStep(cur, n)) continue;   // interior walls (partitions) close some steps
         const g = cost.get(key(cur)) + (dx && dz ? Math.SQRT2 : 1);
         if (g >= (cost.get(key(n)) ?? Infinity)) continue;
         cost.set(key(n), g); came.set(key(n), { gx: cur.gx, gz: cur.gz });
@@ -128,6 +138,7 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
       if (!free(n.gx, n.gz) || taken.has(cellKey(n))) continue;
       const diagonal = dx !== 0 && dz !== 0;
       if (diagonal && Math.abs(dx) === 1 && Math.abs(dz) === 1 && !free(c.gx + dx, c.gz) && !free(c.gx, c.gz + dz)) continue;
+      if (Math.max(Math.abs(dx), Math.abs(dz)) === 1 && !canStep(c, n)) continue;   // not through a partition
       const q = center(n.gx, n.gz);
       const score = Math.hypot(q.x - front.x, q.z - front.z) + (diagonal ? 1.5 : 0) + (Math.max(Math.abs(dx), Math.abs(dz)) - 1) * 3;
       if (score < bestScore) { bestScore = score; best = n; }

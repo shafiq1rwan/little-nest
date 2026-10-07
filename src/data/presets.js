@@ -5,6 +5,11 @@
 // `walls: 'railing'` swaps the two walls for low railings (open air): nothing can be wall-mounted there.
 // `door: { wall, end }` puts a door on a wall, at its 'front' (left wall, +z) or 'back'/'right' end; residents come and go
 // through it. Door cells refuse new wall decorations but never invalidate a saved room.
+// `partitions` are interior cutaway walls on grid lines: { axis, line, from, to, gaps }. axis 'z' runs along z on
+// the grid line x = line (between columns line - 1 and line) over rows from..to-1; axis 'x' runs along x on the grid
+// line z = line over columns from..to-1. `gaps` lists the rows (or columns) left open as doorways. Furniture may
+// not straddle a partition, and people and the cat walk around it. `zones` give a floor area its own finish:
+// { from: [gx, gz], to: [gx, gz] (exclusive), floor: 'tile' }.
 // Keys are stored in saved rooms: never rename them; add migrations before removing one.
 
 export const WALL_HEIGHT = 4;
@@ -246,6 +251,66 @@ export const ROOM_PRESETS = {
       { type: 'basket', gx: 1, gz: 3, rot: 0 },
     ],
   },
+  apartment: {
+    name: 'Apartment',
+    blurb: 'A roomy one-room home with its own tiled bathroom, a bed, a lounge and a kitchenette.',
+    width: 10, depth: 8,
+    windows: [{ wall: 'back', at: 1, width: 3.6 }, { wall: 'left', at: -3, width: 1.4 }],
+    door: { wall: 'left', end: 'front' },
+    residents: 2,
+    lights: true,
+    // The bathroom: the back-left 3 x 3 corner, walled off with a doorway at its front right.
+    partitions: [{ axis: 'z', line: 3, from: 0, to: 3 }, { axis: 'x', line: 3, from: 0, to: 3, gaps: [2] }],
+    zones: [{ from: [0, 0], to: [3, 3], floor: 'tile' }],
+    items: [
+      // Bathroom: shower and bathtub along the back wall, toilet and basin on the side wall, a vanity by the wall.
+      { type: 'kitShower', gx: 0, gz: 0, rot: 0 },
+      { type: 'kitBathtub', gx: 1, gz: 0, rot: 0 },
+      { type: 'kitToilet', gx: 0, gz: 1, rot: 1 },
+      { type: 'kitBathroomSink', gx: 0, gz: 2, rot: 1 },
+      { type: 'kitBathroomMirror', wall: 'left', col: 2, row: 3 },
+      { type: 'kitBathroomCabinetDrawer', gx: 2, gz: 1, rot: 3, key: 'vanity' },
+      { type: 'kitPlantSmall3', on: 'vanity', slot: 0, rot: 0 },
+      // Lounge under the big window.
+      { type: 'kitPottedPlant', gx: 3, gz: 0, rot: 0 },
+      { type: 'kitLoungeSofa', gx: 4, gz: 0, rot: 0, key: 'sofa', select: true },
+      { type: 'kitPillow', on: 'sofa', slot: 0, rot: 0, color: 0x81936a },
+      { type: 'kitRugRectangle', gx: 3, gz: 1, rot: 0, color: 0xc38e62 },
+      { type: 'kitTableCoffee', gx: 4, gz: 2, rot: 0, key: 'coffee' },
+      { type: 'kitBooks', on: 'coffee', slot: 0, rot: 0 },
+      { type: 'kitLoungeChair', gx: 3, gz: 2, rot: 1, color: 0x81936a },
+      { type: 'kitLampRoundFloor', gx: 6, gz: 0, rot: 0 },
+      // Kitchenette on the right of the back wall.
+      { type: 'kitKitchenCabinetDrawer', gx: 7, gz: 0, rot: 0, key: 'counter' },
+      { type: 'kitKitchenCoffeeMachine', on: 'counter', slot: 0, rot: 0 },
+      { type: 'kitKitchenStove', gx: 8, gz: 0, rot: 0 },
+      { type: 'kitKitchenFridge', gx: 9, gz: 0, rot: 0 },
+      { type: 'kitHoodModern', wall: 'back', col: 8, row: 3 },
+      { type: 'kitKitchenCabinetUpperLow', wall: 'back', col: 9, row: 4 },
+      // Dining table for four.
+      { type: 'kitTable', gx: 7, gz: 3, rot: 0, key: 'dining' },
+      { type: 'vase', on: 'dining', slot: 0, rot: 0 },
+      { type: 'kitChairCushion', gx: 7, gz: 2, rot: 0 },
+      { type: 'kitChairCushion', gx: 8, gz: 2, rot: 0 },
+      { type: 'kitChairCushion', gx: 7, gz: 4, rot: 2 },
+      { type: 'kitChairCushion', gx: 8, gz: 4, rot: 2 },
+      // Bed against the left wall with a nightstand each side; the front door is just beyond.
+      { type: 'kitCabinetBedDrawerTable', gx: 0, gz: 3, rot: 1, key: 'standA' },
+      { type: 'kitLampRoundTable', on: 'standA', slot: 0, rot: 0 },
+      { type: 'kitBedDouble', gx: 0, gz: 4, rot: 1 },
+      { type: 'kitCabinetBedDrawerTable', gx: 0, gz: 6, rot: 1, key: 'standB' },
+      { type: 'kitLampRoundTable', on: 'standB', slot: 0, rot: 0 },
+      { type: 'botanicalPrint', wall: 'left', col: 4, row: 4 },
+      { type: 'kitRugDoormat', gx: 0, gz: 7, rot: 1 },
+      // A desk at the front and plants.
+      { type: 'kitDesk', gx: 8, gz: 7, rot: 2, key: 'desk' },
+      { type: 'kitLaptop', on: 'desk', slot: 0, rot: 0 },
+      { type: 'kitChairDesk', gx: 8, gz: 6, rot: 0 },
+      { type: 'monstera', gx: 9, gz: 5, rot: 0 },
+      { type: 'snakePlant', gx: 5, gz: 7, rot: 0 },
+      { type: 'clock', wall: 'back', col: 3, row: 5 },
+    ],
+  },
   readingNook: {
     name: 'Reading nook',
     blurb: 'A small, quiet corner with a recliner under the window, a lamp, and walls of books.',
@@ -299,6 +364,21 @@ export function presetWallRows(preset) {
   return preset.walls === 'railing' ? 0 : WALL_HEIGHT / 0.5;
 }
 
+/** A key for the edge between two neighbouring cells, the same whichever way round they are given. */
+export function edgeKey(ax, az, bx, bz) {
+  return ax < bx || (ax === bx && az < bz) ? ax + ',' + az + '|' + bx + ',' + bz : bx + ',' + bz + '|' + ax + ',' + az;
+}
+/** The cell edges a preset's partitions close (doorway gaps stay open). */
+export function presetPartitionEdges(preset) {
+  const out = new Set();
+  for (const p of preset.partitions ?? []) {
+    for (let i = p.from; i < p.to; i++) {
+      if (p.gaps?.includes(i)) continue;
+      out.add(p.axis === 'z' ? edgeKey(p.line - 1, i, p.line, i) : edgeKey(i, p.line - 1, i, p.line));
+    }
+  }
+  return out;
+}
 export const DOOR_WIDTH = 0.9, DOOR_HEIGHT = 2.3;
 /** The preset's door in world units along its wall, or null: { wall, at, width, height }. */
 export function presetDoor(preset) {

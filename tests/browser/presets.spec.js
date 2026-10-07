@@ -18,7 +18,7 @@ for (const [width, height, label] of [[1440, 900, 'desktop'], [390, 844, 'phone'
 
       // Start a studio from the Rooms dialog.
       await page.locator('#load').click();
-      await expect(page.locator('#gallery-presets .preset-card')).toHaveCount(5);
+      await expect(page.locator('#gallery-presets .preset-card')).toHaveCount(6);
       await page.getByRole('button', { name: 'Start a new studio', exact: true }).click();
       await expect(page.locator('#gallery')).toBeHidden();
       await twoFrames(page);

@@ -113,6 +113,10 @@ A compact cat matching Kenney's Furniture Kit: bevelled box forms, a broad squar
 
 People bring the room to life in small, quiet ways. A TV lights pale blue while someone sits facing it, a laptop or monitor glows for the person at its desk, and a stove's hob and oven window glow warm with a few soft steam puffs while someone cooks. Glows fade in and out over about half a second and never light the room. Mood bubbles are cream speech bubbles with a brown edge and a single drawn icon (heart, note, cup, sleepy z), shown for under three seconds when someone settles; never text, never emoji fonts. Under reduced motion glows switch without fading and steam is off. Sleepers lie on their backs under a small sage blanket with their heads out; a playing radio sends up a few small brown notes. A guest rings with a soft two-note chime and is the only visitor at a time; under reduced motion nobody visits. Pointing at a person shows a cream name tag with a brown edge just above their head; in the Light tab each resident has a row with their picture, an editable name (up to 20 characters) and ‹ › buttons that step through the twelve looks.
 
+## Interior walls
+
+Rooms can be divided by partitions (the apartment's bathroom). They are low cutaway walls, 1.35 units high and 0.12 thick, in a pale plaster cream with the cream trim along the top, so the camera always sees over them into the room behind; doorways are plain gaps. A room behind a partition can have its own floor finish (the bathroom's cream tiles). Nothing hangs on a partition, and nothing straddles one.
+
 ## Finish options
 
 The Walls and Floor tabs put a row of option buttons above the swatches: the wall target (Both walls, Back, Left) and the floor pattern (Parquet, Planks, Tile). Active options use the sage primary style; 32px on desktop and 44px on compact.

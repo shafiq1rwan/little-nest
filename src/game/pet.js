@@ -2,6 +2,7 @@
 // no DOM, so tests/unit can drive it. The scene turns each pose into joint angles (src/scene/cat.js).
 //
 // world: {
+//   passable(ax,az,bx,bz) -> boolean              optional: false where an interior wall closes the step
 //   dims()       -> { width, depth, cell }        room size in cells
 //   isFree(gx,gz) -> boolean                      floor cell clear of furniture
 //   seats()      -> [{ key, x, y, z }]            free seat slots the cat may hop onto (world position)
@@ -45,6 +46,14 @@ export function createPetBrain(world, { rng = Math.random, speed = 0.85, hopTime
     }
     return best;
   }
+  /** A step to a neighbouring cell that no interior wall closes; a diagonal needs both of its corners open. */
+  function canStep(a, b) {
+    const pass = (p, q) => world.passable?.(p.gx, p.gz, q.gx, q.gz) ?? true;
+    const dx = b.gx - a.gx, dz = b.gz - a.gz;
+    if (!dx || !dz) return pass(a, b);
+    const viaX = { gx: a.gx + dx, gz: a.gz }, viaZ = { gx: a.gx, gz: a.gz + dz };
+    return pass(a, viaX) && pass(viaX, b) && pass(a, viaZ) && pass(viaZ, b);
+  }
   /** A* over free cells with eight neighbours; diagonals may not cut a blocked corner. */
   function findPath(from, to) {
     if (!free(to.gx, to.gz)) return null;
@@ -66,6 +75,7 @@ export function createPetBrain(world, { rng = Math.random, speed = 0.85, hopTime
         const n = { gx: cur.gx + dx, gz: cur.gz + dz };
         if (!free(n.gx, n.gz)) continue;
         if (dx && dz && (!free(cur.gx + dx, cur.gz) || !free(cur.gx, cur.gz + dz))) continue;
+        if (!canStep(cur, n)) continue;   // interior walls (partitions) close some steps
         const g = cost.get(key(cur)) + (dx && dz ? Math.SQRT2 : 1);
         if (g >= (cost.get(key(n)) ?? Infinity)) continue;
         cost.set(key(n), g); came.set(key(n), { gx: cur.gx, gz: cur.gz });

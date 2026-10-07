@@ -4,7 +4,7 @@ import { createRoomState } from '../../src/game/state.js';
 import { createCommands } from '../../src/game/commands.js';
 import { parseRoom, migrateRoom, SaveError, CURRENT_VERSION, LEGACY_ROOM } from '../../src/persistence/schema.js';
 import { createRequire } from 'node:module';
-import { ROOM_PRESETS, DEFAULT_PRESET, MIN_ROOM_SIZE, MAX_ROOM_SIZE, presetFixtures, presetWallRows } from '../../src/data/presets.js';
+import { ROOM_PRESETS, DEFAULT_PRESET, MIN_ROOM_SIZE, MAX_ROOM_SIZE, presetFixtures, presetWallRows, presetPartitionEdges } from '../../src/data/presets.js';
 
 // The real catalog's footprints and surfaces, without Three.js: only the fields the rules read.
 const catalog = {
@@ -25,7 +25,7 @@ const catalog = {
 for (const e of createRequire(import.meta.url)('../../src/data/kenney-catalog.json')) {
   catalog[e.key] = { w: e.w, d: e.d, ...(e.layer && { layer: e.layer }), ...(e.wall && { wall: e.wall }), ...(e.surface && { surface: e.surface }), ...(e.surfaceKind && { surfaceKind: e.surfaceKind }) };
 }
-const placementFor = (room) => createPlacement({ catalog, width: room.width, depth: room.depth, wallRows: presetWallRows(ROOM_PRESETS[room.preset] ?? {}) });
+const placementFor = (room) => createPlacement({ catalog, width: room.width, depth: room.depth, wallRows: presetWallRows(ROOM_PRESETS[room.preset] ?? {}), edges: presetPartitionEdges(ROOM_PRESETS[room.preset] ?? {}) });
 const wallBlockedFor = (room) => placementFor(room).blockedWallCells(presetFixtures({ ...ROOM_PRESETS[room.preset], width: room.width, depth: room.depth }));
 let n = 0;
 const opts = { catalog, placementFor, wallBlockedFor, presets: ROOM_PRESETS, maxItems: 200, newId: () => 'n' + n++, sizeRange: [MIN_ROOM_SIZE, MAX_ROOM_SIZE] };
@@ -125,4 +125,19 @@ test('replaceRoom with a different shell emits room after clearing and undo rest
   events.length = 0;
   commands.replaceRoom({ wall: 3, floor: 4, items: [] });
   expect(events).not.toContain('room');
+});
+
+test('partitions close cell edges, refuse footprints that straddle them, and keep doorway gaps open', () => {
+  const apartment = ROOM_PRESETS.apartment;
+  const edges = presetPartitionEdges(apartment);
+  const p = createPlacement({ catalog, width: 10, depth: 8, edges });
+  expect(p.passable(2, 0, 3, 0)).toBe(false);    // the bathroom's side wall
+  expect(p.passable(0, 2, 0, 3)).toBe(false);    // its front wall
+  expect(p.passable(2, 2, 2, 3)).toBe(true);     // the doorway
+  expect(p.passable(5, 5, 6, 5)).toBe(true);     // open floor
+  const occ = new Set();
+  expect(p.isFree(occ, 'coffeeTable', 2, 1, 0)).toBe(false);   // 2 x 1 across the side wall
+  expect(p.isFree(occ, 'coffeeTable', 3, 1, 0)).toBe(true);
+  expect(p.isFree(occ, 'rug', 1, 1, 0)).toBe(false);           // rugs do not run under a wall either
+  expect(p.isFree(occ, 'armchair', 2, 2, 0)).toBe(true);       // a single cell beside it is fine
 });

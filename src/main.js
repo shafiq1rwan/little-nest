@@ -8,7 +8,7 @@ import { tintModel as tint, disposeModel, measureModel, compactModel } from './s
 import { installIcons } from './ui/icons.js';
 import { CELL, CAMERA, RENDER, MOTION, MUSIC, SAVE_KEY, ROOMS_KEY, MUSIC_KEY, SFX_KEY, SFX_VOLUME_KEY, AMBIENT_KEY, OUTLINES_KEY, MAX_SAVED_ITEMS } from './config/game.js';
 import { BACKDROP, SELECTION_OUTLINE, HOVER_OUTLINE, GHOST_OK, GHOST_BLOCKED, WALL_FINISHES, FLOOR_FINISHES, FLOOR_STYLES, DEFAULT_FLOOR_STYLE, ITEM_COLORS, PET_COLORS, DEFAULT_PET_COLOR } from './config/theme.js';
-import { ROOM_PRESETS, DEFAULT_PRESET, WALL_HEIGHT, MIN_ROOM_SIZE, MAX_ROOM_SIZE, presetFixtures, presetWallRows, presetDoor } from './data/presets.js';
+import { ROOM_PRESETS, DEFAULT_PRESET, WALL_HEIGHT, MIN_ROOM_SIZE, MAX_ROOM_SIZE, presetFixtures, presetWallRows, presetDoor, presetPartitionEdges } from './data/presets.js';
 import { COLLECTIONS, DEFAULT_COLLECTION } from './data/collections.js';
 import { LIGHTING, DEFAULT_LIGHTING } from './data/lighting.js';
 import { createPlacement } from './game/placement.js';
@@ -70,7 +70,7 @@ function presetFor(room) {
 }
 /** Placement rules for another room size, used to validate saves and imports before they are applied. */
 function placementFor(room) {
-  return createPlacement({ catalog: CATALOG, width: room.width, depth: room.depth, cell: CELL, wallRows: presetWallRows(presetFor(room)), wallRow: 0.5 });
+  return createPlacement({ catalog: CATALOG, width: room.width, depth: room.depth, cell: CELL, wallRows: presetWallRows(presetFor(room)), wallRow: 0.5, edges: presetPartitionEdges(presetFor(room)) });
 }
 function wallBlockedFor(room) {
   return placementFor(room).blockedWallCells(presetFixtures(presetFor(room)).filter((f) => f.kind !== 'door'));   // doors never invalidate a save
@@ -95,7 +95,7 @@ function buildShell(room) {
   shell = createRoom(scene, { ...preset, doorway: presetDoor(preset) }, WALL_HEIGHT, { wallColor: finishes.wall, wallLeftColor: finishes.wallLeft, floorColor: finishes.floor, floorStyle: finishes.floorStyle });
   shell.walls.visible = wallsVisible;
   motion.setBulbs(shell.bulbs);
-  placement.configure({ width: room.width, depth: room.depth, wallRows: presetWallRows(preset) });
+  placement.configure({ width: room.width, depth: room.depth, wallRows: presetWallRows(preset), edges: presetPartitionEdges(preset) });
   wallBlocked.clear();
   const fixtures = presetFixtures(preset);
   for (const c of placement.blockedWallCells(fixtures.filter((f) => f.kind !== 'door'))) wallBlocked.add(c);
@@ -184,6 +184,7 @@ const outlineSetting = { isOn: () => outlines.enabled, setOn(on) { outlines.setE
 const petWorld = {
   dims: () => ({ width: roomConfig.width, depth: roomConfig.depth, cell: CELL }),
   isFree: (gx, gz) => !state.occupancy.has(cellKey(gx, gz)),
+  passable: (ax, az, bx, bz) => placement.passable(ax, az, bx, bz),
   seats() {
     const out = [];
     for (const r of state.items) {
@@ -224,6 +225,7 @@ function chairHeight(type) { const def = CATALOG[type]; return def.tags?.include
 const residentsWorld = {
   dims: petWorld.dims,
   isFree: petWorld.isFree,
+  passable: petWorld.passable,
   seats() {
     const out = [];
     for (const r of state.items) {
@@ -244,7 +246,8 @@ const residentsWorld = {
     const out = [];
     for (const r of state.items) {
       const def = CATALOG[r.type];
-      if (r.parent || r.gx === null || !def.tags?.includes('kitchen') || !placement.occupies(r.type) || r.type === 'kitTrashcan') continue;
+      const basin = r.type === 'kitBathroomSink' || r.type === 'kitBathroomSinkSquare';   // washing up in the bathroom
+      if (r.parent || r.gx === null || !(def.tags?.includes('kitchen') || basin) || !placement.occupies(r.type) || r.type === 'kitTrashcan') continue;
       const h = rotY(r), { w, d } = placement.footprint(r.type, r.rot);
       const fx = Math.round(Math.sin(h)), fz = Math.round(Math.cos(h));
       const gx = fx > 0 ? r.gx + w : fx < 0 ? r.gx - 1 : r.gx, gz = fz > 0 ? r.gz + d : fz < 0 ? r.gz - 1 : r.gz;
@@ -335,7 +338,7 @@ function stepActivities(pairs, dt, now, animate) {
     }
     if (before !== 'walk' || pose.settling || !['sit', 'interact', 'gaze', 'idle', 'sleep', 'pet'].includes(pose.action)) return;
     const spotItem = pose.spot?.startsWith('spot:') ? state.get(pose.spot.slice(5)) : null;
-    const place = spotItem ? (APPLIANCE_KINDS[spotItem.type] === 'stove' ? 'stove' : 'kitchen')
+    const place = spotItem ? (APPLIANCE_KINDS[spotItem.type] === 'stove' ? 'stove' : CATALOG[spotItem.type].tags?.includes('bathroom') ? 'bath' : 'kitchen')
       : pose.action === 'sit' ? activeAppliances([pose], appliances.filter((a) => a.kind !== 'stove')).size ? 'tv' : null : null;
     const cat = pet ? brain.pose() : null;
     const radioNear = music.isOn() && state.items.some((r) => { if (!isRadio(r.type) || !r.lit || !meshes.has(r.id)) return false; meshes.get(r.id).getWorldPosition(worldAt); return Math.hypot(worldAt.x - pose.x, worldAt.z - pose.z) < 2.5; });

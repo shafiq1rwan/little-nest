@@ -40,7 +40,7 @@ Keep package-lock.json when moving computers. The runtime itself is browser-base
 - Right-drag to orbit and scroll to zoom.
 - The HUD is a few quiet pieces around the room: a top-right bar (Rooms, Save, a More menu, Hide HUD), a floating Decorate card, and a bottom dock (Decorate, Undo, Redo, grid, View with the camera tools). On phones the Decorate card is a bottom sheet with the dock along its foot; choosing furniture lowers it for placement and selecting an item shows its actions there. Landscape phones use a side drawer.
 - One finger moves furniture; two fingers orbit/pinch.
-- Save room keeps the open room in this browser (the first save is named "Living room"). Rooms also offers "Start fresh" presets: living room, studio, reading nook, bedroom, and an open-air balcony, each with its own size, windows, and furniture; starting one is undoable. Rooms opens your saved designs to load, rename, duplicate, export, or delete them, to import a room file, and to save the current room under a new name. Clear removes furniture.
+- Save room keeps the open room in this browser (the first save is named "Living room"). Rooms also offers "Start fresh" presets: living room, studio, reading nook, bedroom, an open-air balcony, and a 10 × 8 apartment with its own walled, tiled bathroom, each with its own size, windows, and furniture; starting one is undoable. Rooms opens your saved designs to load, rename, duplicate, export, or delete them, to import a room file, and to save the current room under a new name. Clear removes furniture.
 - The game opens on a main menu over the live room: Start decorating, My rooms, and Settings. The Menu button in the top-right capsule returns to it.
 - Lo-fi background music starts after the first click or tap. The music button in the top bar, or Settings on the menu, turns it off or on, and the choice is remembered in this browser.
 - The help button explains controls. Keyboard shortcuts are inactive while typing in search.
@@ -70,7 +70,7 @@ The header uses a text-only Little Nest wordmark in bundled Fredoka Semibold. [I
 | src/scene/create-scene.js, geometry.js, thumbnails.js | Renderer and camera setup, material ownership, catalog previews |
 | src/config/game.js | Room size, camera limits, renderer, music, and storage constants |
 | src/config/theme.js | Scene palette, selectable wall/floor finishes, item colors |
-| src/data/presets.js | Room presets: size, windows, and the starter layout for each |
+| src/data/presets.js | Room presets: size, windows, door, interior partitions and floor zones, and the starter layout for each |
 | src/data/collections.js | Furniture collections (Nest classics, Japandi, Cottage) |
 | src/data/lighting.js | Lighting moods (Morning, Sunset, Evening) |
 | src/game/placement.js, state.js, commands.js | Pure placement rules, committed item records with stable ids, and undoable commands |

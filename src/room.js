@@ -191,6 +191,48 @@ export function createRoom(scene, preset, wallHeight = 4, { wallColor = 0x92725c
       /** Opening from 0 (shut) to 1 (wide open, swung into the room). */
       setOpen(t) { this.open = t; pivot.rotation.y = -t * 1.45; } };
   }
+  // Interior partitions: low cutaway walls on grid lines (the camera looks over them), with a trim cap.
+  // Floor zones lay their own finish (a tiled bathroom) just above the main floor.
+  if (preset.partitions?.length) {
+    const plaster = new THREE.MeshStandardMaterial({ color: 0xeee2cf, roughness: .92 });
+    owned.push(plaster);
+    const H = 1.35, T = .12;
+    for (const p of preset.partitions) {
+      // Runs of closed cells between doorway gaps.
+      let start = null;
+      for (let i = p.from; i <= p.to; i++) {
+        const open = i === p.to || p.gaps?.includes(i);
+        if (!open && start === null) start = i;
+        if (open && start !== null) {
+          const len = i - start, mid = start + len / 2;
+          if (p.axis === 'z') {
+            const x = -halfW + p.line, z = -halfD + mid;
+            block(T, H, len, plaster, x, H / 2, z);
+            block(T + .06, .06, len + .02, trim, x, H + .03, z);
+          } else {
+            const x = -halfW + mid, z = -halfD + p.line;
+            block(len, H, T, plaster, x, H / 2, z);
+            block(len + .02, .06, T + .06, trim, x, H + .03, z);
+          }
+          start = null;
+        }
+      }
+    }
+  }
+  for (const zone of preset.zones ?? []) {
+    const [x0, z0] = zone.from, [x1, z1] = zone.to;
+    const map = tex[FLOOR_TEXTURE[zone.floor] || 'tile'].clone();
+    map.wrapS = map.wrapT = THREE.RepeatWrapping;
+    map.repeat.set((x1 - x0) / 4, (z1 - z0) / 4);   // four tiles to a texture, one tile per cell
+    map.needsUpdate = true;
+    const zoneMat = new THREE.MeshStandardMaterial({ map, color: 0xf3ece2, roughness: .6, polygonOffset: true, polygonOffsetFactor: -1 });
+    owned.push(zoneMat, map);
+    const plane = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0), zoneMat);
+    plane.rotation.x = -Math.PI / 2;
+    plane.position.set(-halfW + (x0 + x1) / 2, .002, -halfD + (z0 + z1) / 2);
+    plane.receiveShadow = true;
+    root.add(plane);
+  }
   for (const win of preset.windows) {
     if (win.wall === 'back') windowAt(win.at, -halfD + .05, 0, win.width);
     else windowAt(-halfW + .05, win.at, Math.PI / 2, win.width);

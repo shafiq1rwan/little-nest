@@ -191,31 +191,50 @@ export function createRoom(scene, preset, wallHeight = 4, { wallColor = 0x92725c
       /** Opening from 0 (shut) to 1 (wide open, swung into the room). */
       setOpen(t) { this.open = t; pivot.rotation.y = -t * 1.45; } };
   }
-  // Interior partitions: low cutaway walls on grid lines (the camera looks over them), with a trim cap.
-  // Floor zones lay their own finish (a tiled bathroom) just above the main floor.
+  // Interior partitions: room-height walls on grid lines that face the camera, so they are drawn as a ghost:
+  // see-through plaster between a solid skirting board and a solid top trim, with solid door frames (posts,
+  // header) and an open, see-through door leaf in each doorway gap. They never shade the room behind them.
+  // Floor zones lay their own finish (a tiled bathroom or kitchen) just above the main floor.
   if (preset.partitions?.length) {
-    const plaster = new THREE.MeshStandardMaterial({ color: 0xeee2cf, roughness: .92 });
-    owned.push(plaster);
-    const H = 1.35, T = .12;
+    const ghost = new THREE.MeshStandardMaterial({ color: 0xf4eadb, roughness: .9, transparent: true, opacity: .2, depthWrite: false });
+    const skirting = new THREE.MeshStandardMaterial({ color: 0xd9c3a2, roughness: .85 });
+    owned.push(ghost, skirting);
+    const T = .12, DOOR = 2.3;
+    // A box along the partition: `a` and `b` are positions along it, `y0`..`y1` its height.
+    const piece = (p, a, b, y0, y1, mat, thick = T) => {
+      const len = b - a, mid = (a + b) / 2, h = y1 - y0;
+      const m = p.axis === 'z' ? block(thick, h, len, mat, -halfW + p.line, y0 + h / 2, -halfD + mid) : block(len, h, thick, mat, -halfW + mid, y0 + h / 2, -halfD + p.line);
+      if (mat === ghost) { m.castShadow = false; m.renderOrder = 1; }
+      return m;
+    };
     for (const p of preset.partitions) {
-      // Runs of closed cells between doorway gaps.
+      const H = p.height ?? 2.6;
+      // Closed runs between doorway gaps: ghost plaster on a skirting board under a trim cap.
       let start = null;
       for (let i = p.from; i <= p.to; i++) {
         const open = i === p.to || p.gaps?.includes(i);
         if (!open && start === null) start = i;
         if (open && start !== null) {
-          const len = i - start, mid = start + len / 2;
-          if (p.axis === 'z') {
-            const x = -halfW + p.line, z = -halfD + mid;
-            block(T, H, len, plaster, x, H / 2, z);
-            block(T + .06, .06, len + .02, trim, x, H + .03, z);
-          } else {
-            const x = -halfW + mid, z = -halfD + p.line;
-            block(len, H, T, plaster, x, H / 2, z);
-            block(len + .02, .06, T + .06, trim, x, H + .03, z);
-          }
+          piece(p, start, i, .1, H, ghost);
+          piece(p, start, i, 0, .1, skirting, T + .02);
+          piece(p, start - .01, i + .01, H, H + .06, trim, T + .06);
           start = null;
         }
+      }
+      // Doorways: two posts and a header, ghost plaster above it, and the door standing open into the room.
+      for (const g of p.gaps ?? []) {
+        piece(p, g, g + .08, 0, DOOR, trim, T + .08);
+        piece(p, g + .92, g + 1, 0, DOOR, trim, T + .08);
+        piece(p, g, g + 1, DOOR, DOOR + .1, trim, T + .08);
+        piece(p, g, g + 1, DOOR + .1, H, ghost);
+        piece(p, g - .01, g + 1.01, H, H + .06, trim, T + .06);
+        const hinge = new THREE.Group();
+        if (p.axis === 'z') { hinge.position.set(-halfW + p.line, 0, -halfD + g + .08); hinge.rotation.y = -Math.PI * .6; }
+        else { hinge.position.set(-halfW + g + .08, 0, -halfD + p.line); hinge.rotation.y = Math.PI * .6; }
+        walls.add(hinge);
+        const leaf = block(.84, DOOR - .04, .05, ghost, .42, (DOOR - .04) / 2, 0, hinge);
+        leaf.castShadow = false; leaf.renderOrder = 1;
+        block(.05, .05, .1, trim, .74, 1.05, 0, hinge);   // the handle
       }
     }
   }

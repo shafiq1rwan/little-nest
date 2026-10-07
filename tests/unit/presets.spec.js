@@ -131,13 +131,13 @@ test('partitions close cell edges, refuse footprints that straddle them, and kee
   const apartment = ROOM_PRESETS.apartment;
   const edges = presetPartitionEdges(apartment);
   const p = createPlacement({ catalog, width: 10, depth: 8, edges });
-  expect(p.passable(2, 0, 3, 0)).toBe(false);    // the bathroom's side wall
+  expect(p.passable(3, 0, 4, 0)).toBe(false);    // the bathroom's side wall
   expect(p.passable(0, 2, 0, 3)).toBe(false);    // its front wall
-  expect(p.passable(2, 2, 2, 3)).toBe(true);     // the doorway
+  expect(p.passable(3, 2, 3, 3)).toBe(true);     // the doorway
   expect(p.passable(5, 5, 6, 5)).toBe(true);     // open floor
   const occ = new Set();
-  expect(p.isFree(occ, 'coffeeTable', 2, 1, 0)).toBe(false);   // 2 x 1 across the side wall
-  expect(p.isFree(occ, 'coffeeTable', 3, 1, 0)).toBe(true);
+  expect(p.isFree(occ, 'coffeeTable', 3, 1, 0)).toBe(false);   // 2 x 1 across the side wall
+  expect(p.isFree(occ, 'coffeeTable', 1, 1, 0)).toBe(true);    // inside the bathroom
   expect(p.isFree(occ, 'rug', 1, 1, 0)).toBe(false);           // rugs do not run under a wall either
-  expect(p.isFree(occ, 'armchair', 2, 2, 0)).toBe(true);       // a single cell beside it is fine
+  expect(p.isFree(occ, 'armchair', 3, 2, 0)).toBe(true);       // a single cell beside it is fine
 });

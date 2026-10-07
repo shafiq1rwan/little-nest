@@ -115,7 +115,7 @@ People bring the room to life in small, quiet ways. A TV lights pale blue while 
 
 ## Interior walls
 
-Rooms can be divided by partitions (the apartment's bathroom). They are low cutaway walls, 1.35 units high and 0.12 thick, in a pale plaster cream with the cream trim along the top, so the camera always sees over them into the room behind; doorways are plain gaps. A room behind a partition can have its own floor finish (the bathroom's cream tiles). Nothing hangs on a partition, and nothing straddles one.
+Rooms can be divided by partitions (the apartment's bathroom). They are room-height walls (2.6 units, 0.12 thick) that face the camera, so they are drawn as a ghost: see-through pale plaster between a solid skirting board and a solid cream trim along the top, so the room behind always shows. Doorways get solid posts and a header at door height with a see-through door standing open. Ghost walls cast no shadow. A room behind a partition, or an open-plan area such as a kitchen, can have its own floor finish (cream tiles). Nothing hangs on a partition, and nothing straddles one.
 
 ## Finish options
 

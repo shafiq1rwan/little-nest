@@ -272,7 +272,7 @@ test('residents can be renamed and dressed from the Light tab, undone, saved, an
   expect(errors).toEqual([]);
 });
 
-test('the apartment has a walled bathroom that people reach through its doorway', async ({ page }) => {
+test('the apartment has a walled bathroom people reach through its door, and a tiled kitchen with an island', async ({ page }) => {
   const errors = await openGame(page, '/');
   const info = await page.evaluate(() => {
     const s = window.__sim;
@@ -280,13 +280,16 @@ test('the apartment has a walled bathroom that people reach through its doorway'
     const types = s.items.map((i) => i.type);
     return {
       size: [s.roomConfig.width, s.roomConfig.depth],
-      bathroom: ['kitShower', 'kitBathtub', 'kitToilet', 'kitBathroomSink', 'kitBathroomMirror'].every((t) => types.includes(t)),
+      bathroom: ['kitBathtub', 'kitToilet', 'kitBathroomSink', 'kitBathroomMirror', 'kitBathroomCabinetDrawer'].every((t) => types.includes(t)),
+      kitchen: ['kitKitchenSink', 'kitKitchenStove', 'kitKitchenFridge', 'kitKitchenBar', 'kitStoolBar'].every((t) => types.includes(t)),
+      kitchenSpots: s.residents.world.spots().filter((q) => q.kind === 'kitchen' && q.gz === 1 && q.gx >= 6).length,
       basin: s.residents.world.spots().find((q) => q.key === 'spot:' + s.items.find((i) => i.type === 'kitBathroomSink').id),
-      wallThrough: s.placement.passable(2, 1, 3, 1), doorway: s.placement.passable(2, 2, 2, 3),
-      straddle: s.isFree('kitTableCoffee', 2, 4, 0) && !s.state.canPlace('kitTableCoffee', 2, 1, 0),
+      wallThrough: s.placement.passable(3, 1, 4, 1), doorway: s.placement.passable(3, 2, 3, 3),
+      straddle: s.isFree('kitTableCoffee', 2, 3, 0) && !s.state.canPlace('kitTableCoffee', 3, 1, 0),
     };
   });
-  expect(info).toMatchObject({ size: [10, 8], bathroom: true, wallThrough: false, doorway: true, straddle: true });
+  // Six kitchen spots in the corridor: four at the back counters, two at the island (worked from the kitchen side).
+  expect(info).toMatchObject({ size: [10, 8], bathroom: true, kitchen: true, kitchenSpots: 6, wallThrough: false, doorway: true, straddle: true });
   // Someone goes to wash up at the basin: they get there through the doorway.
   await page.evaluate(() => window.__sim.commands.setFinish('residents', 1));
   const sent = await page.evaluate((spot) => { const b = window.__sim.residents.brain; b.person(0).claim = null; return b.send(0, { kind: 'spot', target: spot }); }, info.basin);

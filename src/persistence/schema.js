@@ -11,13 +11,14 @@
 //   9           { pet: { present, color } } a visiting cat and its fur (default: none); its position is not saved
 //   10          { residents } how many people live in the room, 0 to 3 (default 0); where they are is not saved
 //   11          { people: [{ name, look }] } a name and a look for each of the three resident slots (default: DEFAULT_PEOPLE)
+//   12          people gain wear: an accessory key (RESIDENT_ACCESSORIES) or null (default null)
 //
 // Older versions are migrated on read; the writer always emits the current version.
 
 import { WALLS } from '../game/placement.js';
-import { RESIDENT_LOOKS, DEFAULT_PEOPLE, MAX_NAME_LENGTH } from '../data/people.js';
+import { RESIDENT_LOOKS, DEFAULT_PEOPLE, MAX_NAME_LENGTH, ACCESSORY_KEYS } from '../data/people.js';
 
-export const CURRENT_VERSION = 11;
+export const CURRENT_VERSION = 12;
 export const MAX_SAVED_RESIDENTS = 3;   // keep in step with MAX_RESIDENTS in src/game/residents.js
 export const PET_COLOR_KEYS = ['ginger', 'grey', 'cream', 'black'];   // keep in step with PET_COLORS in src/config/theme.js
 export const NO_PET = { present: false, color: 'ginger' };
@@ -40,7 +41,7 @@ function record(it) {
 
 export function serializeRoom({ room = LEGACY_ROOM, wall, wallLeft = wall, floor, floorStyle = 'parquet', lighting = DEFAULT_LIGHTING_KEY, pet = NO_PET, residents = 0, people = DEFAULT_PEOPLE, items }) {
   const ordered = [...items.filter((i) => !i.parent), ...items.filter((i) => i.parent)];
-  return { version: CURRENT_VERSION, room: { preset: room.preset, width: room.width, depth: room.depth }, wall, wallLeft, floor, floorStyle, lighting, pet: { present: !!pet.present, color: pet.color }, residents, people: people.map(({ name, look }) => ({ name, look })), items: ordered.map(record) };
+  return { version: CURRENT_VERSION, room: { preset: room.preset, width: room.width, depth: room.depth }, wall, wallLeft, floor, floorStyle, lighting, pet: { present: !!pet.present, color: pet.color }, residents, people: people.map(({ name, look, wear = null }) => ({ name, look, wear })), items: ordered.map(record) };
 }
 
 function isColor(value) {
@@ -51,7 +52,7 @@ function isColor(value) {
 export function migrateRoom(data) {
   if (!data || typeof data !== 'object') fail('Not a saved room');
   const version = data.version ?? 2;
-  if (![2, 3, 4, 5, 6, 7, 8, 9, 10, 11].includes(version)) fail('Unsupported save version ' + version);
+  if (![2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].includes(version)) fail('Unsupported save version ' + version);
   const items = Array.isArray(data.items)
     ? data.items.map((it) => {
       if (!it || typeof it !== 'object') return it;
@@ -70,7 +71,7 @@ export function migrateRoom(data) {
   const floorStyle = data.floorStyle ?? 'parquet';
   const pet = data.pet ?? { ...NO_PET };
   const residents = data.residents ?? 0;
-  const people = data.people ?? DEFAULT_PEOPLE.map((p) => ({ ...p }));
+  const people = Array.isArray(data.people) && version < 12 ? data.people.map((p) => (p && typeof p === 'object' ? { ...p, wear: p.wear ?? null } : p)) : data.people ?? DEFAULT_PEOPLE.map((p) => ({ ...p }));
   return { ...data, version: CURRENT_VERSION, room, lighting, wallLeft, floorStyle, pet, residents, people, items };
 }
 
@@ -96,7 +97,7 @@ export function parseRoom(raw, { catalog, placement, placementFor, maxItems = 20
   if (!FLOOR_STYLE_KEYS.includes(data.floorStyle)) fail('Unknown floor style ' + data.floorStyle);
   if (!data.pet || typeof data.pet !== 'object' || typeof data.pet.present !== 'boolean' || !PET_COLOR_KEYS.includes(data.pet.color)) fail('Invalid pet');
   if (!Number.isInteger(data.residents) || data.residents < 0 || data.residents > MAX_SAVED_RESIDENTS) fail('Invalid residents');
-  if (!Array.isArray(data.people) || data.people.length !== MAX_SAVED_RESIDENTS || !data.people.every((p) => p && typeof p.name === 'string' && p.name.trim() && p.name.length <= MAX_NAME_LENGTH && RESIDENT_LOOKS.includes(p.look))) fail('Invalid people');
+  if (!Array.isArray(data.people) || data.people.length !== MAX_SAVED_RESIDENTS || !data.people.every((p) => p && typeof p.name === 'string' && p.name.trim() && p.name.length <= MAX_NAME_LENGTH && RESIDENT_LOOKS.includes(p.look) && (p.wear === null || ACCESSORY_KEYS.includes(p.wear)))) fail('Invalid people');
 
   const room = data.room;
   if (!room || typeof room !== 'object' || typeof room.preset !== 'string') fail('Invalid room');
@@ -164,5 +165,5 @@ export function parseRoom(raw, { catalog, placement, placementFor, maxItems = 20
     }
     floorItems.push(record({ ...it, parent: null, slot: null, wall: null, col: null, row: null }));
   }
-  return { room: roomOut, wall: data.wall, wallLeft: data.wallLeft, floor: data.floor, floorStyle: data.floorStyle, lighting: data.lighting, pet: { present: data.pet.present, color: data.pet.color }, residents: data.residents, people: data.people.map(({ name, look }) => ({ name: name.trim(), look })), items: [...floorItems, ...surfaceItems] };
+  return { room: roomOut, wall: data.wall, wallLeft: data.wallLeft, floor: data.floor, floorStyle: data.floorStyle, lighting: data.lighting, pet: { present: data.pet.present, color: data.pet.color }, residents: data.residents, people: data.people.map(({ name, look, wear }) => ({ name: name.trim(), look, wear })), items: [...floorItems, ...surfaceItems] };
 }

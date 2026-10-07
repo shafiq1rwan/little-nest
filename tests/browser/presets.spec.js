@@ -42,7 +42,7 @@ for (const [width, height, label] of [[1440, 900, 'desktop'], [390, 844, 'phone'
       // Save: the store records the preset; the gallery row names it.
       await page.locator('#save').click();
       const store = await galleryStore(page);
-      expect(store.rooms[0].room.version).toBe(11);
+      expect(store.rooms[0].room.version).toBe(12);
       expect(store.rooms[0].room.room).toEqual({ preset: 'studio', width: 6, depth: 6 });
       await page.locator('#load').click();
       await expect(page.locator('#gallery .room-head p').first()).toContainText('Studio');

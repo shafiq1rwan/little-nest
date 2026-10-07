@@ -2,7 +2,8 @@
 // own animation clips, in public/models/people/character-<look>.glb. The brain (src/game/residents.js)
 // decides where each person is and what they do; this module plays the matching clip and crossfades
 // between them. The looks in use load during the loading screen and others on demand (loadLook); a file
-// that fails to load leaves that person out.
+// that fails to load leaves that person out. Accessories (glasses, sunglasses, a hearing aid) are the pack's aid models,
+// parented to the head bone so they follow every clip (ACCESSORIES below; keys in src/data/people.js).
 
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -15,6 +16,29 @@ const CLIPS = { walk: 'walk', idle: 'idle', gaze: 'idle', sit: 'sit', interact: 
 const LIE_LIFT = 0.2;    // lying on the back, the body's back is this far below the model's origin
 const SIT_DROP = 0.02;   // the sit clip lowers the hips to just above the origin; this rests the thighs on the cushion
 const NAME_HEIGHT = { sleep: 0.66, sit: 1.1, other: 1.38 };   // just above the head; mood bubbles float higher
+
+// Where each accessory sits, in its bone's space (model units, before SCALE): the bone, the file, an offset and a turn.
+const ACCESSORIES = {
+  glasses: { file: 'aid-glasses', bone: 'head', at: [0, 0.1, 0.1], turn: [0, 0, 0] },
+  sunglasses: { file: 'aid-sunglasses', bone: 'head', at: [0, 0.1, 0.1], turn: [0, 0, 0] },
+  'hearing-aid': { file: 'aid-hearing', bone: 'head', at: [-0.2, 0.08, 0], turn: [0, 0, 0] },
+};
+const accessoryTemplates = new Map();   // key -> THREE.Object3D
+const accessoryLoading = new Map();     // key -> Promise<boolean>
+/** Loads one accessory model. Resolves true when it is ready, false when it failed or is unknown. */
+export function loadAccessory(key) {
+  const spec = ACCESSORIES[key];
+  if (!spec) return Promise.resolve(false);
+  if (accessoryTemplates.has(key)) return Promise.resolve(true);
+  if (!accessoryLoading.has(key)) {
+    accessoryLoading.set(key, new GLTFLoader().loadAsync('models/people/' + spec.file + '.glb?v=' + MODELS_VERSION).then((gltf) => {
+      gltf.scene.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
+      accessoryTemplates.set(key, gltf.scene);
+      return true;
+    }).catch((error) => { console.warn('Little Nest: the ' + key + ' accessory did not load.', error); return false; }));
+  }
+  return accessoryLoading.get(key);
+}
 
 const templates = new Map();   // look -> { scene, clips }
 const loading = new Map();     // look -> Promise<boolean>
@@ -55,7 +79,7 @@ function nameTexture(name) {
 }
 
 /** A body wearing `look`, or null when that look has not loaded. Geometry and materials are shared with the template. */
-export function createPerson(look, name = '') {
+export function createPerson(look, name = '', wear = null) {
   const template = templates.get(look);
   if (!template) return null;
   const model = cloneSkinned(template.scene);
@@ -72,6 +96,18 @@ export function createPerson(look, name = '') {
   tag.name = 'name-tag'; tag.renderOrder = 11; tag.scale.set(1.4, 0.35, 1); tag.visible = false;
   root.add(tag);
   let shownName = null, nameWanted = false;
+  // The accessory being worn, parented to its bone; swapped by setWear() (loading the model first if needed).
+  let worn = null, wornKey = null;
+  function putOn(key) {
+    worn?.removeFromParent(); worn = null;
+    const spec = ACCESSORIES[key], template = accessoryTemplates.get(key);
+    const bone = spec && model.getObjectByName(spec.bone);
+    if (!template || !bone) return;
+    worn = template.clone();
+    worn.name = 'accessory';
+    worn.position.set(...spec.at); worn.rotation.set(...spec.turn);
+    bone.add(worn);
+  }
   const mixer = new THREE.AnimationMixer(model);
   const actions = new Map();
   let current = null;
@@ -98,6 +134,16 @@ export function createPerson(look, name = '') {
       tag.material.needsUpdate = true;
       tag.visible = nameWanted && !!next;
     },
+    get wear() { return wornKey; },
+    get wearing() { return worn; },
+    /** Puts on an accessory key (or null for none). One that has not loaded yet appears when it has. */
+    setWear(key) {
+      if (key === wornKey) return;
+      wornKey = key ?? null;
+      if (!wornKey) { putOn(null); return; }
+      if (accessoryTemplates.has(wornKey)) putOn(wornKey);
+      else loadAccessory(wornKey).then((ok) => { if (ok && wornKey === key) putOn(key); });
+    },
     /** Shows or hides the name tag (hover). */
     showName(on) { nameWanted = !!on; tag.visible = nameWanted && !!shownName; },
     get nameShown() { return tag.visible; },
@@ -118,5 +164,6 @@ export function createPerson(look, name = '') {
     dispose() { mixer.stopAllAction(); blanket.geometry.dispose(); tag.material.map?.dispose(); tag.material.dispose(); root.removeFromParent(); },
   };
   body.setName(name);
+  body.setWear(wear);
   return body;
 }

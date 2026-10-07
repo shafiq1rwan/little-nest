@@ -72,6 +72,7 @@
   .finish-options button { min-height: 44px; font-size: 12px; }
   .resident-row input { height: 44px; }
   .resident-row button { width: 44px; min-height: 44px; }
+  .resident-row .resident-wear { height: 44px; font-size: 14px; }
   #help-panel { top: 12px; right: 12px; width: min(300px, calc(100% - 24px)); max-height: calc(100% - 24px); overflow: auto; padding: 16px; }
   .touch-help { display: block; }
   .desktop-help { display: none; }

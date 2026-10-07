@@ -136,7 +136,7 @@ test('version 10 saves how many people live here; older saves have nobody; bad c
   const { createPlacement } = await import('../../src/game/placement.js');
   const opts = { catalog: { chair: { w: 1, d: 1 } }, placement: createPlacement({ catalog: { chair: { w: 1, d: 1 } }, room: 8 }), newId: () => 'x' };
   const saved = serializeRoom({ wall: 1, floor: 2, residents: 2, items: [] });
-  expect(saved).toMatchObject({ version: 11, residents: 2 });
+  expect(saved).toMatchObject({ version: 12, residents: 2 });
   expect(parseRoom(saved, opts).residents).toBe(2);
   expect(migrateRoom({ version: 9, wall: 1, floor: 2, items: [] }).residents).toBe(0);
   for (const bad of [-1, 4, 1.5, '2']) expect(() => parseRoom({ ...saved, residents: bad }, opts)).toThrow(SaveError);
@@ -235,12 +235,29 @@ test('version 11 saves a name and a look for each resident slot; older saves get
   const opts = { catalog: { chair: { w: 1, d: 1 } }, placement: createPlacement({ catalog: { chair: { w: 1, d: 1 } }, room: 8 }), newId: () => 'x' };
   const people = [{ name: 'Nadia', look: 'female-d' }, { name: ' Omar ', look: 'male-c' }, { name: 'Lu', look: 'male-f' }];
   const saved = serializeRoom({ wall: 1, floor: 2, residents: 2, people, items: [] });
-  expect(saved.version).toBe(11);
-  expect(parseRoom(saved, opts).people).toEqual([{ name: 'Nadia', look: 'female-d' }, { name: 'Omar', look: 'male-c' }, { name: 'Lu', look: 'male-f' }]);
+  expect(saved.version).toBe(12);
+  expect(parseRoom(saved, opts).people).toEqual([{ name: 'Nadia', look: 'female-d', wear: null }, { name: 'Omar', look: 'male-c', wear: null }, { name: 'Lu', look: 'male-f', wear: null }]);
   expect(migrateRoom({ version: 10, wall: 1, floor: 2, residents: 1, items: [] }).people).toEqual(DEFAULT_PEOPLE);
   expect(RESIDENT_LOOKS).toHaveLength(12);
   for (const bad of [people.slice(0, 2), [...people.slice(0, 2), { name: '', look: 'male-a' }], [...people.slice(0, 2), { name: 'x'.repeat(21), look: 'male-a' }], [...people.slice(0, 2), { name: 'Pat', look: 'robot' }], 'Maya']) {
     expect(() => parseRoom({ ...saved, people: bad }, opts)).toThrow(SaveError);
+  }
+});
+
+test('version 12 saves what each resident wears; version 11 people wear nothing; unknown accessories are refused', async () => {
+  const { parseRoom, serializeRoom, migrateRoom, SaveError } = await import('../../src/persistence/schema.js');
+  const { ACCESSORY_KEYS, DEFAULT_PEOPLE } = await import('../../src/data/people.js');
+  const { createPlacement } = await import('../../src/game/placement.js');
+  const opts = { catalog: { chair: { w: 1, d: 1 } }, placement: createPlacement({ catalog: { chair: { w: 1, d: 1 } }, room: 8 }), newId: () => 'x' };
+  expect(ACCESSORY_KEYS).toEqual(['glasses', 'sunglasses', 'hearing-aid']);
+  expect(DEFAULT_PEOPLE.map((p) => p.wear)).toEqual([null, null, 'glasses']);
+  const people = [{ name: 'Nadia', look: 'female-d', wear: 'sunglasses' }, { name: 'Omar', look: 'male-c', wear: 'hearing-aid' }, { name: 'Lu', look: 'male-f', wear: null }];
+  const saved = serializeRoom({ wall: 1, floor: 2, residents: 3, people, items: [] });
+  expect(parseRoom(JSON.parse(JSON.stringify(saved)), opts).people).toEqual(people);
+  const v11 = { version: 11, wall: 1, floor: 2, residents: 1, people: people.map(({ name, look }) => ({ name, look })), items: [] };
+  expect(migrateRoom(v11).people.map((p) => p.wear)).toEqual([null, null, null]);
+  for (const wear of ['cane', 'crown', 3, undefined]) {
+    expect(() => parseRoom({ ...saved, people: [{ ...people[0], wear }, ...people.slice(1)] }, opts)).toThrow(SaveError);
   }
 });
 

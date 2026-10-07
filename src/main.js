@@ -27,8 +27,8 @@ import { createMotion } from './scene/motion.js';
 import { createCat, disposeCat } from './scene/cat.js';
 import { createOutlines } from './scene/outline.js';
 import { createResidentsBrain, MAX_RESIDENTS } from './game/residents.js';
-import { preloadPeople, createPerson, loadLook, hasLook } from './scene/people.js';
-import { RESIDENT_LOOKS, DEFAULT_PEOPLE, GUEST_LOOKS, MAX_NAME_LENGTH } from './data/people.js';
+import { preloadPeople, createPerson, loadLook, hasLook, loadAccessory } from './scene/people.js';
+import { RESIDENT_LOOKS, DEFAULT_PEOPLE, GUEST_LOOKS, MAX_NAME_LENGTH, RESIDENT_ACCESSORIES } from './data/people.js';
 import { activeAppliances, bubbleFor, APPLIANCE_KINDS } from './game/activities.js';
 import { createActivityView } from './scene/activities.js';
 import { createPetBrain } from './game/pet.js';
@@ -39,7 +39,7 @@ export async function initializeGame({ onProgress = async () => {}, onOpenRoom =
 const $ = (id) => document.getElementById(id);
 let editing = false;
 await onProgress(25, 'Building your little nest…');
-await Promise.all([preloadModels(CATALOG), preloadArt(['worldMap', 'botanicalPrint', 'frame']), preloadPeople([...DEFAULT_PEOPLE.map((p) => p.look), GUEST_LOOKS[0]])]);   // models and print images must be ready before the first build()
+await Promise.all([preloadModels(CATALOG), preloadArt(['worldMap', 'botanicalPrint', 'frame']), preloadPeople([...DEFAULT_PEOPLE.map((p) => p.look), GUEST_LOOKS[0]]), ...DEFAULT_PEOPLE.filter((p) => p.wear).map((p) => loadAccessory(p.wear))]);   // models and print images must be ready before the first build()
 
 // ---------- renderer / scene ----------
 const canvas = $('scene');
@@ -422,14 +422,15 @@ function syncResidents() {
   // One body per resident, wearing their look; a look that has not loaded yet loads, then this runs again.
   while (people.length > residents.count) people.pop()?.dispose();
   for (let i = 0; i < residents.count; i++) {
-    const { name, look } = finishes.people[i];
+    const { name, look, wear = null } = finishes.people[i];
     if (people[i] && people[i].look !== look) { people[i].dispose(); people[i] = undefined; }
     if (!people[i]) {
       if (!hasLook(look)) { loadLook(look).then((ok) => { if (ok && finishes.people[i]?.look === look) syncResidents(); }); continue; }
-      people[i] = createPerson(look, name);
+      people[i] = createPerson(look, name, wear);
       scene.add(people[i].root);
     }
     people[i].setName(name);
+    people[i].setWear(wear);
   }
   if (residents.count > before && !viaDoor) placeResidentsSoon();
   residentsClock = 0;
@@ -464,7 +465,8 @@ function stepResidents(now) {
   if (guest && !guestBody) {
     const worn = new Set(finishes.people.slice(0, residents.count).map((p) => p.look));
     const look = GUEST_LOOKS.find((l) => !worn.has(l)) ?? GUEST_LOOKS[0];
-    if (hasLook(look)) { guestBody = createPerson(look, 'Guest'); scene.add(guestBody.root); } else loadLook(look);
+    // Some guests wear glasses or a hearing aid too.
+    if (hasLook(look)) { guestBody = createPerson(look, 'Guest', Math.random() < 0.4 ? RESIDENT_ACCESSORIES[Math.floor(Math.random() * RESIDENT_ACCESSORIES.length)].key : null); scene.add(guestBody.root); } else loadLook(look);
   }
   if (!guest && guestBody) { guestBody.dispose(); guestBody = null; moving = true; }
   if (guest && guestBody) { guestBody.setPose(guest, dt, animate); pairs.push([guest, guestBody]); if (guest.action === 'walk' || guest.settling) moving = true; }
@@ -1056,7 +1058,7 @@ function setPerson(i, change) {
 }
 function syncResidentControls() {
   $('resident-count').querySelectorAll('button').forEach((b) => { const on = Number(b.dataset.residents) === finishes.residents; b.classList.toggle('active', on); b.setAttribute('aria-pressed', String(on)); });
-  // A row per resident: their picture, a name to edit, and buttons to try the other looks.
+  // A row per resident: their picture, a name to edit, buttons to try the other looks, and what they wear.
   const rows = $('resident-people');
   if (rows.contains(document.activeElement) && document.activeElement.tagName === 'INPUT') return;   // never rebuild under the caret
   rows.replaceChildren();
@@ -1071,7 +1073,11 @@ function syncResidentControls() {
     const step = (dir) => { const k = RESIDENT_LOOKS.indexOf(finishes.people[i].look); setPerson(i, { look: RESIDENT_LOOKS[(k + dir + RESIDENT_LOOKS.length) % RESIDENT_LOOKS.length] }); };
     const prev = document.createElement('button'); prev.textContent = '‹'; prev.setAttribute('aria-label', 'Previous look for ' + name); prev.onclick = () => step(-1);
     const next = document.createElement('button'); next.textContent = '›'; next.setAttribute('aria-label', 'Next look for ' + name); next.onclick = () => step(1);
-    row.append(img, input, prev, next);
+    const wear = document.createElement('select');
+    wear.className = 'resident-wear'; wear.setAttribute('aria-label', 'What ' + name + ' wears');
+    for (const [key, label] of [['', 'No accessory'], ...RESIDENT_ACCESSORIES.map((a) => [a.key, a.label])]) wear.append(new Option(label, key, false, key === (finishes.people[i].wear ?? '')));
+    wear.onchange = () => setPerson(i, { wear: wear.value || null });
+    row.append(img, input, prev, next, wear);
     rows.append(row);
   }
 }
@@ -1394,7 +1400,7 @@ window.__sim = {
   get rooms() { return { focus: focusRoom, preview: previewRoom, ghosted: shell.ghostedPieces(), roomAt: (x, z) => roomAt({ x, z }), ...houseRooms }; },
   setFocusRoom,
   hoverPerson,
-  get residents() { return { names: people.map((b) => b?.name ?? null), looks: people.map((b) => b?.look ?? null), guest: residents.guestPose(), guestBody: guestBody?.root ?? null, count: residents.count, poses: residents.poses(), cells: people.map((_, i) => residents.cellOf(i)), clips: people.map((b) => b?.clip ?? null), bodies: people.map((b) => b?.root ?? null), brain: residents, world: residentsWorld }; },
+  get residents() { return { names: people.map((b) => b?.name ?? null), looks: people.map((b) => b?.look ?? null), wears: people.map((b) => b?.wear ?? null), guest: residents.guestPose(), guestBody: guestBody?.root ?? null, count: residents.count, poses: residents.poses(), cells: people.map((_, i) => residents.cellOf(i)), clips: people.map((b) => b?.clip ?? null), bodies: people.map((b) => b?.root ?? null), brain: residents, world: residentsWorld }; },
   get pet() { return pet ? { action: brain.action, cell: brain.cell(), onSeat: brain.onSeat, pose: brain.pose(), root: pet.root, view: pet, brain } : null; },
   get items() { return state.items.map(withMesh); },
   get ghost() { return ghost; },

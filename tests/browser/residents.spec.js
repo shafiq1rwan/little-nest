@@ -80,7 +80,7 @@ test('the people picker is undoable and saved; the door refuses wall decorations
 
   await page.locator('#save').click();
   const store = await galleryStore(page);
-  expect(store.rooms[0].room).toMatchObject({ version: 11, residents: 3 });
+  expect(store.rooms[0].room).toMatchObject({ version: 12, residents: 3 });
 
   // An older (version 9) save with a mirror where the door now is loads intact, with nobody home.
   await page.evaluate(() => {
@@ -252,10 +252,22 @@ test('residents can be renamed and dressed from the Light tab, undone, saved, an
   await page.locator('#redo-tool').click();
   await page.waitForFunction(() => window.__sim.residents.looks[1] === 'male-b');
 
+  // Sunglasses for the first person: the model hangs on the head bone, and undo takes them off again.
+  const wear = page.locator('#resident-people .resident-row[data-person="0"] .resident-wear');
+  await expect(wear).toHaveValue('');
+  await wear.selectOption('sunglasses');
+  await page.waitForFunction(() => window.__sim.residents.bodies[0].getObjectByName('accessory')?.parent?.name === 'head', null, { timeout: 15000 });
+  expect(await page.evaluate(() => window.__sim.residents.wears[0])).toBe('sunglasses');
+  await page.locator('#undo-tool').click();
+  await page.waitForFunction(() => !window.__sim.residents.bodies[0].getObjectByName('accessory'));
+  await page.locator('#redo-tool').click();
+  await page.waitForFunction(() => !!window.__sim.residents.bodies[0].getObjectByName('accessory'));
+  await expect(wear).toHaveValue('sunglasses');
+
   // Saved with the room.
   await page.locator('#save').click();
   const saved = (await galleryStore(page)).rooms[0].room;
-  expect(saved.people.slice(0, 2)).toEqual([{ name: 'Nadia', look: 'female-b' }, { name: 'Sam', look: 'male-b' }]);
+  expect(saved.people.slice(0, 2)).toEqual([{ name: 'Nadia', look: 'female-b', wear: 'sunglasses' }, { name: 'Sam', look: 'male-b', wear: null }]);
 
   // Hovering a person shows their name tag; moving away hides it.
   await page.evaluate(() => { const r = window.__sim.residents; for (let i = 0; i < r.count; i++) r.brain.person(i).timer = 999; });

@@ -102,14 +102,14 @@ test('every room preset with walls has a door with clear floor inside it', async
   const errors = await openGame(page);
   const doors = await page.evaluate(() => {
     const s = window.__sim, out = {};
-    for (const id of ['livingRoom', 'studio', 'bedroom', 'balcony', 'readingNook', 'apartment']) {
+    for (const id of ['livingRoom', 'studio', 'bedroom', 'balcony', 'readingNook', 'apartment', 'house']) {
       s.startPreset(id);
       const d = s.residents.world.door();
       out[id] = d ? s.isFree('pouf', d.gx, d.gz, 0) && !!s.door : null;
     }
     return out;
   });
-  expect(doors).toEqual({ livingRoom: true, studio: true, bedroom: true, balcony: null, readingNook: true, apartment: true });
+  expect(doors).toEqual({ livingRoom: true, studio: true, bedroom: true, balcony: null, readingNook: true, apartment: true, house: true });
   expect(errors).toEqual([]);
 });
 
@@ -295,5 +295,27 @@ test('the apartment has a walled bathroom people reach through its door, and a t
   const sent = await page.evaluate((spot) => { const b = window.__sim.residents.brain; b.person(0).claim = null; return b.send(0, { kind: 'spot', target: spot }); }, info.basin);
   expect(sent).toBe(true);
   await page.waitForFunction((key) => { const p = window.__sim.residents.poses[0]; return p.action === 'interact' && p.spot === key; }, info.basin.key, { timeout: 60000 });
+  expect(errors).toEqual([]);
+});
+
+test('the house has a bedroom, bathroom, reading room, hall, kitchen and living room, all reachable from the front door', async ({ page }) => {
+  const errors = await openGame(page, '/');
+  const info = await page.evaluate(() => {
+    const s = window.__sim, b = s.residents.brain;
+    s.startPreset('house');
+    const door = s.residents.world.door();
+    const from = { gx: door.gx, gz: door.gz };
+    // A free cell in each room, by the plan in src/data/presets.js.
+    const rooms = { bedroom: { gx: 3, gz: 3 }, bathroom: { gx: 6, gz: 2 }, reading: { gx: 3, gz: 6 }, hall: { gx: 1, gz: 10 }, kitchen: { gx: 9, gz: 1 }, living: { gx: 8, gz: 9 } };
+    const reach = Object.fromEntries(Object.entries(rooms).map(([k, c]) => [k, s.isFree('pouf', c.gx, c.gz, 0) && !!b.findPath(from, c)]));
+    const types = new Set(s.items.map((i) => i.type));
+    return {
+      size: [s.roomConfig.width, s.roomConfig.depth], reach,
+      furnished: ['kitBedDouble', 'kitBathtub', 'kitToilet', 'kitKitchenStove', 'kitLoungeChairRelax', 'kitLoungeSofa', 'kitTable', 'kitCoatRackStanding'].every((t) => types.has(t)),
+      residents: s.residents.count, cat: !!s.pet,
+      throughWall: s.placement.passable(4, 2, 5, 2),
+    };
+  });
+  expect(info).toEqual({ size: [12, 12], reach: { bedroom: true, bathroom: true, reading: true, hall: true, kitchen: true, living: true }, furnished: true, residents: 3, cat: true, throughWall: false });
   expect(errors).toEqual([]);
 });

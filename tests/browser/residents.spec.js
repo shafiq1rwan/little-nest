@@ -190,3 +190,20 @@ test('in the studio the TV, desk screen and stove come on for the people using t
   await page.waitForFunction((ids) => ids.every((id) => !window.__sim.activities.isLit(id) && !window.__sim.activities.hasSteam(id)), [tv, screen, stove], { timeout: 10000 });
   expect(errors).toEqual([]);
 });
+
+test('at night people sleep in the bedroom bed under a blanket, and get up when the lighting changes', async ({ page }) => {
+  const errors = await openGame(page, '/');
+  await page.evaluate(() => { const s = window.__sim; s.startPreset('bedroom'); s.commands.setFinish('residents', 2); s.commands.setFinish('lighting', 'evening'); });
+  const sent = await page.evaluate(() => {
+    const r = window.__sim.residents, b = r.brain, beds = r.world.beds();
+    for (let i = 0; i < 2; i++) b.person(i).claim = null;
+    return [beds.length, b.send(0, { kind: 'bed', target: beds[0] }), b.send(1, { kind: 'bed', target: beds[1] })];
+  });
+  expect(sent).toEqual([2, true, true]);   // the double bed sleeps two
+  await page.waitForFunction(() => window.__sim.residents.poses.every((p) => p.action === 'sleep' && p.seat && !p.settling), null, { timeout: 60000 });
+  expect(await page.evaluate(() => window.__sim.residents.bodies.map((b) => b.getObjectByName('blanket').visible))).toEqual([true, true]);
+  await page.evaluate(() => window.__sim.commands.setFinish('lighting', 'morning'));
+  await page.waitForFunction(() => window.__sim.residents.poses.every((p) => p.action !== 'sleep' && !p.seat?.startsWith('bed')), null, { timeout: 20000 });
+  expect(await page.evaluate(() => window.__sim.residents.bodies.map((b) => b.getObjectByName('blanket').visible))).toEqual([false, false]);
+  expect(errors).toEqual([]);
+});

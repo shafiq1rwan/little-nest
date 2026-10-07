@@ -258,6 +258,24 @@ const residentsWorld = {
     }
     return out;
   },
+  /** Where to lie in each bed: hips over the head-end slots, head toward the headboard. */
+  beds() {
+    const out = [];
+    for (const r of state.items) {
+      if (r.parent || r.gx === null || !/bed/i.test(r.type) || !meshes.has(r.id)) continue;
+      const surface = placement.surfaceOf(r.type);
+      if (surface?.kind !== 'seat') continue;
+      const head = Math.min(...surface.slots.map((s) => s.z));
+      surface.slots.forEach((slot, i) => {
+        if (slot.z !== head) return;
+        const p = meshes.get(r.id).localToWorld(new THREE.Vector3(slot.x, slot.y ?? surface.y, slot.z + 0.85));
+        out.push({ key: r.id + ':' + i, x: p.x, y: p.y, z: p.z, heading: rotY(r) });
+      });
+    }
+    return out;
+  },
+  evening: () => finishes.lighting === 'evening',
+  cat: () => (pet && brain.cell() && (brain.action === 'sit' || brain.action === 'curl') ? { x: brain.pose().x, z: brain.pose().z } : null),
   door() {
     const d = presetDoor(presetFor(roomConfig));
     if (!d) return null;
@@ -273,6 +291,7 @@ const people = [];       // bodies, one per resident that loaded
 // What residents do to the room: screens light up, stoves glow and steam, bubbles pop up (src/game/activities.js).
 const activityView = createActivityView(scene);
 const lastAction = [];   // per resident, to notice when someone settles
+const lastBubble = [];   // per resident, when their last bubble showed (sleepers doze off again every few seconds)
 const worldDir = new THREE.Vector3(), worldAt = new THREE.Vector3();
 function appliancesInRoom() {
   const out = [];
@@ -305,17 +324,20 @@ function stepActivities(poses, dt, now, animate) {
   poses.forEach((pose, i) => {
     const body = people[i];
     if (!body) return;
-    heights.set(body.root, pose.action === 'sit' ? 1.35 : 1.62);
+    heights.set(body.root, pose.action === 'sleep' ? 0.95 : pose.action === 'sit' ? 1.35 : 1.62);
     const before = lastAction[i];
     lastAction[i] = pose.settling ? 'walk' : pose.action;
-    if (before !== 'walk' || pose.settling || !['sit', 'interact', 'gaze', 'idle'].includes(pose.action)) return;
+    if (pose.action === 'sleep' && pose.seat && now - (lastBubble[i] ?? 0) > 8000 && !activityView.bubbleOf(body.root)) {
+      activityView.showBubble(body.root, 'sleep'); lastBubble[i] = now; busy = true;
+    }
+    if (before !== 'walk' || pose.settling || !['sit', 'interact', 'gaze', 'idle', 'sleep', 'pet'].includes(pose.action)) return;
     const spotItem = pose.spot?.startsWith('spot:') ? state.get(pose.spot.slice(5)) : null;
     const place = spotItem ? (APPLIANCE_KINDS[spotItem.type] === 'stove' ? 'stove' : 'kitchen')
       : pose.action === 'sit' ? activeAppliances([pose], appliances.filter((a) => a.kind !== 'stove')).size ? 'tv' : null : null;
     const cat = pet ? brain.pose() : null;
     const radioNear = music.isOn() && state.items.some((r) => { if (!isRadio(r.type) || !r.lit || !meshes.has(r.id)) return false; meshes.get(r.id).getWorldPosition(worldAt); return Math.hypot(worldAt.x - pose.x, worldAt.z - pose.z) < 2.5; });
     const icon = bubbleFor({ action: pose.action, place, evening: finishes.lighting === 'evening', catNear: !!cat && Math.hypot(cat.x - pose.x, cat.z - pose.z) < 1.6, radioNear });
-    if (icon) { activityView.showBubble(body.root, icon); busy = true; }
+    if (icon) { activityView.showBubble(body.root, icon); lastBubble[i] = now; busy = true; }
   });
   if (activityView.stepBubbles(dt, heights, animate)) busy = true;
   return busy;

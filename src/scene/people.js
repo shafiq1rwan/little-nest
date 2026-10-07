@@ -7,11 +7,13 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 import { MODELS_VERSION } from '../config/game.js';
+import { sharedMaterial } from './geometry.js';
 
 /** Who lives here, in arrival order. Resident i always looks like PEOPLE[i]. */
 export const PEOPLE = ['character-female-b', 'character-male-a', 'character-female-e'];
 const SCALE = 1.5;   // the characters are about 0.78 tall in the file; this makes them about 1.17
-const CLIPS = { walk: 'walk', idle: 'idle', gaze: 'idle', sit: 'sit', interact: 'interact-right', away: 'idle' };
+const CLIPS = { walk: 'walk', idle: 'idle', gaze: 'idle', sit: 'sit', interact: 'interact-right', sleep: 'idle', pet: 'pick-up', away: 'idle' };
+const LIE_LIFT = 0.2;    // lying on the back, the body's back is this far below the model's origin
 const SIT_DROP = 0.02;   // the sit clip lowers the hips to just above the origin; this rests the thighs on the cushion
 
 const templates = new Map();   // file name -> { scene, clips }
@@ -39,6 +41,10 @@ export function createPerson(index) {
   const root = new THREE.Group();
   root.name = 'resident-' + index;
   root.add(model);
+  // A blanket tucked over a sleeper, from the feet (the root) up to the chest. Hidden while awake.
+  const blanket = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.07, 0.6), sharedMaterial(0xc5c9a4, 0.95));   // legs and body; the big head stays out
+  blanket.position.set(0, LIE_LIFT + 0.2, -0.22); blanket.castShadow = blanket.receiveShadow = true; blanket.visible = false; blanket.name = 'blanket';
+  root.add(blanket);
   const mixer = new THREE.AnimationMixer(model);
   const actions = new Map();
   let current = null;
@@ -61,9 +67,14 @@ export function createPerson(index) {
       root.visible = !pose.outside;
       root.position.set(pose.x, pose.y - (pose.action === 'sit' && pose.seat ? SIT_DROP : 0), pose.z);
       root.rotation.y = pose.heading;
+      // In bed: on the back, head toward the headboard (the bed's -z), feet at the root.
+      const lying = pose.action === 'sleep' && !!pose.seat;
+      model.rotation.x = lying ? -Math.PI / 2 : 0;
+      model.position.y = lying ? LIE_LIFT : 0;
+      blanket.visible = lying;
       play(CLIPS[pose.action] || 'idle', animate ? 0.25 : 0);
       mixer.update(animate ? dt : 0);
     },
-    dispose() { mixer.stopAllAction(); root.removeFromParent(); },
+    dispose() { mixer.stopAllAction(); blanket.geometry.dispose(); root.removeFromParent(); },
   };
 }

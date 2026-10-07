@@ -141,3 +141,36 @@ test('version 10 saves how many people live here; older saves have nobody; bad c
   expect(migrateRoom({ version: 9, wall: 1, floor: 2, items: [] }).residents).toBe(0);
   for (const bad of [-1, 4, 1.5, '2']) expect(() => parseRoom({ ...saved, residents: bad }, opts)).toThrow(SaveError);
 });
+
+test('in the evening people go to bed and lie down, and get up when the evening ends', () => {
+  const w = room({ seats: SOFA });
+  w.night = true;
+  w.beds = () => [{ key: 'bed:0', x: 2.5, y: 0.45, z: -2.2, heading: 0 }];
+  w.evening = () => w.night;
+  const brain = createResidentsBrain(w, { rng: seeded(21) });
+  brain.setCount(1);
+  let asleep = false;
+  run(brain, 120, () => { asleep ||= brain.pose(0).action === 'sleep' && brain.pose(0).seat === 'bed:0'; });
+  expect(asleep).toBe(true);
+  expect([...brain.claimedSeats()]).toContain('bed:0');   // the cat keeps off an occupied bed
+  w.night = false;
+  run(brain, 3);
+  expect(brain.pose(0).seat).not.toBe('bed:0');
+  expect(brain.pose(0).y).toBe(0);
+  // Without beds or evenings the world behaves exactly as before: nobody sleeps.
+  const day = createResidentsBrain(room({ seats: SOFA }), { rng: seeded(21) });
+  day.setCount(2);
+  run(day, 120, () => { for (const p of day.poses()) expect(p.action).not.toBe('sleep'); });
+});
+
+test('people walk over to a resting cat and stroke it, facing it', () => {
+  const w = room();
+  w.cat = () => ({ x: 0.5, z: 0.5 });   // resting on cell 4,4
+  const brain = createResidentsBrain(w, { rng: seeded(8) });
+  brain.setCount(1);
+  expect(brain.send(0, { kind: 'pet', target: { gx: 5, gz: 4 } })).toBe(true);
+  let petting = null;
+  for (let i = 0; i < 300 && !petting; i++) { brain.update(1 / 30); if (brain.pose(0).action === 'pet') petting = brain.pose(0); }
+  expect(petting).toMatchObject({ x: 1.5, z: 0.5 });
+  expect(petting.heading).toBeCloseTo(-Math.PI / 2, 5);   // looking at the cat to the west
+});

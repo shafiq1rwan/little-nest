@@ -36,8 +36,8 @@ export function activeAppliances(people, appliances) {
  * close by always earns a heart; a radio playing nearby often gets a hum.
  */
 export function bubbleFor({ action, place = null, evening = false, catNear = false, radioNear = false }, rng = Math.random) {
-  if (catNear && (action === 'sit' || action === 'idle' || action === 'gaze')) return 'heart';
-  if (radioNear && action !== 'walk' && rng() < 0.6) return 'note';
+  if (catNear && (action === 'sit' || action === 'idle' || action === 'gaze' || action === 'pet')) return 'heart';
+  if (radioNear && action !== 'walk' && action !== 'sleep' && rng() < 0.6) return 'note';
   if (action === 'interact') return place === 'stove' ? 'note' : rng() < 0.7 ? 'cup' : null;
   if (action === 'sit') {
     if (place === 'tv' || place === 'screen') return rng() < 0.3 ? 'note' : null;
@@ -45,5 +45,7 @@ export function bubbleFor({ action, place = null, evening = false, catNear = fal
     return rng() < 0.4 ? 'heart' : null;
   }
   if (action === 'gaze') return rng() < 0.3 ? 'heart' : null;
+  if (action === 'sleep') return 'sleep';
+  if (action === 'pet') return 'heart';
   return null;
 }

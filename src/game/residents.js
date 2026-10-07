@@ -11,13 +11,16 @@
 //                                                             kind 'kitchen' (busy hands) or 'window' (gaze)
 //   door()        -> { gx, gz, x, z, outX, outZ } | null      the floor cell inside the door, the
 //                                                             threshold point, and a point beyond it
+//   beds()        -> [{ key, x, y, z, heading }]              optional: where to lie down (the hips' spot)
+//   evening()     -> boolean                                  optional: bedtime; sleepers wake when it ends
+//   cat()         -> { x, z } | null                          optional: the cat, while it rests on the floor
 // }
 // pose(i) returns { x, y, z, heading, action, outside, seat, spot, settling } (spot: the claimed spot key while
 // busy at it; settling: stepping onto or off a seat). action: 'walk' | 'idle' | 'sit' |
-// 'interact' | 'gaze' | 'away'. People never rest on a cell that is not free: when furniture lands on
+// 'interact' | 'gaze' | 'sleep' (lying in bed; seat is the bed key) | 'pet' (stroking the cat) | 'away'. People never rest on a cell that is not free: when furniture lands on
 // them they step to the nearest free cell, and they stand up when their seat is moved or removed.
 
-export const RESIDENT_ACTIONS = ['walk', 'idle', 'sit', 'interact', 'gaze', 'away'];
+export const RESIDENT_ACTIONS = ['walk', 'idle', 'sit', 'interact', 'gaze', 'sleep', 'pet', 'away'];
 export const MAX_RESIDENTS = 3;
 
 export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, settleTime = 0.45 } = {}) {
@@ -34,6 +37,10 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
   const pick = (list) => list[Math.floor(rng() * list.length)];
   const wrap = (a) => { while (a > Math.PI) a -= Math.PI * 2; while (a < -Math.PI) a += Math.PI * 2; return a; };
   const cellKey = (c) => 'cell:' + c.gx + ',' + c.gz;
+  const beds = () => world.beds?.() ?? [];
+  const evening = () => !!world.evening?.();
+  const catAt = () => world.cat?.() ?? null;
+  const placesOf = (p) => (p.bed ? beds() : world.seats());
 
   /** Keys claimed by everyone except `who`: seats, spots, and the cells people rest on or head for. */
   function claimedBy(who) {
@@ -96,16 +103,17 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
   function slide(p, to, then, time = settleTime) {
     p.transit = { from: { ...p.pos }, to: { ...to }, t: 0, time, then };
   }
-  function sitDown(p, s) {
-    p.claim = s.key; p.action = 'sit';
+  /** Settles onto a seat, or into bed with `action` 'sleep'. */
+  function sitDown(p, s, action = 'sit') {
+    p.claim = s.key; p.action = action; p.bed = action === 'sleep';
     p.heading = s.heading;
-    slide(p, { x: s.x, y: s.y, z: s.z }, () => { p.seat = s.key; rest(p, 'sit', between(8, 18)); p.claim = s.key; });
+    slide(p, { x: s.x, y: s.y, z: s.z }, () => { p.seat = s.key; rest(p, action, p.bed ? between(40, 80) : between(8, 18)); p.claim = s.key; });
   }
   /** The free cell to step onto from a seat: in front of it, never the gap behind a sofa. */
   const frontOf = (p, taken) => nearestFree(p.pos.x + Math.sin(p.heading) * 0.75, p.pos.z + Math.cos(p.heading) * 0.75, taken);
   function standUp(p, then = () => rest(p, 'idle', between(0.6, 1.4))) {
     const to = frontOf(p, claimedBy(p));
-    p.seat = null; p.claim = null;
+    p.seat = null; p.claim = null; p.bed = false;
     if (!to) { p.pos.y = 0; then(); return; }
     const c = center(to.gx, to.gz);
     p.action = 'idle';
@@ -127,6 +135,16 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
     const others = people.filter((q) => q !== p && q.away).length;
     const canLeave = door && free(door.gx, door.gz) && others < people.length - 1;
     const roll = rng();
+    if (evening()) {   // bedtime: most people head for a free bed
+      const free = beds().filter((b) => !taken.has(b.key));
+      if (free.length && roll < 0.6) return { kind: 'bed', target: pick(free) };
+    }
+    const cat = catAt();
+    if (cat && rng() < 0.15) {   // now and then, go and stroke the cat
+      const c = cellOf(cat.x, cat.z);
+      const beside = nearestFree(cat.x, cat.z, new Set([...taken, cellKey(c)]));
+      if (beside && Math.hypot(center(beside.gx, beside.gz).x - cat.x, center(beside.gx, beside.gz).z - cat.z) < 1.6) return { kind: 'pet', target: beside };
+    }
     if (roll < 0.36 && seats.length) return { kind: 'seat', target: pick(seats) };
     if (roll < 0.56 && kitchen.length) return { kind: 'spot', target: pick(kitchen) };
     if (roll < 0.7 && windows.length) return { kind: 'spot', target: pick(windows) };
@@ -142,10 +160,11 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
   function planTo(p, goal) {
     const here = cellOf(p.pos.x, p.pos.z);
     const taken = claimedBy(p);
-    if (goal.kind === 'seat') {
-      const s = world.seats().find((q) => q.key === goal.target.key);
+    if (goal.kind === 'seat' || goal.kind === 'bed') {
+      const s = (goal.kind === 'bed' ? beds() : world.seats()).find((q) => q.key === goal.target.key);
       if (!s || taken.has(s.key)) return false;
-      const approach = nearestFree(s.x + Math.sin(s.heading) * 0.75, s.z + Math.cos(s.heading) * 0.75, taken);
+      const reach = goal.kind === 'bed' ? 0 : 0.75;   // a bed is climbed into from the nearest side
+      const approach = nearestFree(s.x + Math.sin(s.heading) * reach, s.z + Math.cos(s.heading) * reach, taken);
       const path = approach && findPath(here, approach);
       if (!path) return false;
       p.claim = s.key; walk(p, path, { ...goal, target: s });
@@ -173,6 +192,20 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
       if (s && !(avoid() === s.key)) { sitDown(p, s); return; }
       p.claim = null; rest(p, 'idle', between(1, 2)); return;
     }
+    if (g?.kind === 'bed') {
+      const s = beds().find((q) => q.key === g.target.key);
+      if (s && evening() && avoid() !== s.key) { sitDown(p, s, 'sleep'); return; }
+      p.claim = null; rest(p, 'idle', between(1, 2)); return;
+    }
+    if (g?.kind === 'pet') {
+      const cat = catAt();
+      if (cat && Math.hypot(cat.x - p.pos.x, cat.z - p.pos.z) < 1.7) {
+        p.heading = Math.atan2(cat.x - p.pos.x, cat.z - p.pos.z);
+        rest(p, 'pet', between(3, 5));
+      } else rest(p, 'idle', between(1, 2));
+      p.claim = cellKey(cellOf(p.pos.x, p.pos.z));
+      return;
+    }
     if (g?.kind === 'leave') { p.away = true; p.outside = true; p.claim = null; rest(p, 'away', between(10, 24)); return; }
     if (g?.kind === 'spot') {
       p.heading = g.target.heading;
@@ -197,7 +230,7 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
   /** Puts a person straight into the room: a free seat for the first, then spots and free cells. */
   function placeInside(p) {
     const taken = claimedBy(p);
-    p.away = false; p.outside = false; p.transit = null; p.path = []; p.goal = null; p.seat = null; p.claim = null;
+    p.away = false; p.outside = false; p.transit = null; p.path = []; p.goal = null; p.seat = null; p.claim = null; p.bed = false;
     const seats = world.seats().filter((s) => !taken.has(s.key));
     if (seats.length && (p.id === 0 || rng() < 0.5)) {
       const s = pick(seats);
@@ -232,10 +265,11 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
       return;
     }
     if (p.seat) {
-      const s = world.seats().find((q) => q.key === p.seat);
+      const s = placesOf(p).find((q) => q.key === p.seat);
       if (!s) { standUp(p); return; }
       p.pos = { x: s.x, y: s.y, z: s.z }; p.heading = s.heading;
       if (calm) return;
+      if (p.bed && !evening()) { standUp(p); return; }   // morning: up and about
       p.timer -= dt;
       if (p.timer <= 0) standUp(p);
       return;

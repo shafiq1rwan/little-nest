@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openGame, roomState, selectedInfo, twoFrames, loadCurrentRoom, STARTER_ITEM_COUNT, TERRACOTTA } from './helpers.js';
+import { openGame, roomState, selectedInfo, twoFrames, loadCurrentRoom, STARTER_ITEM_COUNT, TERRACOTTA, menu } from './helpers.js';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -53,7 +53,7 @@ test('pillows and throws sit on seats only, follow the seat, recolour, and survi
 
   // Save and load keep the pillows on their seats.
   await page.locator('#save').click();
-  await page.locator('#clear').click();
+  await menu(page, 'clear');
   await loadCurrentRoom(page);
   expect(await roomState(page)).toHaveLength(STARTER_ITEM_COUNT + 1);
   expect((await childrenOf(page, 'sofa')).map((c) => c.type + '@' + c.slot).sort()).toEqual(['pillow@0', 'pillow@1', 'pillow@2']);

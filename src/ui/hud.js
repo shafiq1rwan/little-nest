@@ -127,7 +127,6 @@ export function buildFinishSwatches(groups) {
 export function renderSelectionCard({ card, item, def, thumbnail, sizeText, canRecolor, colors, activeColor, onColor, onLight = null }) {
   card.hidden = !item;
   if (!item) return;
-  card.querySelector('#selection-image').src = thumbnail;
   card.querySelector('#selection-name').textContent = def.label;
   card.querySelector('#selection-size').textContent = sizeText;
   const light = card.querySelector('#light-selected');

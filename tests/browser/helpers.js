@@ -20,6 +20,20 @@ export async function enterFromMenu(page) {
   await twoFrames(page);
 }
 
+/** Clicks (or taps) an item in the More menu: main-menu-toggle, music-toggle, help-toggle, hud-hide-menu, clear. */
+export async function menu(page, id, { tap = false } = {}) {
+  const press = (l) => (tap ? l.tap() : l.click());
+  if (await page.locator('#more-menu').isHidden()) await press(page.locator('#more-toggle'));
+  await press(page.locator('#' + id));
+}
+
+/** Clicks (or taps) a View tool above the dock: photo-tool, orbit-left, orbit-right, zoom-out, zoom-in, reset-view, walls-tool. */
+export async function view(page, id, { tap = false } = {}) {
+  const press = (l) => (tap ? l.tap() : l.click());
+  if (await page.locator('#view-menu').isHidden()) await press(page.locator('#view-toggle'));
+  await press(page.locator('#' + id));
+}
+
 /** Serializable snapshot of the committed furniture, floor items first, then surface items (the save order). */
 export function roomState(page) {
   return page.evaluate(() => {

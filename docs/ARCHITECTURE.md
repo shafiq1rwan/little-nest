@@ -18,7 +18,7 @@ It is not yet a fully separated foundation for a larger game. src/main.js is app
 | src/main.js | Exports initializeGame(): scene setup, mesh ownership, placing/drag/rotate flow, and wiring of the modules below; returns the small API the screens use (setEditing, openRooms, refresh, music) |
 | src/game/input.js | Pointer, keyboard, and touch lifecycle; raycasting; emits move/down/up/secondTouch/key |
 | src/ui/hud.js | Toast, catalog cards and filtering, tabs, finish swatches, selection card rendering |
-| src/ui/responsive.js | Compact media query, drawer expand/collapse, selection card docking |
+| src/ui/responsive.js | Compact and side-drawer queries; the Decorate card's open, minimised and closed states; where the selection card and the dock live (bottom sheet on portrait phones) |
 | src/ui/music.js | Background music with gesture unlock and remembered mute |
 | src/config/game.js | ROOM, CELL, WALL_H, CAMERA, RENDER, MUSIC, storage keys, save version and item cap |
 | src/config/theme.js | Backdrop and highlight colors, WALL_FINISHES, FLOOR_FINISHES, ITEM_COLORS |
@@ -53,7 +53,7 @@ It is not yet a fully separated foundation for a larger game. src/main.js is app
 | src/scene/thumbnails.js | Offscreen catalog previews cached in browser storage under a catalog signature |
 | tests/perf | Opt-in benchmark (PERF=1) for startup, draw calls, and frame time |
 | src/ui/icons.js | Inline SVG icon registry |
-| src/styles/ | index.css imports tokens.css (fonts, colors, tactile HUD tokens), components.css, layout.css (desktop floating controls and Decorating box), responsive.css (compact and landscape drawers) |
+| src/styles/ | index.css imports tokens.css (fonts, colors, tactile HUD tokens), components.css, layout.css (desktop bar, Decorate card, dock and popovers), responsive.css (compact bottom sheet and landscape drawer) |
 | public/fonts | Bundled OFL fonts with licences: Fredoka for the wordmark, Gelasio and Source Sans 3 as heading/body fallbacks |
 | public/icons | Original Little Nest artwork and exported icon sizes |
 | public/manifest.webmanifest | Game name, display mode, theme, and application icons |

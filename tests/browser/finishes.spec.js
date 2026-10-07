@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openGame, loadCurrentRoom, galleryStore } from './helpers.js';
+import { openGame, loadCurrentRoom, galleryStore, menu } from './helpers.js';
 
 for (const [width, height, label] of [[1440, 900, 'desktop'], [390, 844, 'phone']]) {
   test.describe(label, () => {
@@ -44,7 +44,7 @@ for (const [width, height, label] of [[1440, 900, 'desktop'], [390, 844, 'phone'
       await tap(page.locator('#redo-tool'));
       await tap(page.locator('#save'));
       expect((await galleryStore(page)).rooms[0].room).toMatchObject({ version: 11, wall: 0x9ba58c, wallLeft: 0xb77d66, floorStyle: 'tile' });
-      await tap(page.locator('#clear'));
+      await menu(page, 'clear', { tap: width < 700 });
       await loadCurrentRoom(page);
       expect(await colors()).toMatchObject({ back: 0x9ba58c, left: 0xb77d66 });
       expect(await page.evaluate(() => window.__sim.finishes.floorStyle)).toBe('tile');

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openGame } from './helpers.js';
+import { openGame, menu } from './helpers.js';
 
 test.use({ viewport: { width: 1440, height: 900 }, reducedMotion: 'no-preference' });
 
@@ -37,7 +37,7 @@ test('lamps breathe, plants sway, string lights twinkle at night, and turning mo
   expect(b1).not.toEqual(b2);
 
   // Off: everything returns to rest and the room goes idle again.
-  await page.locator('#main-menu-toggle').click();
+  await menu(page, 'main-menu-toggle');
   await page.locator('#menu-settings').click();
   await expect(page.locator('#settings-motion')).toHaveAttribute('aria-pressed', 'true');
   await page.locator('#settings-motion').click();

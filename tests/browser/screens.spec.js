@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openGame, enterFromMenu, roomState, twoFrames, STARTER_ITEM_COUNT } from './helpers.js';
+import { openGame, enterFromMenu, roomState, twoFrames, STARTER_ITEM_COUNT, menu } from './helpers.js';
 
 for (const [width, height, label] of [[1440, 900, 'desktop'], [390, 844, 'phone']]) {
   test.describe(label, () => {
@@ -54,7 +54,7 @@ for (const [width, height, label] of [[1440, 900, 'desktop'], [390, 844, 'phone'
       expect(await roomState(page)).toHaveLength(STARTER_ITEM_COUNT - 1);
 
       // Back to the menu with the visible Menu button: keys no longer edit, and the label reads Resume.
-      await page.locator('#main-menu-toggle').click();
+      await menu(page, 'main-menu-toggle');
       expect(await screenName()).toBe('menu');
       await expect(page.locator('#menu-start')).toContainText('Resume decorating');
       await page.keyboard.press('Control+z');

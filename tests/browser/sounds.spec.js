@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openGame, tilePoint, twoFrames } from './helpers.js';
+import { openGame, tilePoint, twoFrames, menu } from './helpers.js';
 import { SFX } from '../../src/ui/sfx.js';
 
 const SOUND_FILES = Object.values(SFX).reduce((n, s) => n + s.files.length, 0);   // every file in the table must load and decode
@@ -46,7 +46,7 @@ test('actions play their sounds, every file decodes, and the effects switch and 
   expect(await played(page)).toEqual(['lamp', 'recolor', 'remove']);   // the card buttons do not also tap
 
   // Settings: effects off is silent and remembered; volume is remembered.
-  await page.locator('#main-menu-toggle').click();
+  await menu(page, 'main-menu-toggle');
   await page.locator('#menu-settings').click();
   await expect(page.locator('#settings-sfx')).toHaveAttribute('aria-pressed', 'true');
   await page.locator('#settings-sfx-volume').fill('40');

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openGame, roomState, tilePoint, twoFrames, STARTER_ITEM_COUNT } from './helpers.js';
+import { openGame, roomState, tilePoint, twoFrames, STARTER_ITEM_COUNT, view } from './helpers.js';
 
 for (const [width, height, label] of [[1440, 900, 'desktop'], [390, 844, 'phone']]) {
   test.describe(label, () => {
@@ -47,13 +47,13 @@ for (const [width, height, label] of [[1440, 900, 'desktop'], [390, 844, 'phone'
       const azimuth = () => page.evaluate(() => window.__sim.controls.getAzimuthalAngle());
       const limits = await page.evaluate(() => ({ min: window.__sim.controls.minAzimuthAngle, max: window.__sim.controls.maxAzimuthAngle }));
       const start = await azimuth();
-      await page.locator('#orbit-left').click();
+      await view(page, 'orbit-left');
       expect(await azimuth()).toBeGreaterThan(start);
-      for (let i = 0; i < 12; i++) await page.locator('#orbit-left').click();
+      for (let i = 0; i < 12; i++) await view(page, 'orbit-left');
       expect(await azimuth()).toBeLessThanOrEqual(limits.max + 1e-6);
-      for (let i = 0; i < 20; i++) await page.locator('#orbit-right').click();
+      for (let i = 0; i < 20; i++) await view(page, 'orbit-right');
       expect(await azimuth()).toBeGreaterThanOrEqual(limits.min - 1e-6);
-      await page.locator('#reset-view').click();
+      await view(page, 'reset-view');
       expect(Math.abs((await azimuth()) - start)).toBeLessThan(1e-6);
       expect(errors).toEqual([]);
     });

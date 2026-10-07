@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openGame, enterFromMenu, roomState, galleryStore, STARTER_ITEM_COUNT } from './helpers.js';
+import { openGame, enterFromMenu, roomState, galleryStore, STARTER_ITEM_COUNT, menu } from './helpers.js';
 
 for (const [width, height, label] of [[1440, 900, 'desktop'], [390, 844, 'phone']]) {
   test.describe(label, () => {
@@ -29,7 +29,7 @@ for (const [width, height, label] of [[1440, 900, 'desktop'], [390, 844, 'phone'
       // Change the room, save a second design, then load the first back.
       await page.locator('#gallery-close').click();
       await expect(dialog).toBeHidden();
-      await page.locator('#clear').click();
+      await menu(page, 'clear');
       expect(await roomState(page)).toHaveLength(0);
       await page.locator('#load').click();
       await page.locator('#gallery-name').fill('Empty');

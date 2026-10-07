@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-import { openGame, itemPoint, selectedInfo, twoFrames } from './helpers.js';
+import { openGame, itemPoint, selectedInfo, twoFrames, view } from './helpers.js';
 
 function pngSize(buffer) {
   // PNG signature then IHDR: width and height are big-endian at bytes 16 and 20.
@@ -19,11 +19,11 @@ for (const [width, height, label] of [[1440, 900, 'desktop'], [390, 844, 'phone'
       expect(await page.evaluate(() => window.__sim.grid.visible)).toBe(true);
       const canvasBefore = await page.locator('#scene').boundingBox();
 
-      await page.locator('#photo-tool').click();
+      await view(page, 'photo-tool');
       expect(await page.evaluate(() => window.__sim.photoMode)).toBe(true);
       await expect(page.locator('#photo-bar')).toBeVisible();
       await expect(page.locator('#panel')).toBeHidden();
-      await expect(page.locator('.tool-rail')).toBeHidden();
+      await expect(page.locator('#dock-decorate')).toBeHidden();   // only the View tools stay
       await expect(page.locator('#selection-card')).toBeHidden();
       expect(await page.evaluate(() => window.__sim.grid.visible)).toBe(false);
       expect(await selectedInfo(page)).toBeNull();
@@ -54,11 +54,11 @@ for (const [width, height, label] of [[1440, 900, 'desktop'], [390, 844, 'phone'
       await page.keyboard.press('Escape');
       expect(await page.evaluate(() => window.__sim.photoMode)).toBe(false);
       await expect(page.locator('#photo-bar')).toBeHidden();
-      await expect(page.locator('.tool-rail')).toBeVisible();
+      await expect(page.locator('#dock-decorate')).toBeVisible();
       expect(await page.evaluate(() => window.__sim.grid.visible)).toBe(true);
       if (!compact) await expect(page.locator('#panel')).toBeVisible();
       await page.locator('#save').click();
-      await page.locator('#photo-tool').click();
+      await view(page, 'photo-tool');
       const [named] = await Promise.all([page.waitForEvent('download'), page.locator('#photo-save').click()]);
       expect(named.suggestedFilename()).toBe('living-room-photo.png');
       await page.locator('#photo-exit').click();

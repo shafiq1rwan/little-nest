@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openGame, enterFromMenu, roomState, tilePoint, itemPoint, selectedInfo, noHorizontalOverflow, loadCurrentRoom, galleryStore, STARTER_ITEM_COUNT, TERRACOTTA } from './helpers.js';
+import { openGame, enterFromMenu, roomState, tilePoint, itemPoint, selectedInfo, noHorizontalOverflow, loadCurrentRoom, galleryStore, STARTER_ITEM_COUNT, TERRACOTTA, menu, view } from './helpers.js';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -45,14 +45,14 @@ test('desktop decorating flow: rotate, recolor, save/load, search, finishes, cam
 
   await page.locator('#grid-tool').click();
   expect(await page.evaluate(() => window.__sim.grid.visible)).toBe(true);
-  await page.locator('#walls-tool').click();
+  await view(page, 'walls-tool');
   expect(await page.evaluate(() => window.__sim.walls.visible)).toBe(false);
-  await page.locator('#walls-tool').click();
+  await view(page, 'walls-tool');
 
   const zoom = await page.evaluate(() => window.__sim.camera.zoom);
-  await page.locator('#zoom-in').click();
+  await view(page, 'zoom-in');
   expect(await page.evaluate((z) => window.__sim.camera.zoom > z, zoom)).toBe(true);
-  await page.locator('#reset-view').click();
+  await view(page, 'reset-view');
   expect(await page.evaluate(() => window.__sim.camera.zoom)).toBe(1);
 
   // Place a plant on a free tile, then delete it with the keyboard.
@@ -83,7 +83,7 @@ test('desktop decorating flow: rotate, recolor, save/load, search, finishes, cam
   await page.getByRole('button', { name: 'Load Broken', exact: true }).click();
   expect(await roomState(page)).toEqual(beforeInvalid);
 
-  await page.locator('#clear').click();
+  await menu(page, 'clear');
   expect(await roomState(page)).toHaveLength(0);
   expect(await page.evaluate(() => window.__sim.occupancy.size)).toBe(0);
 
@@ -105,7 +105,7 @@ test('saves carry stable ids and a legacy version 2 save is imported into the ga
   expect(saved.items.map((i) => i.id).sort()).toEqual(liveIds);
 
   // Ids survive a round trip, so undo and export can refer to items reliably.
-  await page.locator('#clear').click();
+  await menu(page, 'clear');
   await loadCurrentRoom(page);
   expect(await page.evaluate(() => window.__sim.items.map((i) => i.id).sort())).toEqual(liveIds);
 
@@ -188,7 +188,7 @@ test('undo and redo cover placement, drag, rotate, recolor, finishes, clear, and
   expect(await page.locator('#wall-swatches button[aria-pressed="true"]').getAttribute('data-color')).toBe(String(wallBefore));
 
   // Clear is one entry and restores occupancy.
-  await page.locator('#clear').click();
+  await menu(page, 'clear');
   expect(await roomState(page)).toHaveLength(0);
   await page.keyboard.press('Control+z');
   expect(await roomState(page)).toHaveLength(STARTER_ITEM_COUNT);
@@ -201,7 +201,7 @@ test('undo and redo cover placement, drag, rotate, recolor, finishes, clear, and
 
   // Load is one entry.
   await page.locator('#save').click();
-  await page.locator('#clear').click();
+  await menu(page, 'clear');
   await loadCurrentRoom(page);
   expect(await roomState(page)).toHaveLength(STARTER_ITEM_COUNT);
   await page.keyboard.press('Control+z');
@@ -260,12 +260,12 @@ test('background music waits for a gesture and remembers the mute choice', async
   expect(await page.evaluate(() => window.__sim.bgm.currentSrc.endsWith('/audio/lofidreams-bgm.mp3'))).toBe(true);
 
   await enterFromMenu(page);
-  await page.locator('#music-toggle').click();
+  await menu(page, 'music-toggle');
   expect(await music()).toMatchObject({ on: false, paused: true, pressed: 'false', pref: 'off' });
   await page.reload();
   await page.waitForFunction(() => !!window.__sim);
   expect(await music()).toMatchObject({ on: false, pressed: 'false', pref: 'off' });
   await enterFromMenu(page);
-  await page.locator('#music-toggle').click();
+  await menu(page, 'music-toggle');
   expect(await music()).toMatchObject({ on: true, pressed: 'true', pref: 'on' });
 });

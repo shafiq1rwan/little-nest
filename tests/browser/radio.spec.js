@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openGame } from './helpers.js';
+import { openGame, menu } from './helpers.js';
 
 test.use({ viewport: { width: 1440, height: 900 }, reducedMotion: 'no-preference' });
 
@@ -13,7 +13,7 @@ test('the radio is an on/off item that starts and stops the music, floats notes 
   }, radio);
 
   // Start from silence with the radio switched off.
-  if (await page.evaluate(() => window.__sim.musicOn)) await page.locator('#music-toggle').click();
+  if (await page.evaluate(() => window.__sim.musicOn)) await menu(page, 'music-toggle');
   await page.evaluate((id) => { const s = window.__sim; s.setSelected(s.state.get(id)); }, radio);
   const button = page.locator('#light-selected');
   await expect(button).toBeVisible();

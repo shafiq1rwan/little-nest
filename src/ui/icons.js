@@ -36,6 +36,10 @@ const paths = {
   music: 'M9 18V6l11-2v12M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm11-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z',
   'music-off': 'M9 18V9M9 6l11-2v9M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM3 3l18 18',
   heart: 'M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10Z',
+  more: 'M5 12h.5M11.75 12h.5M18.5 12h.5',
+  'eye-off': 'M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6 0 10 7 10 7a17 17 0 0 1-3.3 4M6.6 6.6C3.9 8.3 2 12 2 12s4 7 10 7a9.6 9.6 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2',
+  sliders: 'M4 7h9M17 7h3M4 17h3M11 17h9M15 5v4M9 15v4',
+  'chevron-up': 'm6 15 6-6 6 6',
 };
 
 export function installIcons(root = document) {

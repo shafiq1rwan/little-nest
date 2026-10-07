@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openGame, roomState, twoFrames, loadCurrentRoom, galleryStore, STARTER_ITEM_COUNT } from './helpers.js';
+import { openGame, roomState, twoFrames, loadCurrentRoom, galleryStore, STARTER_ITEM_COUNT, menu } from './helpers.js';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -57,7 +57,7 @@ test('curtains hang only over windows, open and close with a tween, dim the sun,
   // Saved closed, loads closed without a tween, and the sun is dim straight away.
   await page.locator('#save').click();
   expect(galleryStore(page) && (await galleryStore(page)).rooms[0].room.items.find((i) => i.type === 'curtain').lit).toBe(false);
-  await page.locator('#clear').click();
+  await menu(page, 'clear');
   expect(await page.evaluate(() => window.__sim.sun.intensity)).toBeCloseTo(sunBefore, 5);
   await loadCurrentRoom(page);
   await twoFrames(page);

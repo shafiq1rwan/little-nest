@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openGame } from './helpers.js';
+import { openGame, menu } from './helpers.js';
 
 test.use({ viewport: { width: 1280, height: 800 } });
 
@@ -28,7 +28,7 @@ test('outlines darken edges, can be switched off in Settings, and the choice is 
 
   // Settings switch, remembered across a reload.
   await page.evaluate(() => window.__sim.outlines.setEnabled(true));
-  await page.locator('#main-menu-toggle').click();
+  await menu(page, 'main-menu-toggle');
   await page.locator('#menu-settings').click();
   await expect(page.locator('#settings-outlines')).toHaveAttribute('aria-pressed', 'true');
   await page.locator('#settings-outlines').click();

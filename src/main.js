@@ -122,6 +122,7 @@ function applyLighting(key) {
   sun.intensity = mood.sun.intensity * curtainFactor();
   sun.position.set(...mood.sun.position);
   scene.background.setHex(mood.backdrop);
+  $('app').style.setProperty('--scene-backdrop', '#' + mood.backdrop.toString(16).padStart(6, '0'));   // the page behind the Decorate card matches the sky
   motion.setTwinkle(key === 'evening');
   renderer.toneMappingExposure = mood.exposure;
   if (shell) {
@@ -719,6 +720,7 @@ function startPlacing(type) {
   const where = placement.isSurfaceItem(type) ? (placement.surfaceKindOf(type) === 'seat' ? ' on a seat' : ' on a table or shelf') : placement.isWallItem(type) ? ' on a wall' : '';
   $('mode-label').textContent = 'Place ' + CATALOG[type].label.toLowerCase() + where;
   $('keep-placing').hidden = $('cancel-placing').hidden = false;
+  document.querySelector('.mode-pill').classList.add('placing');
   canvas.style.cursor = 'crosshair';
   updateSelection();
   if (hud.isCompact()) hud.setExpanded(false);
@@ -731,6 +733,7 @@ function cancelPlacing() {
   selectedType = null;
   $('mode-label').textContent = 'Decorate mode';
   $('keep-placing').hidden = $('cancel-placing').hidden = true;
+  document.querySelector('.mode-pill').classList.remove('placing');
   canvas.style.cursor = 'grab';
   updateSelection();
 }
@@ -897,7 +900,11 @@ const hud = createResponsiveHUD({
   panelContent: $('panel-content'),
   selectionCard: $('selection-card'),
   viewport: $('viewport'),
+  dock: document.querySelector('.dock'),
   toggle: $('panel-toggle'),
+  close: $('panel-close'),
+  decorate: $('dock-decorate'),
+  collapseSelection: $('selection-collapse'),
   hasSelection: () => !!selected,
 });
 
@@ -905,7 +912,6 @@ function updateCount() { $('item-count').textContent = state.items.length + ' it
 function updateSelection() {
   hud.markSelection();
   if (selected && hud.isCompact()) hud.setExpanded(true);
-  $('rotate-tool').disabled = !selected && !ghost;
   setCatalogActive($('catalog'), selected?.type || selectedType);
   const def = selected && CATALOG[selected.type];
   let canRecolor = false;
@@ -1021,18 +1027,47 @@ const syncLightingOptions = buildLightingOptions({
 installIcons($('lighting-options'));
 
 $('rotate-selected').onclick = rotateSelected;
-$('rotate-tool').onclick = rotateSelected;
 $('undo-tool').onclick = () => undoRedo('undo');
 $('redo-tool').onclick = () => undoRedo('redo');
 $('remove-selected').onclick = () => { if (selected) removeItem(selected); };
 $('duplicate-selected').onclick = duplicateSelected;
 $('deselect').onclick = () => setSelected(null);
-$('move-tool').onclick = () => { cancelPlacing(); toast('Drag any furniture to move it.'); };
 $('move-selected').onclick = () => { if (hud.isCompact()) hud.setExpanded(false); toast('Drag the selected furniture to a free tile.'); };
 function showGrid(on) { gridVisible = on; grid.visible = on; setPressed($('grid-tool'), on); invalidate(); }
 $('grid-tool').onclick = () => showGrid(!gridVisible);
 $('walls-tool').onclick = () => { wallsVisible = !wallsVisible; shell.walls.visible = wallsVisible; invalidate(); $('walls-tool').setAttribute('aria-pressed', String(wallsVisible)); };
 $('help-toggle').onclick = () => { $('help-panel').hidden = !$('help-panel').hidden; };
+// Popovers: the More menu under the action bar and the View tools above the dock. A menu closes after
+// a choice; the View tools stay open for repeated zooming and orbiting. Escape or a click elsewhere closes both.
+function bindPopover(toggle, popover, { closeOnChoice }) {
+  const setOpen = (open) => { popover.hidden = !open; toggle.setAttribute('aria-expanded', String(open)); };
+  toggle.addEventListener('click', () => setOpen(popover.hidden));
+  if (closeOnChoice) popover.addEventListener('click', (ev) => { if (ev.target.closest('button')) setOpen(false); });
+  document.addEventListener('pointerdown', (ev) => { if (!popover.hidden && !popover.contains(ev.target) && !toggle.contains(ev.target)) setOpen(false); });
+  document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && !popover.hidden) { setOpen(false); toggle.focus({ preventScroll: true }); } });
+  return setOpen;
+}
+bindPopover($('more-toggle'), $('more-menu'), { closeOnChoice: true });
+const setViewOpen = bindPopover($('view-toggle'), $('view-menu'), { closeOnChoice: false });
+// Hide HUD is a viewing state: it cancels a pending placement and clears the selection (the room itself is
+// unchanged), leaves only the room and a Show HUD button, and Escape or Show HUD brings the controls back.
+function setHudHidden(hidden) {
+  if (hidden) { cancelPlacing(); setSelected(null); }
+  document.body.classList.toggle('hud-hidden', hidden);
+  $('show-hud').hidden = !hidden;
+  if (hidden) { setViewOpen(false); $('show-hud').focus({ preventScroll: true }); }
+  else $('hud-toggle').focus({ preventScroll: true });
+  invalidate();
+}
+$('hud-toggle').onclick = $('hud-hide-menu').onclick = () => setHudHidden(true);
+$('show-hud').onclick = () => setHudHidden(false);
+document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && document.body.classList.contains('hud-hidden')) setHudHidden(false); });
+// The filter button shows or hides the collection and category filters.
+$('filter-toggle').onclick = () => {
+  const show = $('catalog-filters').hidden;
+  $('catalog-filters').hidden = !show;
+  $('filter-toggle').setAttribute('aria-pressed', String(show));
+};
 
 const sfx = createSfx({ storageKey: SFX_KEY, volumeKey: SFX_VOLUME_KEY });
 // A quiet tap for HUD buttons; buttons whose action has its own sound opt out with data-sfx="none".
@@ -1043,6 +1078,14 @@ document.addEventListener('click', (ev) => {
 const music = createMusic({ src: MUSIC.src, volume: MUSIC.volume, storageKey: MUSIC_KEY, button: $('music-toggle'), installIcons, onToggle: (on) => toast(on ? 'Music on.' : 'Music off.') });
 
 canvas.addEventListener('pointerleave', () => { setHover(null); hoverPerson(null); if (pet) brain.lookAt(null); });
+// A tap in the room can slide the sheet up under the finger; the browser's follow-up click must not land
+// on whatever the sheet brought there (the dock's Decorate button, a swatch), so ignore it briefly.
+let lastRoomTap = { at: 0, x: 0, y: 0 };
+canvas.addEventListener('pointerup', (ev) => { if (ev.pointerType !== 'mouse') lastRoomTap = { at: performance.now(), x: ev.clientX, y: ev.clientY }; });
+$('panel').addEventListener('click', (ev) => {
+  const ghostClick = performance.now() - lastRoomTap.at < 600 && Math.hypot(ev.clientX - lastRoomTap.x, ev.clientY - lastRoomTap.y) < 12;
+  if (ghostClick) { ev.stopPropagation(); ev.preventDefault(); }
+}, true);
 $('keep-placing').onclick = () => { keepPlacing = !keepPlacing; $('keep-placing').setAttribute('aria-pressed', String(keepPlacing)); $('keep-placing').classList.toggle('active', keepPlacing); };
 $('cancel-placing').onclick = () => { cancelPlacing(); $('scene').focus({ preventScroll: true }); };
 $('orbit-left').onclick = () => { if (orbitBy(CAMERA.orbitStep)) invalidate(); };
@@ -1184,6 +1227,7 @@ function enterPhotoMode() {
   settle();
   photoRestore = { grid: gridVisible, panelExpanded: hud.isExpanded() };
   photoMode = true;
+  hud.setPhoto(true);
   grid.visible = false;
   document.body.classList.add('photo');
   $('photo-bar').hidden = false;
@@ -1200,6 +1244,7 @@ function exitPhotoMode() {
   setPressed($('photo-tool'), false);
   $('photo-tool').setAttribute('aria-label', 'Photo mode');
   showGrid(photoRestore.grid);
+  hud.setPhoto(false);
   hud.setExpanded(photoRestore.panelExpanded);
   photoRestore = null;
   canvas.style.cursor = 'grab';

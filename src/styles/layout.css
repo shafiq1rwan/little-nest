@@ -1,55 +1,104 @@
-/* Floating game HUD. The scene keeps its full height behind the top controls. */
-#app { display: flex; flex-direction: column; height: 100dvh; }
-.topbar { position: absolute; z-index: 3; top: 16px; left: 20px; right: 20px; height: 50px; display: flex; align-items: center; gap: 12px; pointer-events: none; }
+/* Floating game HUD (docs/STYLE_GUIDE.md, "HUD layout"): a brand in the top left, a small action bar in the
+   top right, the Decorate card floating on the right, and a dock at the bottom centre. Everything else
+   (camera tools, more actions) opens from the dock or the bar, so the room stays the picture. */
+#app { display: flex; flex-direction: column; height: 100dvh; background-color: var(--scene-backdrop, var(--backdrop)); }
+.topbar { position: absolute; z-index: 4; top: 16px; left: 20px; right: 20px; height: 50px; display: flex; align-items: center; gap: 12px; pointer-events: none; }
 .topbar > * { pointer-events: auto; }
 .brand { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; min-width: 0; max-width: min(360px, 40vw); color: var(--cream); }
 .brand h1 { max-width: 100%; font-family: var(--font-brand); font-size: 30px; font-weight: 600; line-height: 1.1; letter-spacing: .3px; }
 .room-name { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; line-height: 1.3; letter-spacing: 1.6px; }
-.save-actions { margin-left: auto; display: flex; gap: 6px; align-items: center; padding: 5px; background: var(--cream); border: 2px solid var(--panel-edge); border-radius: 17px; box-shadow: var(--panel-shadow); }
-.save-actions button { min-height: 38px; font-size: 12px; padding: 8px 12px; }
-.save-actions .icon-button { width: 38px; height: 38px; }
+
+/* Ghost buttons: icon or text on the cream surface, no plinth. Used across the bar, dock and cards. */
+button.ghost, .dock-item, .menu button { background: transparent; border-color: transparent; box-shadow: none; color: var(--ink); }
+button.ghost:hover, .dock-item:hover, .menu button:hover { background: var(--hover); }
+button.ghost:active:not(:disabled), .dock-item:active:not(:disabled) { translate: 0 1px; box-shadow: none; }
+button.ghost[aria-pressed="true"] { background: var(--card-active); color: var(--sage-deep); border-color: transparent; box-shadow: inset 0 0 0 1.5px var(--sage); }
+#walls-tool[aria-pressed="true"] { background: transparent; color: inherit; box-shadow: none; }   /* walls showing is the normal state */
+#walls-tool[aria-pressed="false"] { background: var(--card-active); color: var(--sage-deep); box-shadow: inset 0 0 0 1.5px var(--sage); }
+
+.save-actions { margin-left: auto; display: flex; gap: 4px; align-items: center; padding: 5px; background: var(--cream); border: 2px solid var(--panel-edge); border-radius: 16px; box-shadow: var(--panel-shadow); }
+.save-actions .icon-button { width: 38px; height: 38px; border-radius: 11px; }
+.save-actions #save { min-height: 36px; padding: 6px 18px; font-size: 13px; font-weight: 600; border-radius: 11px; margin: 0 4px; }
+.save-actions #save [data-icon] { display: none; }
+[data-icon="more"] svg { stroke-width: 3.2; }
+
+/* Popovers: the More menu under the bar, the View tools above the dock. */
+.menu-anchor { position: relative; display: flex; }
+.popover { position: absolute; z-index: 6; padding: 6px; background: var(--cream); border: 2px solid var(--panel-edge); border-radius: 16px; box-shadow: var(--panel-shadow); }
+.menu { top: calc(100% + 10px); right: -6px; width: 218px; display: flex; flex-direction: column; gap: 2px; }
+.menu button { justify-content: flex-start; gap: 11px; width: 100%; min-height: 38px; padding: 8px 10px; border-radius: 10px; font-size: 13px; text-align: left; }
+.menu svg { width: 18px; height: 18px; color: var(--muted); }
+.menu #music-toggle[aria-pressed="true"] { color: var(--sage-deep); }
+.menu #music-toggle[aria-pressed="true"]::after { content: 'On'; margin-left: auto; font-size: 11px; color: var(--sage-deep); }
+.menu #music-toggle[aria-pressed="false"]::after { content: 'Off'; margin-left: auto; font-size: 11px; color: var(--muted); }
+.menu-divider { height: 1px; margin: 5px 6px; background: var(--line); }
+.menu-note { margin: 4px 10px 2px; font-size: 11px; color: var(--muted); }
+#hud-hide-menu { display: none; }   /* the bar has its own button on wide screens */
+
 .workspace { display: flex; flex: 1; min-height: 0; }
 #viewport { flex: 1; min-width: 0; position: relative; overflow: hidden; }
 #scene { display: block; width: 100%; height: 100%; touch-action: none; }
-.mode-pill { position: absolute; top: 84px; left: 22px; display: flex; align-items: center; gap: 7px; background: var(--sage-deep); color: var(--cream); padding: 7px 12px; border-radius: 14px; font-size: 11px; box-shadow: 0 3px 0 var(--sage-bottom); }
+
+/* While placing: what is in hand, Keep placing and Cancel, at the top centre where it never covers the floor. */
+.mode-pill { position: absolute; z-index: 5; top: 22px; left: 50%; translate: -50% 0; display: flex; align-items: center; gap: 7px; background: var(--sage-deep); color: var(--cream); padding: 7px 12px; border-radius: 14px; font-size: 12px; box-shadow: 0 3px 0 var(--sage-bottom); white-space: nowrap; }
+.mode-pill:not(.placing) { display: none; }
 .mode-pill svg { width: 16px; height: 16px; }
-.mode-pill .pill-button { display: inline-flex; align-items: center; gap: 5px; min-height: 26px; padding: 0 9px; margin-left: 2px; font-size: 11px; font-weight: 600; color: var(--sage-deep); background: var(--cream); border: 1px solid var(--sage-bottom); border-radius: 10px; box-shadow: 0 2px 0 var(--sage-bottom); }
+.mode-pill .pill-button { display: inline-flex; align-items: center; gap: 5px; min-height: 28px; padding: 0 10px; margin-left: 2px; font-size: 11px; font-weight: 600; color: var(--sage-deep); background: var(--cream); border: 1px solid var(--sage-bottom); border-radius: 10px; box-shadow: 0 2px 0 var(--sage-bottom); }
 .mode-pill .pill-button svg { width: 13px; height: 13px; }
 .mode-pill .pill-button.active { background: var(--paper-glow); box-shadow: inset 0 2px 0 var(--sage-bottom); }
-.mode-pill .pill-button[hidden] { display: none; }
-.tool-rail { position: absolute; top: 134px; left: 22px; display: flex; flex-direction: column; gap: 6px; padding: 6px; border: 2px solid var(--panel-edge); border-radius: 18px; background: var(--cream); box-shadow: var(--panel-shadow); }
-.tool-rail .icon-button { width: 38px; height: 38px; }
-.tool-rail svg, .camera-tools svg { width: 19px; height: 19px; }
-.tool-rail #undo-tool { margin-top: 4px; }
-.tool-rail #grid-tool { margin-top: 4px; }
-.hint-strip { position: absolute; bottom: 22px; left: 22px; font-size: 11px; color: var(--ink); background: var(--cream); padding: 10px 15px; border-radius: 16px; pointer-events: none; opacity: .85; }
-.hint-strip span { margin: 0 8px; }
-.camera-tools { display: flex; gap: 5px; align-items: center; position: absolute; bottom: 20px; right: 20px; padding: 5px; border: 2px solid var(--panel-edge); border-radius: 17px; background: var(--cream); box-shadow: var(--panel-shadow); }
-.camera-tools > span { font-size: 11px; margin: 0 5px; font-weight: 600; }
-.camera-tools .icon-button { width: 38px; height: 38px; }
-#panel { width: clamp(280px, 23vw, 330px); flex-shrink: 0; display: flex; flex-direction: column; margin: 82px 20px 20px 0; padding: 0 14px; background: var(--cream); border: 2px solid var(--panel-edge); border-radius: 26px; box-shadow: var(--panel-shadow), inset 0 2px 0 var(--paper-glow); }
+
+/* The dock. Decorate opens and closes the Decorate card; View opens the camera tools. */
+.dock { position: absolute; z-index: 3; bottom: 20px; left: 50%; translate: -50% 0; display: flex; align-items: center; gap: 4px; padding: 6px 8px; background: var(--cream); border: 2px solid var(--panel-edge); border-radius: 18px; box-shadow: var(--panel-shadow); }
+.dock .icon-button { width: 40px; height: 40px; border-radius: 12px; }
+.dock svg { width: 20px; height: 20px; }
+.dock-item { position: relative; min-height: 40px; padding: 6px 12px; gap: 9px; border-radius: 12px; font-size: 13px; }
+.dock-item .dock-caret svg { width: 14px; height: 14px; }
+#dock-decorate[aria-pressed="true"]::after { content: ''; position: absolute; left: 12px; right: 12px; bottom: 2px; height: 2.5px; border-radius: 2px; background: var(--sage); }
+#view-toggle[aria-expanded="true"] { background: var(--hover); }
+#view-toggle[aria-expanded="true"] .dock-caret { rotate: 180deg; }
+.dock-sep { width: 1px; height: 26px; margin: 0 4px; background: var(--line); }
+#view-menu { bottom: calc(100% + 16px); right: -8px; display: flex; gap: 3px; }
+#view-menu[hidden] { display: none; }
+#view-menu .icon-button { width: 40px; height: 40px; }
+
+.show-hud { position: absolute; z-index: 3; bottom: 20px; left: 50%; translate: -50% 0; gap: 10px; padding: 10px 18px; font-size: 13px; border: 2px solid var(--panel-edge); box-shadow: var(--panel-shadow); }
+body.hud-hidden .save-actions, body.hud-hidden #panel, body.hud-hidden .dock, body.hud-hidden .selection-card, body.hud-hidden .mode-pill, body.hud-hidden #help-panel { display: none !important; }
+
+/* The Decorate card. */
+#panel { width: clamp(290px, 23vw, 330px); flex-shrink: 0; align-self: flex-start; display: flex; flex-direction: column; max-height: calc(100% - 96px); margin: 82px 20px 0 0; padding: 4px 16px 0; background: var(--cream); border: 2px solid var(--panel-edge); border-radius: 22px; box-shadow: var(--panel-shadow), inset 0 2px 0 var(--paper-glow); }
+#panel.closed { display: none; }
+#panel.minimized #panel-content { display: none; }
 #panel-content { display: flex; flex-direction: column; flex: 1; min-height: 0; }
-.drawer-heading { display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; min-height: 62px; gap: 12px; }
-.drawer-heading h2 { margin: 4px 0 0; font: 600 21px var(--font-heading); letter-spacing: -.5px; }
-.drawer-eyebrow { font-size: 8px; font-weight: 700; letter-spacing: 1.6px; color: var(--muted); }
-#panel-toggle { display: none; }
-.tabs { display: flex; gap: 5px; background: var(--drawer-button); padding: 5px; border-radius: 17px; margin-bottom: 14px; flex-shrink: 0; }
-.tabs button { flex: 1; min-height: 42px; border: 0; border-radius: 11px; padding: 5px 4px; font-size: 11px; flex-direction: column; gap: 3px; box-shadow: none; }
-.tabs svg { width: 17px; height: 17px; }
-.tabs button.active { background: var(--cream); color: var(--sage-deep); font-weight: 700; box-shadow: 0 2px 0 var(--button-bottom); }
-.pane { overflow: auto; flex: 1; min-height: 0; scrollbar-width: thin; scrollbar-color: var(--panel-edge) transparent; padding: 2px 3px 18px; }
-.search-field { display: flex; gap: 9px; align-items: center; border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; background: var(--paper-glow); box-shadow: inset 0 2px 3px var(--shadow); }
+.drawer-heading { display: flex; flex-shrink: 0; align-items: center; justify-content: space-between; min-height: 56px; gap: 12px; }
+.drawer-heading h2 { margin: 0; font: 600 21px var(--font-heading); letter-spacing: -.3px; }
+.drawer-actions { display: flex; gap: 2px; margin-right: -6px; }
+.drawer-actions .icon-button { width: 34px; height: 34px; border-radius: 10px; color: var(--muted); }
+.drawer-actions svg { width: 18px; height: 18px; }
+.compact-only { display: none !important; }
+.tabs { display: flex; gap: 2px; margin: 0 0 12px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+.tabs button { flex: 1; min-height: 38px; padding: 6px 2px; border: 0; border-radius: 10px 10px 0 0; background: transparent; box-shadow: none; font-size: 13px; color: var(--muted); }
+.tabs button:hover { background: transparent; color: var(--ink); }
+.tabs button:active:not(:disabled) { translate: 0 0; }
+.tabs button.active { color: var(--sage-deep); font-weight: 700; box-shadow: inset 0 -2.5px 0 var(--sage); }
+.pane { overflow: auto; flex: 1; min-height: 0; scrollbar-width: thin; scrollbar-color: var(--panel-edge) transparent; padding: 2px 3px 16px; }
+.search-row { display: flex; align-items: center; gap: 6px; }
+.search-field { flex: 1; display: flex; gap: 9px; align-items: center; min-height: 40px; padding: 6px 2px; border-bottom: 1px solid var(--line); }
 .search-field svg { color: var(--muted); width: 18px; }
-.search-field input { width: 100%; min-width: 0; border: none; background: transparent; color: var(--ink); font-size: 12px; }
+.search-field input { width: 100%; min-width: 0; border: none; background: transparent; color: var(--ink); font-size: 13px; }
 .search-field input::placeholder { color: var(--muted); }
-.categories { display: flex; flex-wrap: wrap; gap: 5px; margin: 12px 0; }
-.categories button { border-radius: 10px; font-size: 10.5px; padding: 5px 6px; flex: 1 1 auto; white-space: nowrap; min-height: 30px; }
-.categories { gap: 4px; }
-.categories button.active { background: var(--sage); color: var(--cream); border-color: var(--sage-deep); box-shadow: 0 3px 0 var(--sage-bottom); }
-#catalog { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+#filter-toggle { width: 36px; height: 36px; }
+#filter-toggle[aria-pressed="true"] { box-shadow: none; background: transparent; color: var(--sage-deep); }
+.catalog-filters { margin: 6px 0 12px; }
+.collection-field { display: flex; justify-content: flex-end; margin: 0 0 4px; }
+.collection-field select { min-height: 30px; padding: 4px 22px 4px 8px; font: inherit; font-size: 11.5px; color: var(--ink); background: transparent; border: 0; border-radius: 9px; cursor: pointer; text-align: right; }
+.collection-field select:hover { background: var(--hover); }
+.categories { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+.categories button { position: relative; flex: 0 0 auto; min-height: 32px; padding: 4px 9px 9px; border: 0; border-radius: 9px; background: transparent; box-shadow: none; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.categories button:hover { background: var(--hover); }
+.categories button.active { color: var(--sage-deep); font-weight: 700; }
+.categories button.active::after { content: ''; position: absolute; bottom: 2px; left: 50%; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--sage); }
+#catalog { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 10px; }
 #empty-catalog { font-size: 13px; color: var(--muted); }
-.panel-footer { display: flex; justify-content: space-between; align-items: center; gap: 8px; border-top: 1px dashed var(--panel-edge); padding: 12px 0; font-size: 11px; color: var(--muted); }
-.panel-footer button { min-height: 36px; padding: 6px 10px; font-size: 11px; }
 .finishes h3 { font-family: var(--font-heading); margin: 12px 0; font-weight: 500; }
 .finishes p { font-size: 13px; line-height: 1.6; color: var(--muted); margin-bottom: 25px; }
 .finishes .swatch { width: 54px; height: 54px; }
@@ -65,20 +114,16 @@
 @media (max-width: 1100px) {
   .topbar { left: 16px; right: 16px; gap: 8px; }
   .brand h1 { font-size: 26px; }
-  #panel { margin-right: 16px; padding: 0 12px; }
-  .selection-card { width: 320px; left: 16px; }
-  .hint-strip { left: 16px; font-size: 10px; }
-  .hint-strip span { margin: 0 4px; }
-  .camera-tools { right: 16px; }
-  .camera-tools > span { display: none; }
+  #panel { margin-right: 16px; padding: 4px 12px 0; }
+  .selection-card { left: 16px; }
 }
 
 /* Title, loading, and settings screens. Menus frame the same live 3D room. */
 .brand { position: relative; min-height: 44px; }
 body[data-screen="menu"] .topbar, body[data-screen="menu"] #panel,
-body[data-screen="menu"] .tool-rail, body[data-screen="menu"] .mode-pill,
-body[data-screen="menu"] .selection-card, body[data-screen="menu"] .hint-strip,
-body[data-screen="menu"] .camera-tools, body[data-screen="menu"] #help-panel { display: none !important; }
+body[data-screen="menu"] .dock, body[data-screen="menu"] .mode-pill,
+body[data-screen="menu"] .selection-card, body[data-screen="menu"] #show-hud,
+body[data-screen="menu"] #help-panel { display: none !important; }
 body[data-screen="menu"] #viewport { margin-left: 34%; }
 body[data-screen="loading"] #app { visibility: hidden; }
 .main-menu-layout { position: fixed; inset: 0; z-index: 5; display: flex; align-items: center; padding: 5vw; pointer-events: none; }
@@ -138,3 +183,14 @@ body[data-screen="loading"] #app { visibility: hidden; }
 .credits-list a { color: var(--sage-deep); font-weight: 600; }
 #credits-done { min-height: 44px; width: 100%; }
 @media (max-width: 440px) { .credits-list { grid-template-columns: 1fr; gap: 4px 0; } .credits-list dd { margin-bottom: 8px; } }
+
+/* Small HUD details: no ring on the filter button, a close-set arrow on the collection select,
+   and no stuck hover highlight after a tap on touch screens. */
+#filter-toggle[aria-pressed="true"] { border-color: transparent; }
+.collection-field select { appearance: none; padding-right: 26px; background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23563425' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 7px center / 13px 13px; }
+@media (hover: none) {
+  .categories button:hover, .catalog-card:hover, button.ghost:hover, .dock-item:hover, .menu button:hover, .selection-actions button:hover, .collection-field select:hover { background-color: transparent; }
+  .catalog-card.active:hover { background: var(--card-active); }
+}
+/* Pressed ghost buttons use the soft sage ring above, not the older bordered pressed style. */
+button.icon-button.ghost[aria-pressed]:not(.active):not(.primary) { border-color: transparent; }

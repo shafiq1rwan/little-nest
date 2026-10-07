@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openGame, roomState, selectedInfo, loadCurrentRoom, twoFrames, STARTER_ITEM_COUNT } from './helpers.js';
+import { openGame, roomState, selectedInfo, loadCurrentRoom, twoFrames, STARTER_ITEM_COUNT, menu } from './helpers.js';
 
 test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -89,7 +89,7 @@ test('wall decorations snap to walls, avoid windows, drag between walls, refuse 
   // Save and load keep wall items; the store is version 5.
   await page.locator('#save').click();
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem("home-deco-sim:rooms")).rooms[0].room.version)).toBeGreaterThanOrEqual(5);
-  await page.locator('#clear').click();
+  await menu(page, 'clear');
   await loadCurrentRoom(page);
   expect((await wallItems(page)).map((w) => w.type).sort()).toEqual(['botanicalPrint', 'clock', 'wallShelf', 'worldMap']);
   expect(await page.evaluate(() => window.__sim.items.filter((i) => i.parent).map((i) => i.type).sort())).toEqual(['frame', 'mug', 'mug', 'pillow', 'pillow']);

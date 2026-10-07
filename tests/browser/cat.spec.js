@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { openGame, loadCurrentRoom, galleryStore, twoFrames } from './helpers.js';
+import { openGame, loadCurrentRoom, galleryStore, twoFrames, menu } from './helpers.js';
 
 test.use({ viewport: { width: 1440, height: 900 }, reducedMotion: 'no-preference' });
 
@@ -99,7 +99,7 @@ test('the starter room has a cat that keeps to free floor, hops off furniture, a
   // Saved with the room; an older save has no cat.
   await page.locator('#save').click();
   expect((await galleryStore(page)).rooms[0].room).toMatchObject({ version: 11, pet: { present: true, color: 'grey' } });
-  await page.locator('#clear').click();
+  await menu(page, 'clear');
   await loadCurrentRoom(page);
   await twoFrames(page);
   expect(await page.evaluate(() => window.__sim.finishes)).toMatchObject({ petPresent: true, petColor: 'grey' });

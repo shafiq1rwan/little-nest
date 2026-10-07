@@ -52,44 +52,50 @@ Selectable finishes can vary within the established warm/soft palette. Baseline 
 ## Typography, spacing, and controls
 
 - Brand: bundled Fredoka Semibold via --font-brand. Other prominent headings: Georgia, then bundled Gelasio, serif. Body and controls: Segoe UI, then bundled Source Sans 3, system-ui, sans-serif. Use the tokens --font-heading and --font-body.
-- Desktop brand size: 30px; the narrower desktop override is 26px. Compact brand is 23px and becomes 19px, wrapping to two lines, at <= 370px width. The title is cream text directly on the backdrop with no capsule or image logo. The current room name sits underneath in smaller, spaced lettering (hidden at <= 370px); long names truncate. Save uses an icon at <= 440px.
+- Desktop brand size: 30px; the narrower desktop override is 26px. Compact brand is 23px and becomes 19px, wrapping to two lines, at <= 370px width. The title is cream text directly on the backdrop with no capsule or image logo. The current room name sits underneath in smaller, spaced lettering (hidden at <= 370px); long names truncate. On compact screens Save is an icon.
 - Small-screen search text is 16px to avoid input zoom in common mobile browsers.
 - Keep control labels readable, normally 12–13px on compact screens. Footprint metadata is secondary.
 - Use thin warm-brown line icons with consistent strokes. Do not mix emoji, filled clip-art, and line icons as controls.
 - Buttons use 12–13px corners and a shallow bottom edge; furniture tiles use 18px corners, and floating panels use 20–26px corners. Use warm outlines, soft shadows, and inset highlights to feel like tactile game pieces. Furniture thumbnails sit directly on the card, with no plinth or shadow.
 - Use consistent spacing from existing 4/8/12/16/24px families.
-- On compact screens, primary touch actions, camera controls, selection controls, category chips, and Clear have targets at least 44 × 44px. Desktop pointer controls are deliberately smaller and calmer: 38px icon buttons in the top-right capsule, tool tray, and camera tray; 36px selection actions; 30px category chips; 34px colour swatches.
+- On compact screens, primary touch actions, the dock, the View tools, menu items, selection controls, category tabs and the filter button have targets at least 44 × 44px. Desktop pointer controls are deliberately smaller and calmer: 38px ghost icon buttons in the top-right capsule, 40px in the dock and View tools, 34px card header buttons, 58px-tall icon-over-label selection actions, 32px category tabs, 36px round swatches.
 - Keep focus indicators, accessible button names, active/pressed states, and reduced-motion support.
 
 The wordmark uses bundled Fredoka on every platform. Body text and other headings use Segoe UI and Georgia when available, with bundled Source Sans 3 and Gelasio as fallbacks. All three fonts include OFL licences in public/fonts.
 
 ## HUD layout and behavior
 
+Reference: [docs/design-reference/hud-compact-v3.png](design-reference/hud-compact-v3.png) (HUD study 03). The room is the picture; the HUD is a few quiet pieces around it.
+
 ### Desktop
 
-The top-left title and room subtitle are cream text directly on the backdrop, matching the generated compact HUD concept. Rooms/Save/music/help actions share a floating cream capsule. There is no full-width header background; the canvas extends behind the top controls. A rounded Decorating box floats at the right with space above, below, and to its right. Its width is reserved beside the canvas so it does not cover playable tiles. It has icon-led Furniture/Walls/Floor tabs, search, categories, two-column thumbnail tiles, and a small footer.
-
-Editing tools sit in a tactile tray at the left of the viewport; camera buttons sit at the bottom right. The selected-item card is at the bottom left. Active furniture tiles have a sage border and a plus badge; their aria-pressed state matches the choice or selection. Keep controls aligned at the viewport edges and avoid expanding them over the center of the room.
+- Top left: the cream wordmark and the room name directly on the backdrop.
+- Top right: one cream capsule with Rooms (folder icon), Save (sage text button), More (⋯) and Hide HUD (crossed eye). More opens a menu under the capsule: Main menu, Music (On/Off), How to play, the item count and Clear room. A menu closes after a choice, on Escape, or on a click elsewhere.
+- Right: the Decorate card floats with space above and to its right and ends above the dock line. Its header has Decorate, − (minimise to the header) and × (close into the dock). Tabs are plain text with a sage underline; search reads Find furniture with a filter button that folds the collection select and category tabs away; the collection select is small and right-aligned; categories are text tabs with a sage dot under the active one. Furniture tiles are borderless: thumbnail and name only, a soft fill on hover, a sage ring and plus badge when active. The card's width is reserved beside the canvas, and the page behind it takes the lighting mood's backdrop colour, so it reads as floating over the room.
+- Bottom centre: the dock. Decorate (with a sage underline while the card is open) opens and closes the card; Undo and Redo; the placement grid; View, which opens the camera tools above the dock (photo, orbit left and right, zoom out and in, reset, walls). The View tools stay open for repeated presses and close on Escape or a click elsewhere.
+- Bottom left: the selected-item card, with the name and size, a chevron that folds the card to its name without deselecting (on phones it lowers the sheet) and × to deselect, icon-over-label actions (Move, Rotate | Copy, Remove, and the light, radio or curtain switch when there is one) and round swatches.
+- Top centre, only while placing: a sage pill with what is in hand, Keep placing and Cancel. It never covers the floor.
+- Hide HUD is a viewing state: it cancels a pending placement and clears the selection, leaves the wordmark and a single Show HUD pill at the bottom centre, and Show HUD or Escape restores the controls. Closing the Decorate card returns focus to the dock's Decorate button.
 
 ### Compact screens
 
 Activate the compact system when width <= 900px OR height <= 600px. JavaScript and CSS use the same condition.
 
-Portrait uses a rounded bottom drawer with the same Decorating box styling. Browse/Hide changes its size. Furniture cards form a horizontally swipeable row. Important header actions remain available; Rooms and narrow-screen Save show icons with accessible names. The compact header reserves its own height to keep controls outside the room.
+Portrait uses a rounded bottom sheet with a grab handle and the dock along its foot; collapsing the sheet (its chevron, or Decorate in the dock) leaves only the dock, so panels collapse into the dock. Furniture cards form a horizontally swipeable row. The header row keeps Rooms, Save (icon) and More; Hide HUD moves into the More menu. The compact header reserves its own height to keep controls outside the room. At widths <= 380px the dock drops its words.
 
-Choosing catalog furniture collapses the drawer for placement. Selecting an item opens its heading, actions, and optional color swatches in the drawer and hides catalog content until deselected. Move can hide the drawer again.
+Choosing catalog furniture lowers the sheet for placement. Selecting an item shows its card at the top of the sheet in place of the tabs (as in the reference's phone selection), and Move lowers the sheet again. A tap in the room that raises the sheet must not let the browser's follow-up click land on the sheet (main.js ignores a click at the tap's position for a moment).
 
-On short portrait screens, the drawer starts collapsed. On compact screens, no item is selected by default. Selection controls must not float over the room.
+On short portrait screens, the sheet starts lowered. On compact screens, no item is selected by default. Selection controls must not float over the room.
 
 ### Landscape
 
-Use a 290px side drawer when landscape height <= 600px, or landscape width is 700–900px. Collapsed width is 64px. The side catalog uses two columns and vertical scrolling.
+Use a 300px side drawer when landscape height <= 600px, or landscape width is 700–900px. Closed, it disappears and the room takes the width; the dock floats at the bottom centre of the room and brings it back. At widths <= 700px the dock is icons only.
 
-Keep the main camera actions available even with the drawer open. At landscape widths <= 700px and heights <= 600px, the tool tray uses three columns and two rows so it stays inside the room and above the camera controls. Use dynamic viewport height and safe-area insets; do not use a fixed device height.
+Use dynamic viewport height and safe-area insets; do not use a fixed device height.
 
 ### Loading screen and main menu
 
-The loading screen is the backdrop colour with soft dappled light, the cream Fredoka wordmark (28–42px), the nook illustration at about 250px, a status line, a slim cream progress bar with a sage fill, and one random tip. Everything is sized to feel quiet rather than splashy. It fades out when the menu is ready. The main menu floats over the live room: wordmark (30–48px), then Start or Resume decorating (sage primary), My rooms, Settings, and Credits as 52px tactile buttons with 15–18px Fredoka labels in a column no wider than 340px. Desktop keeps the menu in the left third with the room to the right; portrait phones stack title, room, and buttons; short landscape keeps the side layout. The editor is inert behind the menu, and the Menu button in the HUD action capsule returns to it.
+The loading screen is the backdrop colour with soft dappled light, the cream Fredoka wordmark (28–42px), the nook illustration at about 250px, a status line, a slim cream progress bar with a sage fill, and one random tip. Everything is sized to feel quiet rather than splashy. It fades out when the menu is ready. The main menu floats over the live room: wordmark (30–48px), then Start or Resume decorating (sage primary), My rooms, Settings, and Credits as 52px tactile buttons with 15–18px Fredoka labels in a column no wider than 340px. Desktop keeps the menu in the left third with the room to the right; portrait phones stack title, room, and buttons; short landscape keeps the side layout. The editor is inert behind the menu, and Main menu in the More menu returns to it.
 
 ### Interaction
 

@@ -207,3 +207,25 @@ test('at night people sleep in the bedroom bed under a blanket, and get up when 
   expect(await page.evaluate(() => window.__sim.residents.bodies.map((b) => b.getObjectByName('blanket').visible))).toEqual([false, false]);
   expect(errors).toEqual([]);
 });
+
+test('ringing the doorbell brings a guest in through the door, who leaves again; the balcony has no visitors', async ({ page }) => {
+  const errors = await openGame(page, '/');
+  await page.locator('#deselect').click();
+  await page.locator('#tab-light').click();
+  await page.locator('#doorbell').click();
+  await expect(page.locator('#toast')).toContainText('Ding-dong');
+  expect(await page.evaluate(() => window.__sim.sfx.log.includes('doorbell'))).toBe(true);
+  expect(await page.evaluate(() => window.__sim.residents.count)).toBe(2);   // a guest is not a resident
+  await page.waitForFunction(() => { const r = window.__sim.residents; return r.guest && !r.guest.outside && r.guestBody?.visible; }, null, { timeout: 30000 });
+  await page.locator('#doorbell').click();
+  await expect(page.locator('#toast')).toContainText('already visiting');
+
+  // Cut the visit short: they walk back out through the door and their body goes away.
+  await page.evaluate(() => { window.__sim.residents.brain.guest().visit = 0.1; });
+  await page.waitForFunction(() => !window.__sim.residents.guest && !window.__sim.residents.guestBody, null, { timeout: 60000 });
+
+  await page.evaluate(() => window.__sim.startPreset('balcony'));
+  await page.locator('#doorbell').click();
+  await expect(page.locator('#toast')).toContainText('no door');
+  expect(errors).toEqual([]);
+});

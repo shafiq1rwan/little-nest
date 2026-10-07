@@ -15,6 +15,7 @@ export const SFX = {
   remove: { files: ['remove'], gain: 0.55 },
   blocked: { files: ['blocked'], gain: 0.35 },
   tap: { files: ['tap'], gain: 0.4 },
+  doorbell: { files: ['doorbell'], gain: 0.55, notes: [[0, 1.26], [0.36, 1]] },   // ding-dong: one chime, a major third apart
 };
 
 export function createSfx({ base = 'audio/sfx/', storageKey, volumeKey, defaultVolume = 0.7 }) {
@@ -55,13 +56,17 @@ export function createSfx({ base = 'audio/sfx/', storageKey, volumeKey, defaultV
     if (context.state === 'suspended') context.resume().catch(() => {});
     const buffer = buffers.get(sfx.files[Math.floor(Math.random() * sfx.files.length)]);
     if (!buffer) return false;
-    const source = context.createBufferSource();
-    source.buffer = buffer;
-    source.playbackRate.value = 0.96 + Math.random() * 0.08;   // a little variation
     const gain = context.createGain();
     gain.gain.value = sfx.gain;
-    source.connect(gain).connect(master);
-    source.start();
+    gain.connect(master);
+    // Most sounds are one sample with a little pitch variation; `notes` plays it as a short tune of [delay, rate].
+    for (const [delay, rate] of sfx.notes ?? [[0, 0.96 + Math.random() * 0.08]]) {
+      const source = context.createBufferSource();
+      source.buffer = buffer;
+      source.playbackRate.value = rate;
+      source.connect(gain);
+      source.start(context.currentTime + delay);
+    }
     return true;
   }
   function setOn(next) {

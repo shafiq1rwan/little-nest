@@ -15,6 +15,9 @@
 //   evening()     -> boolean                                  optional: bedtime; sleepers wake when it ends
 //   cat()         -> { x, z } | null                          optional: the cat, while it rests on the floor
 // }
+// A guest (ringDoorbell) is a visitor on top of the residents: they come in through the door after the bell,
+// do what residents do except sleep, and leave again after a while. Guests are never saved.
+//
 // pose(i) returns { x, y, z, heading, action, outside, seat, spot, settling } (spot: the claimed spot key while
 // busy at it; settling: stepping onto or off a seat). action: 'walk' | 'idle' | 'sit' |
 // 'interact' | 'gaze' | 'sleep' (lying in bed; seat is the bed key) | 'pet' (stroking the cat) | 'away'. People never rest on a cell that is not free: when furniture lands on
@@ -41,6 +44,8 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
   const evening = () => !!world.evening?.();
   const catAt = () => world.cat?.() ?? null;
   const placesOf = (p) => (p.bed ? beds() : world.seats());
+  const residentsOf = () => people.filter((p) => !p.guest);
+  const guestOf = () => people.find((p) => p.guest) ?? null;
 
   /** Keys claimed by everyone except `who`: seats, spots, and the cells people rest on or head for. */
   function claimedBy(who) {
@@ -132,10 +137,12 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
     const spots = world.spots().filter((s) => !taken.has(s.key) && !taken.has(cellKey(s)) && free(s.gx, s.gz));
     const kitchen = spots.filter((s) => s.kind === 'kitchen'), windows = spots.filter((s) => s.kind === 'window');
     const door = world.door();
-    const others = people.filter((q) => q !== p && q.away).length;
-    const canLeave = door && free(door.gx, door.gz) && others < people.length - 1;
+    if (p.guest && p.leaving) return { kind: 'leave' };   // the visit is over
+    const home = residentsOf();
+    const others = home.filter((q) => q !== p && q.away).length;
+    const canLeave = !p.guest && door && free(door.gx, door.gz) && others < home.length - 1;
     const roll = rng();
-    if (evening()) {   // bedtime: most people head for a free bed
+    if (evening() && !p.guest) {   // bedtime: most people head for a free bed
       const free = beds().filter((b) => !taken.has(b.key));
       if (free.length && roll < 0.6) return { kind: 'bed', target: pick(free) };
     }
@@ -206,6 +213,7 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
       p.claim = cellKey(cellOf(p.pos.x, p.pos.z));
       return;
     }
+    if (g?.kind === 'leave' && p.guest) { p.gone = true; p.away = true; p.outside = true; p.claim = null; return; }
     if (g?.kind === 'leave') { p.away = true; p.outside = true; p.claim = null; rest(p, 'away', between(10, 24)); return; }
     if (g?.kind === 'spot') {
       p.heading = g.target.heading;
@@ -259,11 +267,13 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
       return;
     }
     if (p.away) {
+      if (calm && p.guest) { p.gone = true; return; }
       if (calm) { placeInside(p); return; }
       p.timer -= dt;
       if (p.timer <= 0) enter(p);
       return;
     }
+    if (p.guest && !p.leaving && (p.visit -= dt) <= 0) { p.leaving = true; p.timer = 0; }
     if (p.seat) {
       const s = placesOf(p).find((q) => q.key === p.seat);
       if (!s) { standUp(p); return; }
@@ -301,8 +311,8 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
     if (p.timer <= 0) { p.claim = null; const g = chooseGoal(p); if (!g || !planTo(p, g)) rest(p, 'idle', between(1, 3)); }
   }
 
-  function pose(i) {
-    const p = people[i];
+  function pose(i) { return poseOf(residentsOf()[i]); }
+  function poseOf(p) {
     if (!p) return null;
     const spot = !p.away && !p.transit && (p.action === 'interact' || p.action === 'gaze') ? p.claim : null;
     return { x: p.pos.x, y: p.pos.y, z: p.pos.z, heading: p.heading, action: p.away ? 'away' : p.action, outside: p.away || p.outside, seat: p.seat, spot, settling: !!p.transit };
@@ -312,24 +322,48 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
     /** How many people live here (0 to MAX_RESIDENTS). With `viaDoor`, new arrivals walk in through the door. */
     setCount(n, { viaDoor = false } = {}) {
       n = Math.max(0, Math.min(MAX_RESIDENTS, n | 0));
-      while (people.length > n) people.pop();
-      while (people.length < n) {
-        const p = makePerson(people.length);
-        people.push(p);
+      while (residentsOf().length > n) people.splice(people.indexOf(residentsOf().at(-1)), 1);
+      while (residentsOf().length < n) {
+        const p = makePerson(residentsOf().length);
+        people.splice(residentsOf().length, 0, p);   // residents first, a guest last
         if (!viaDoor || calm || !world.door() || !free(world.door().gx, world.door().gz)) { if (!placeInside(p)) rest(p, 'away', 2); }
         else enter(p);
       }
     },
-    get count() { return people.length; },
-    /** Places everyone inside the room again. Call after the room changes. */
-    reset() { for (const p of people) { p.claim = null; p.seat = null; } for (const p of people) if (!placeInside(p)) { p.away = true; rest(p, 'away', 2); } },
-    update(dt) { dt = Math.min(dt, 0.1); for (const p of people) step(p, dt); return people.map((_, i) => pose(i)); },
+    get count() { return residentsOf().length; },
+    /** Places everyone inside the room again (a visiting guest goes home). Call after the room changes. */
+    reset() {
+      const guest = guestOf();
+      if (guest) people.splice(people.indexOf(guest), 1);
+      for (const p of people) { p.claim = null; p.seat = null; }
+      for (const p of people) if (!placeInside(p)) { p.away = true; rest(p, 'away', 2); }
+    },
+    update(dt) {
+      dt = Math.min(dt, 0.1);
+      for (const p of [...people]) step(p, dt);
+      for (let i = people.length - 1; i >= 0; i--) if (people[i].gone) people.splice(i, 1);
+      return residentsOf().map(poseOf);
+    },
     pose,
-    poses: () => people.map((_, i) => pose(i)),
+    poses: () => residentsOf().map(poseOf),
+    /** A visitor rings: after the bell they walk in, stay `visit` seconds (default 50-100) and leave. False when they cannot come. */
+    ringDoorbell({ visit } = {}) {
+      const door = world.door();
+      if (calm || guestOf() || !door) return false;
+      const p = makePerson('guest');
+      p.guest = true; p.leaving = false; p.visit = visit ?? between(50, 100);
+      rest(p, 'away', 1.6);   // the bell rings, then the door opens
+      people.push(p);
+      return true;
+    },
+    get hasGuest() { return !!guestOf(); },
+    guestPose: () => poseOf(guestOf()),
+    guest: () => guestOf(),
     setCalm(on) {
       calm = !!on;
       if (!calm) return;
-      for (const p of people) {
+      for (const p of [...people]) {
+        if (p.guest) { people.splice(people.indexOf(p), 1); continue; }   // no visitors under reduced motion
         if (p.away) placeInside(p);
         else if (p.action === 'walk' && !p.transit) { const here = cellOf(p.pos.x, p.pos.z); if (inRoom(here.gx, here.gz) && free(here.gx, here.gz)) { const c = center(here.gx, here.gz); p.pos = { x: c.x, y: 0, z: c.z }; p.outside = false; rest(p, 'idle'); } else placeInside(p); }
       }
@@ -346,7 +380,7 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
     },
     /** Tests and debugging: sends person i somewhere now ({ kind: 'leave' } or { kind: 'seat'|'spot'|'cell', target }). */
     send(i, goal) {
-      const p = people[i];
+      const p = residentsOf()[i];
       if (!p || p.away) return false;
       if (p.seat || p.transit) {
         const to = frontOf(p, claimedBy(p));
@@ -358,8 +392,8 @@ export function createResidentsBrain(world, { rng = Math.random, speed = 1.1, se
       return planTo(p, goal);
     },
     /** Debug and tests. */
-    cellOf: (i) => { const p = people[i]; return p && !p.away && !p.seat && !p.transit ? cellOf(p.pos.x, p.pos.z) : null; },
-    person: (i) => people[i],
+    cellOf: (i) => { const p = residentsOf()[i]; return p && !p.away && !p.seat && !p.transit ? cellOf(p.pos.x, p.pos.z) : null; },
+    person: (i) => residentsOf()[i],
     findPath, nearestFree,
   };
 }

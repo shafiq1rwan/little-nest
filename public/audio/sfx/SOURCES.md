@@ -13,5 +13,6 @@ All files in this folder are from Kenney's audio packs (www.kenney.nl), released
 | remove.ogg | minimize_003 | Interface Sounds 1.0 |
 | blocked.ogg | bong_001 | Interface Sounds 1.0 |
 | tap.ogg | click3 | UI Audio 1.0 |
+| doorbell.ogg | glass_002 (played twice as a ding-dong) | Interface Sounds 1.0 |
 
 Pack downloads: kenney.nl/assets/impact-sounds, kenney.nl/assets/interface-sounds, kenney.nl/assets/ui-audio. The full packs are kept locally in art-source/sfx-packs (ignored by git). Per-sound gains live in src/ui/sfx.js.

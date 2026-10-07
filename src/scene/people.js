@@ -9,8 +9,9 @@ import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 import { MODELS_VERSION } from '../config/game.js';
 import { sharedMaterial } from './geometry.js';
 
-/** Who lives here, in arrival order. Resident i always looks like PEOPLE[i]. */
-export const PEOPLE = ['character-female-b', 'character-male-a', 'character-female-e'];
+/** Who lives here, in arrival order (resident i always looks like PEOPLE[i]), then the visiting guest. */
+export const PEOPLE = ['character-female-b', 'character-male-a', 'character-female-e', 'character-male-e'];
+export const GUEST_INDEX = 3;
 const SCALE = 1.5;   // the characters are about 0.78 tall in the file; this makes them about 1.17
 const CLIPS = { walk: 'walk', idle: 'idle', gaze: 'idle', sit: 'sit', interact: 'interact-right', sleep: 'idle', pet: 'pick-up', away: 'idle' };
 const LIE_LIFT = 0.2;    // lying on the back, the body's back is this far below the model's origin

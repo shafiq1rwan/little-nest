@@ -27,7 +27,7 @@ import { createMotion } from './scene/motion.js';
 import { createCat, disposeCat } from './scene/cat.js';
 import { createOutlines } from './scene/outline.js';
 import { createResidentsBrain, MAX_RESIDENTS } from './game/residents.js';
-import { preloadPeople, createPerson } from './scene/people.js';
+import { preloadPeople, createPerson, GUEST_INDEX } from './scene/people.js';
 import { activeAppliances, bubbleFor, APPLIANCE_KINDS } from './game/activities.js';
 import { createActivityView } from './scene/activities.js';
 import { createPetBrain } from './game/pet.js';
@@ -290,8 +290,10 @@ residents.setAvoid(() => (pet ? brain.onSeat : null));
 const people = [];       // bodies, one per resident that loaded
 // What residents do to the room: screens light up, stoves glow and steam, bubbles pop up (src/game/activities.js).
 const activityView = createActivityView(scene);
-const lastAction = [];   // per resident, to notice when someone settles
-const lastBubble = [];   // per resident, when their last bubble showed (sleepers doze off again every few seconds)
+const lastAction = new WeakMap();   // body root -> last action, to notice when someone settles
+const lastBubble = new WeakMap();   // body root -> when their last bubble showed (sleepers doze off again every few seconds)
+let guestBody = null;               // the visitor's body while a guest is over
+let nextGuestAt = performance.now() + 150000 + Math.random() * 150000;   // the next unprompted visit
 const worldDir = new THREE.Vector3(), worldAt = new THREE.Vector3();
 function appliancesInRoom() {
   const out = [];
@@ -316,19 +318,18 @@ function stepRadios(now) {
   return true;
 }
 /** Lights appliances in use and pops bubbles for people who just settled. Returns true while anything animates. */
-function stepActivities(poses, dt, now, animate) {
+function stepActivities(pairs, dt, now, animate) {
   const appliances = appliancesInRoom();
-  const active = activeAppliances(poses, appliances);
+  const active = activeAppliances(pairs.map(([pose]) => pose), appliances);
   let busy = activityView.update(appliances, active, dt, now / 1000, animate);
   const heights = new Map();
-  poses.forEach((pose, i) => {
-    const body = people[i];
+  pairs.forEach(([pose, body]) => {
     if (!body) return;
     heights.set(body.root, pose.action === 'sleep' ? 0.95 : pose.action === 'sit' ? 1.35 : 1.62);
-    const before = lastAction[i];
-    lastAction[i] = pose.settling ? 'walk' : pose.action;
-    if (pose.action === 'sleep' && pose.seat && now - (lastBubble[i] ?? 0) > 8000 && !activityView.bubbleOf(body.root)) {
-      activityView.showBubble(body.root, 'sleep'); lastBubble[i] = now; busy = true;
+    const before = lastAction.get(body.root);
+    lastAction.set(body.root, pose.settling || pose.outside ? 'walk' : pose.action);
+    if (pose.action === 'sleep' && pose.seat && now - (lastBubble.get(body.root) ?? 0) > 8000 && !activityView.bubbleOf(body.root)) {
+      activityView.showBubble(body.root, 'sleep'); lastBubble.set(body.root, now); busy = true;
     }
     if (before !== 'walk' || pose.settling || !['sit', 'interact', 'gaze', 'idle', 'sleep', 'pet'].includes(pose.action)) return;
     const spotItem = pose.spot?.startsWith('spot:') ? state.get(pose.spot.slice(5)) : null;
@@ -337,10 +338,17 @@ function stepActivities(poses, dt, now, animate) {
     const cat = pet ? brain.pose() : null;
     const radioNear = music.isOn() && state.items.some((r) => { if (!isRadio(r.type) || !r.lit || !meshes.has(r.id)) return false; meshes.get(r.id).getWorldPosition(worldAt); return Math.hypot(worldAt.x - pose.x, worldAt.z - pose.z) < 2.5; });
     const icon = bubbleFor({ action: pose.action, place, evening: finishes.lighting === 'evening', catNear: !!cat && Math.hypot(cat.x - pose.x, cat.z - pose.z) < 1.6, radioNear });
-    if (icon) { activityView.showBubble(body.root, icon); lastBubble[i] = now; busy = true; }
+    if (icon) { activityView.showBubble(body.root, icon); lastBubble.set(body.root, now); busy = true; }
   });
   if (activityView.stepBubbles(dt, heights, animate)) busy = true;
   return busy;
+}
+/** A visitor rings the bell and comes in. False (and nothing happens) when nobody can visit right now. */
+function ringDoorbell() {
+  if (!residents.ringDoorbell()) return false;
+  sfx.play('doorbell');
+  invalidate();
+  return true;
 }
 let residentsClock = 0, residentsRestRender = 0, residentsByDoor = false;
 /** Matches the bodies to the `residents` finish. New arrivals walk in when the player invited them. */
@@ -371,7 +379,7 @@ function showResidents(dt) {
 /** Advances the residents and the door. Returns true when a frame should be drawn. */
 function stepResidents(now) {
   const door = shell.door;
-  if (!residents.count && !(door && door.open > 0) && !activityView.anyLit()) return false;
+  if (!residents.count && !residents.hasGuest && !guestBody && !(door && door.open > 0) && !activityView.anyLit()) return false;
   const dt = residentsClock ? Math.min(0.1, (now - residentsClock) / 1000) : 1 / 60;
   residentsClock = now;
   residents.setCalm(!motion.isEnabled());
@@ -379,11 +387,18 @@ function stepResidents(now) {
   const animate = motion.isEnabled();
   let moving = false;
   poses.forEach((pose, i) => { people[i]?.setPose(pose, dt, animate); if (pose.action === 'walk' || residents.person(i).transit) moving = true; });
+  const pairs = poses.map((pose, i) => [pose, people[i]]);
+  // A guest has their own body, made when they ring and dropped when they have gone.
+  const guest = residents.guestPose();
+  if (guest && !guestBody && (guestBody = createPerson(GUEST_INDEX))) scene.add(guestBody.root);
+  if (!guest && guestBody) { guestBody.dispose(); guestBody = null; moving = true; }
+  if (guest && guestBody) { guestBody.setPose(guest, dt, animate); pairs.push([guest, guestBody]); if (guest.action === 'walk' || guest.settling) moving = true; }
+  if (now > nextGuestAt) { nextGuestAt = now + 150000 + Math.random() * 150000; if (residents.count && animate) ringDoorbell(); }
   if (door) {
     const want = residents.doorWanted();
     if (door.open !== want) { door.setOpen(animate ? Math.max(0, Math.min(1, door.open + Math.sign(want - door.open) * dt * 2.4)) : want); moving = true; }
   }
-  if (stepActivities(poses, dt, now, animate)) moving = true;
+  if (stepActivities(pairs, dt, now, animate)) moving = true;
   if (moving) return true;
   if (animate && poses.length && now - residentsRestRender > 66) { residentsRestRender = now; return true; }
   return false;
@@ -942,6 +957,12 @@ for (let n = 0; n <= MAX_RESIDENTS; n++) {
   b.onclick = () => { residentsByDoor = n > finishes.residents; if (!commands.setFinish('residents', n)) residentsByDoor = false; };
   $('resident-count').append(b);
 }
+$('doorbell').onclick = () => {
+  if (!presetDoor(presetFor(roomConfig))) toast('This room has no door for visitors.');
+  else if (residents.hasGuest) toast('A guest is already visiting.');
+  else if (!motion.isEnabled()) toast('Visitors come by while ambient motion is on.');
+  else if (ringDoorbell()) toast('Ding-dong! Someone is at the door.');
+};
 function syncResidentControls() {
   $('resident-count').querySelectorAll('button').forEach((b) => { const on = Number(b.dataset.residents) === finishes.residents; b.classList.toggle('active', on); b.setAttribute('aria-pressed', String(on)); });
 }
@@ -1213,7 +1234,8 @@ window.__sim = {
   get musicOn() { return music.isOn(); },
   sfx, motion, ambient, outlines,
   activities: activityView,
-  get residents() { return { count: residents.count, poses: residents.poses(), cells: people.map((_, i) => residents.cellOf(i)), clips: people.map((b) => b.clip), bodies: people.map((b) => b.root), brain: residents, world: residentsWorld }; },
+  ringDoorbell,
+  get residents() { return { guest: residents.guestPose(), guestBody: guestBody?.root ?? null, count: residents.count, poses: residents.poses(), cells: people.map((_, i) => residents.cellOf(i)), clips: people.map((b) => b.clip), bodies: people.map((b) => b.root), brain: residents, world: residentsWorld }; },
   get pet() { return pet ? { action: brain.action, cell: brain.cell(), onSeat: brain.onSeat, pose: brain.pose(), root: pet.root, view: pet, brain } : null; },
   get items() { return state.items.map(withMesh); },
   get ghost() { return ghost; },

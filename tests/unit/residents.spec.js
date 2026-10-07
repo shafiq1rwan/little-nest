@@ -174,3 +174,32 @@ test('people walk over to a resting cat and stroke it, facing it', () => {
   expect(petting).toMatchObject({ x: 1.5, z: 0.5 });
   expect(petting.heading).toBeCloseTo(-Math.PI / 2, 5);   // looking at the cat to the west
 });
+
+test('a guest rings, walks in through the door, visits, leaves, and is never counted as a resident', () => {
+  const w = room({ seats: SOFA, spots: KITCHEN });
+  const brain = createResidentsBrain(w, { rng: seeded(13) });
+  brain.setCount(2);
+  expect(brain.ringDoorbell({ visit: 20 })).toBe(true);
+  expect(brain.ringDoorbell()).toBe(false);                      // one visitor at a time
+  expect(brain.count).toBe(2);
+  expect(brain.poses()).toHaveLength(2);
+  expect(brain.guestPose()).toMatchObject({ action: 'away', outside: true });
+  let inside = false, opened = false;
+  run(brain, 12, () => { inside ||= !brain.guestPose()?.outside; opened ||= brain.doorWanted() === 1; });
+  expect(inside).toBe(true);
+  expect(opened).toBe(true);
+  run(brain, 60);                                                 // the visit ends and they walk out
+  expect(brain.hasGuest).toBe(false);
+  expect(brain.count).toBe(2);
+  // Changing the household while a guest visits leaves the guest alone; a room reset sends them home.
+  brain.ringDoorbell({ visit: 30 });
+  run(brain, 6);
+  brain.setCount(3);
+  expect([brain.count, brain.hasGuest]).toEqual([3, true]);
+  brain.reset();
+  expect(brain.hasGuest).toBe(false);
+  // No door, or reduced motion: nobody comes.
+  expect(createResidentsBrain(room({ door: false })).ringDoorbell()).toBe(false);
+  const calm = createResidentsBrain(w); calm.setCalm(true);
+  expect(calm.ringDoorbell()).toBe(false);
+});

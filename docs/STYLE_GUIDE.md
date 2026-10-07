@@ -105,7 +105,7 @@ A compact cat matching Kenney's Furniture Kit: bevelled box forms, a broad squar
 
 ## Residents and the room
 
-People bring the room to life in small, quiet ways. A TV lights pale blue while someone sits facing it, a laptop or monitor glows for the person at its desk, and a stove's hob and oven window glow warm with a few soft steam puffs while someone cooks. Glows fade in and out over about half a second and never light the room. Mood bubbles are cream speech bubbles with a brown edge and a single drawn icon (heart, note, cup, sleepy z), shown for under three seconds when someone settles; never text, never emoji fonts. Under reduced motion glows switch without fading and steam is off.
+People bring the room to life in small, quiet ways. A TV lights pale blue while someone sits facing it, a laptop or monitor glows for the person at its desk, and a stove's hob and oven window glow warm with a few soft steam puffs while someone cooks. Glows fade in and out over about half a second and never light the room. Mood bubbles are cream speech bubbles with a brown edge and a single drawn icon (heart, note, cup, sleepy z), shown for under three seconds when someone settles; never text, never emoji fonts. Under reduced motion glows switch without fading and steam is off. Sleepers lie on their backs under a small sage blanket with their heads out; a playing radio sends up a few small brown notes. A guest rings with a soft two-note chime and is the only visitor at a time; under reduced motion nobody visits.
 
 ## Finish options
 

@@ -61,6 +61,42 @@ export function createScene({ canvas, camera: cam, render, backdrop }) {
     controls.update();
     return next !== current;
   }
+  // Tilting: the Top view button swings the camera between looking straight down and the angle it had before.
+  let tilt = null;   // { from, to, zoomFrom, zoomTo, start, ms } while swinging
+  let tiltBack = null;   // the polar angle and zoom to return to from the top: { phi, zoom }
+  let roomCells = 8;   // the room's longest side, from setFrame()
+  const isTop = () => controls.getPolarAngle() < cam.topPolarAngle + 0.15;
+  function setPolar(phi) {
+    const offset = camera.position.clone().sub(controls.target);
+    const s = new THREE.Spherical().setFromVector3(offset);
+    s.phi = THREE.MathUtils.clamp(phi, controls.minPolarAngle, controls.maxPolarAngle);
+    s.makeSafe();
+    camera.position.copy(controls.target).add(offset.setFromSpherical(s));
+    controls.update();
+  }
+  /** Looks straight down (`on`), or back at the previous angle. `animate` false jumps there. */
+  function viewFromTop(on, animate = true) {
+    const from = controls.getPolarAngle();
+    if (on && !isTop()) tiltBack = { phi: from, zoom: camera.zoom };
+    const to = on ? cam.topPolarAngle : tiltBack?.phi ?? new THREE.Spherical().setFromVector3(new THREE.Vector3(...cam.position).sub(new THREE.Vector3(...cam.target))).phi;
+    // Seen from straight above, the room is a turned square: zoom out just enough for all of it to fit.
+    const a = controls.getAzimuthalAngle(), extent = roomCells * (Math.abs(Math.sin(a)) + Math.abs(Math.cos(a))) * 1.12;
+    const fit = Math.min((camera.top - camera.bottom) / extent, (camera.right - camera.left) / extent);
+    const zoomTo = on ? Math.min(camera.zoom, fit) : tiltBack?.zoom ?? camera.zoom;
+    if (!on) tiltBack = null;
+    tilt = { from, to, zoomFrom: camera.zoom, zoomTo, start: performance.now(), ms: animate ? cam.tiltMs : 0 };
+    stepView(tilt.start);
+  }
+  /** Advances a tilt; true while one is running. */
+  function stepView(now) {
+    if (!tilt) return false;
+    const k = tilt.ms ? Math.min(1, (now - tilt.start) / tilt.ms) : 1, e = k * k * (3 - 2 * k);
+    camera.zoom = tilt.zoomFrom + (tilt.zoomTo - tilt.zoomFrom) * e;
+    camera.updateProjectionMatrix();
+    setPolar(tilt.from + (tilt.to - tilt.from) * e);
+    if (k >= 1) tilt = null;
+    return true;
+  }
   function zoomBy(factor) {
     camera.zoom = THREE.MathUtils.clamp(camera.zoom * factor, controls.minZoom, controls.maxZoom);
     camera.updateProjectionMatrix();
@@ -81,9 +117,10 @@ export function createScene({ canvas, camera: cam, render, backdrop }) {
   }
   /** Re-frames for a room whose longest side is `cells` wide (8 is the baseline). Smaller rooms keep the baseline. */
   function setFrame(cells) {
+    roomCells = cells;
     frame = Math.max(1, cells / 8);
     resize(true);
   }
 
-  return { renderer, scene, camera, controls, hemisphere, sun, resetView, zoomBy, orbitBy, resize, setFrame };
+  return { renderer, scene, camera, controls, hemisphere, sun, resetView, zoomBy, orbitBy, resize, setFrame, viewFromTop, stepView, isTop };
 }

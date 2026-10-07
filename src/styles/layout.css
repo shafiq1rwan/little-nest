@@ -194,3 +194,5 @@ body[data-screen="loading"] #app { visibility: hidden; }
 }
 /* Pressed ghost buttons use the soft sage ring above, not the older bordered pressed style. */
 button.icon-button.ghost[aria-pressed]:not(.active):not(.primary) { border-color: transparent; }
+/* The View tools wrap rather than run off a narrow screen. */
+#view-menu { flex-wrap: wrap; justify-content: center; width: max-content; max-width: calc(100vw - 24px); }

@@ -43,7 +43,7 @@ await Promise.all([preloadModels(CATALOG), preloadArt(['worldMap', 'botanicalPri
 
 // ---------- renderer / scene ----------
 const canvas = $('scene');
-const { renderer, scene, camera, controls, hemisphere, sun, resetView, zoomBy, orbitBy, resize, setFrame } = createScene({ canvas, camera: CAMERA, render: RENDER, backdrop: BACKDROP });
+const { renderer, scene, camera, controls, hemisphere, sun, resetView, zoomBy, orbitBy, resize, setFrame, viewFromTop, stepView, isTop } = createScene({ canvas, camera: CAMERA, render: RENDER, backdrop: BACKDROP });
 
 // ---------- room shell ----------
 // The shell (floor, walls, windows, grid) is rebuilt whenever the room preset changes. `placement`
@@ -1133,6 +1133,11 @@ $('cancel-placing').onclick = () => { cancelPlacing(); $('scene').focus({ preven
 $('orbit-left').onclick = () => { if (orbitBy(CAMERA.orbitStep)) invalidate(); };
 $('orbit-right').onclick = () => { if (orbitBy(-CAMERA.orbitStep)) invalidate(); };
 $('zoom-in').onclick = () => { zoomBy(CAMERA.zoomStep); invalidate(); };
+// Top view: straight down, or back to the angle you had. The button shows whether you are looking down.
+$('top-view').onclick = () => { viewFromTop(!isTop(), !reducedMotion.matches); invalidate(); };
+function syncTopView() { const on = isTop(); if ($('top-view').getAttribute('aria-pressed') !== String(on)) { $('top-view').setAttribute('aria-pressed', String(on)); $('top-view').setAttribute('aria-label', on ? 'Back to the room view' : 'Top view'); } }
+controls.addEventListener('change', syncTopView);
+syncTopView();
 $('zoom-out').onclick = () => { zoomBy(1 / CAMERA.zoomStep); invalidate(); };
 $('reset-view').onclick = () => { resetView(); invalidate(); };
 
@@ -1333,6 +1338,7 @@ perf.renders = 0;
 renderer.setAnimationLoop(() => {
   if (resize()) dirty = true;
   if (controls.update()) dirty = true;
+  if (stepView(performance.now())) dirty = true;
   if (tweens.size) { stepTweens(performance.now()); dirty = true; }
   if (bounces.size) { stepBounces(performance.now()); dirty = true; }
   if (motion.step(performance.now())) dirty = true;

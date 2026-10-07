@@ -40,6 +40,7 @@ const paths = {
   'eye-off': 'M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6 0 10 7 10 7a17 17 0 0 1-3.3 4M6.6 6.6C3.9 8.3 2 12 2 12s4 7 10 7a9.6 9.6 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2',
   sliders: 'M4 7h9M17 7h3M4 17h3M11 17h9M15 5v4M9 15v4',
   'chevron-up': 'm6 15 6-6 6 6',
+  'top-view': 'M4 9 12 5l8 4-8 4-8-4ZM12 13v6M9 16l3 3 3-3',
 };
 
 export function installIcons(root = document) {

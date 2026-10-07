@@ -8,8 +8,10 @@ export const MODELS_VERSION = 11;  // bump when a file in public/models changes,
 export const CAMERA = {
   position: [13, 12, 13],
   target: [0, 1.4, 0],
-  minPolarAngle: 0.5,
+  minPolarAngle: 0.04,   // tilt all the way to an almost straight-down view (the Top view button goes here)
   maxPolarAngle: 1.2,
+  topPolarAngle: 0.04,
+  tiltMs: 450,           // how long the Top view button takes to swing the camera
   minAzimuthAngle: 0.3,
   maxAzimuthAngle: Math.PI / 2 - 0.3,
   minZoom: 0.65,

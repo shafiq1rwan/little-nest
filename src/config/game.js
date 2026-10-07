@@ -32,7 +32,7 @@ export const RENDER = {
 };
 
 export const MUSIC = {
-  src: '/audio/lofidreams-bgm.mp3',
+  src: 'audio/lofidreams-bgm.mp3',   // relative, so the game runs from any folder (GitHub Pages, itch.io, Electron)
   volume: 0.35,
 };
 

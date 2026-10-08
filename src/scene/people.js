@@ -35,7 +35,7 @@ export function loadAccessory(key) {
       gltf.scene.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
       accessoryTemplates.set(key, gltf.scene);
       return true;
-    }).catch((error) => { console.warn('Little Nest: the ' + key + ' accessory did not load.', error); return false; }));
+    }).catch((error) => { console.warn('Little Nest: the ' + key + ' accessory did not load.', error); accessoryLoading.delete(key); return false; }));
   }
   return accessoryLoading.get(key);
 }
@@ -52,7 +52,8 @@ export function loadLook(look) {
       templates.set(look, { scene: gltf.scene, clips: new Map(gltf.animations.map((c) => [c.name, c])) });
       return true;
     }).catch((error) => {
-      console.warn('Little Nest: the ' + look + ' look did not load; that person stays away.', error);
+      console.warn('Little Nest: the ' + look + ' look did not load; it will be tried again.', error);
+      loading.delete(look);   // a dropped download is not remembered: the next call tries again
       return false;
     }));
   }

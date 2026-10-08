@@ -230,6 +230,15 @@ test('ringing the doorbell brings a guest in through the door, who leaves again;
   expect(errors).toEqual([]);
 });
 
+test('a character model that fails to download is fetched again, so nobody goes missing', async ({ page }) => {
+  let failed = 0;
+  await page.route('**/models/people/character-female-b.glb*', (route) => (failed++ < 1 ? route.abort() : route.continue()));
+  await openGame(page, '/');
+  await page.waitForFunction(() => window.__sim.residents.looks[0] === 'female-b', null, { timeout: 15000 });
+  expect(failed).toBeGreaterThanOrEqual(2);   // the dropped download, then the retry
+  expect(await page.evaluate(() => window.__sim.residents.bodies[0]?.visible)).toBe(true);
+});
+
 test('residents can be renamed and dressed from the Light tab, undone, saved, and show their name on hover', async ({ page }) => {
   const errors = await openGame(page, '/');
   await page.locator('#deselect').click();

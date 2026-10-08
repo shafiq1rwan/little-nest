@@ -346,6 +346,7 @@ const activityView = createActivityView(scene);
 const lastAction = new WeakMap();   // body root -> last action, to notice when someone settles
 const lastBubble = new WeakMap();   // body root -> when their last bubble showed (sleepers doze off again every few seconds)
 let guestBody = null;               // the visitor's body while a guest is over
+const lookRetries = new Map();      // look -> failed downloads retried so far (syncResidents)
 let nextGuestAt = performance.now() + 150000 + Math.random() * 150000;   // the next unprompted visit
 const worldDir = new THREE.Vector3(), worldAt = new THREE.Vector3();
 function appliancesInRoom() {
@@ -425,7 +426,15 @@ function syncResidents() {
     const { name, look, wear = null } = finishes.people[i];
     if (people[i] && people[i].look !== look) { people[i].dispose(); people[i] = undefined; }
     if (!people[i]) {
-      if (!hasLook(look)) { loadLook(look).then((ok) => { if (ok && finishes.people[i]?.look === look) syncResidents(); }); continue; }
+      // A look that is not loaded yet loads, then this runs again; a failed download is retried a few times.
+      if (!hasLook(look)) {
+        loadLook(look).then((ok) => {
+          if (finishes.people[i]?.look !== look) return;
+          if (ok) syncResidents();
+          else if ((lookRetries.get(look) ?? 0) < 5) { lookRetries.set(look, (lookRetries.get(look) ?? 0) + 1); setTimeout(syncResidents, 3000); }
+        });
+        continue;
+      }
       people[i] = createPerson(look, name, wear);
       scene.add(people[i].root);
     }

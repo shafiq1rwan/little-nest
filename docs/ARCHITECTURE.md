@@ -39,6 +39,8 @@ It is not yet a fully separated foundation for a larger game. src/main.js is app
 | src/game/pet.js | The cat's brain: pathing, goals, rests, look-at; pure and unit-tested |
 | src/scene/cat.js | Kenney-style bevelled cat geometry, facial sleep state, and joint pose blending from the brain's state; shared materials are never disposed |
 | src/game/residents.js | The residents' brain (up to three people): seats, kitchen and window spots, claims, the door; pure and unit-tested |
+| src/game/garden.js | Where the garden's trees, flowers, bushes, path and fence go round a room (pure, seeded, unit-tested) |
+| src/scene/garden.js | The garden island: loads and recolours Kenney Nature Kit models, merges low props, hides trees in front of the room |
 | src/scene/people.js | Residents' bodies: Kenney Mini Characters (public/models/people) by look, loaded on demand, with crossfaded clips, accessories on the head bone, a bed blanket and a hover name tag |
 | src/data/people.js | The twelve resident looks, the accessories (glasses, sunglasses, hearing aid), default names, looks and accessories, guest looks |
 | src/game/activities.js | Which appliances residents are using (TV, desk screen, stove) and which mood bubble a person shows; pure and unit-tested |

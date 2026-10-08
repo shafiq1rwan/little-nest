@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { CATALOG, recolor, poseCurtain } from './props.js';
 import { createRoom } from './room.js';
+import { planGarden, GARDEN_KEYS } from './game/garden.js';
+import { loadGarden, createGarden } from './scene/garden.js';
 import { createScene } from './scene/create-scene.js';
 import { createThumbnails } from './scene/thumbnails.js';
 import { preloadModels, preloadArt, loadedModelKeys } from './scene/models.js';
@@ -39,7 +41,7 @@ export async function initializeGame({ onProgress = async () => {}, onOpenRoom =
 const $ = (id) => document.getElementById(id);
 let editing = false;
 await onProgress(25, 'Building your little nest…');
-await Promise.all([preloadModels(CATALOG), preloadArt(['worldMap', 'botanicalPrint', 'frame']), preloadPeople([...DEFAULT_PEOPLE.map((p) => p.look), GUEST_LOOKS[0]]), ...DEFAULT_PEOPLE.filter((p) => p.wear).map((p) => loadAccessory(p.wear))]);   // models and print images must be ready before the first build()
+await Promise.all([preloadModels(CATALOG), loadGarden(GARDEN_KEYS), preloadArt(['worldMap', 'botanicalPrint', 'frame']), preloadPeople([...DEFAULT_PEOPLE.map((p) => p.look), GUEST_LOOKS[0]]), ...DEFAULT_PEOPLE.filter((p) => p.wear).map((p) => loadAccessory(p.wear))]);   // models and print images must be ready before the first build()
 
 // ---------- renderer / scene ----------
 const canvas = $('scene');
@@ -89,6 +91,7 @@ function syncGhostRooms() {
 function setFocusRoom(id) { if (id !== focusRoom) { focusRoom = id; syncGhostRooms(); } }
 function setPreviewRoom(id) { if (id !== previewRoom) { previewRoom = id; syncGhostRooms(); } }     // wall cells covered by the door: no new decorations there   // the subset of blocked cells that are windows, where curtains hang
 let shell = null;      // { root, floorMat, wallMat, walls, wallPanels, dispose }
+let garden = null;     // the garden island round the shell (src/scene/garden.js); none on the balcony
 let grid = null;
 let gridVisible = false;
 let wallsVisible = true;
@@ -97,6 +100,7 @@ let wallsVisible = true;
 let cutWalls = { back: false, left: false };
 function syncCutaway() {
   const v = camera.position.clone().sub(controls.target);
+  garden?.syncView(v);   // trees between the camera and the room step aside too
   const next = { back: v.z < 0, left: v.x < 0 };
   if (next.back !== cutWalls.back || next.left !== cutWalls.left) { cutWalls = next; shell.setCutaway(next); }
   for (const r of state.items) {
@@ -135,6 +139,8 @@ function makeGrid(width, depth) {
 function buildShell(room) {
   const preset = presetFor(room);
   if (shell) shell.dispose();
+  garden?.dispose();
+  garden = preset.walls === 'railing' ? null : createGarden(scene, planGarden({ width: room.width, depth: room.depth, door: presetDoor(preset) }));   // a balcony is up in the air
   if (grid) { scene.remove(grid); grid.geometry.dispose(); grid.material.dispose(); }
   shell = createRoom(scene, { ...preset, doorway: presetDoor(preset) }, WALL_HEIGHT, { wallColor: finishes.wall, wallLeftColor: finishes.wallLeft, floorColor: finishes.floor, floorStyle: finishes.floorStyle });
   shell.walls.visible = wallsVisible;
@@ -1406,6 +1412,8 @@ window.__sim = {
   activities: activityView,
   ringDoorbell,
   get cutaway() { return { ...cutWalls }; },
+  get garden() { return garden; },
+  renderFrame: () => outlines.render(),   // draws one frame now (benchmarks)
   get rooms() { return { focus: focusRoom, preview: previewRoom, ghosted: shell.ghostedPieces(), roomAt: (x, z) => roomAt({ x, z }), ...houseRooms }; },
   setFocusRoom,
   hoverPerson,
